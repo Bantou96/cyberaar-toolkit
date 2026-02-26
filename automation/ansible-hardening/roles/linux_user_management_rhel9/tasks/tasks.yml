@@ -1,0 +1,87 @@
+---
+
+- name: "Gather user & group facts"
+  ansible.builtin.getent:
+    database: passwd
+  register: "passwd_db"
+
+- name: "Gather shadow facts (for password checks)"
+  ansible.builtin.getent:
+    database: shadow
+  register: "shadow_db"
+
+- name: "Disable root login via SSH (PermitRootLogin no)"
+  when: "linux_root_ssh_disabled | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: '^#?PermitRootLogin'
+    line: "PermitRootLogin no"
+    validate: "/usr/sbin/sshd -T -f %s"
+  notify: "Restart sshd"
+
+- name: "Lock root account for direct login (except via sudo)"
+  when: "linux_root_login_disabled | bool"
+  ansible.builtin.user:
+    name: "root"
+    password_lock: true
+
+- name: "Lock legacy/unused system accounts"
+  when: "item in passwd_db.ansible_facts.getent_passwd"
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: "{{ linux_system_shell }}"
+    password_lock: true
+    state: present  # don't remove, just lock
+  loop: "{{ linux_legacy_accounts_to_lock }}"
+
+- name: "Enforce password expiry & history policies"
+  ansible.builtin.lineinfile:
+    path: "/etc/login.defs"
+    regexp: "^{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: '^PASS_MAX_DAYS', line: "PASS_MAX_DAYS {{ linux_password_max_days }}" }
+    - { regexp: '^PASS_MIN_DAYS', line: "PASS_MIN_DAYS {{ linux_password_min_days }}" }
+    - { regexp: '^PASS_WARN_AGE', line: "PASS_WARN_AGE {{ linux_password_warn_days }}" }
+
+- name: "Set password history in PAM (remember previous passwords)"
+  ansible.builtin.lineinfile:
+    path: "/etc/security/pwquality.conf"
+    regexp: '^remember ='
+    line: "remember = {{ linux_password_history }}"
+    create: true
+  notify: "PAM changes applied"
+
+- name: "Restrict sudo to wheel group only"
+  when: "linux_restrict_sudo_to_wheel | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers"
+    regexp: '^%wheel'
+    line: "%wheel ALL=(ALL) ALL"
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: "Remove any users with empty/null passwords"
+  when:
+    - "linux_remove_empty_password_users | bool"
+    - "item.value[1] == '' or item.value[1] == '!' or item.value[1] is none"
+  ansible.builtin.user:
+    name: "{{ item.key }}"
+    password: "!"   # Lock with invalid hash
+    state: present
+  loop: "{{ shadow_db.ansible_facts.getent_shadow | dict2items }}"
+
+- name: "Ensure no users have empty password field (final check)"
+  ansible.builtin.command: "awk -F: '($2 == \"\" || $2 == \"!\") {print $1}' /etc/shadow"
+  changed_when: false
+  register: "empty_passwd_check"
+  failed_when: "empty_passwd_check.stdout_lines | length > 0"
+
+- name: "Debug user management summary"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Locked legacy accounts: {{ linux_legacy_accounts_to_lock | length }}"
+      - "Password policy: max {{ linux_password_max_days }} days, remember {{ linux_password_history }}"
+      - "Empty password users found: {{ empty_passwd_check.stdout_lines | default([]) }}"
+
+...

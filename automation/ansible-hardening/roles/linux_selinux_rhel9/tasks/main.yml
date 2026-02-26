@@ -1,0 +1,8 @@
+---
+
+- name: "Apply SELinux enforcing & hardening (RHEL 9 family)"
+  when: "linux_selinux_disabled is not defined or not linux_selinux_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_selinux_rhel9"
+
+...

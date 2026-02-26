@@ -1,0 +1,85 @@
+---
+- name: "Ensure required packages for authselect are installed"
+  ansible.builtin.package:
+    name:
+      - "authselect"
+      - "sssd"
+      - "libpwquality"
+      - "pam_faillock"   # explicit for some setups
+    state: "present"
+
+- name: "Register current authselect configuration"
+  ansible.builtin.command: "authselect current -r"
+  changed_when: false
+  check_mode: false
+  register: "authselect_current_raw"
+
+- name: "Parse current profile from authselect output"
+  ansible.builtin.set_fact:
+    authselect_current_profile: "{{ authselect_current_raw.stdout_lines[0].split(':')[0] | trim | default('none') }}"
+
+- name: "Parse current enabled features"
+  ansible.builtin.set_fact:
+    authselect_current_features: "{{ authselect_current_raw.stdout_lines[1:] | join(' ') | split | unique | list }}"
+
+- name: "Select desired authselect profile if mismatch"
+  when: "authselect_current_profile != linux_authselect_profile"
+  ansible.builtin.command:
+    cmd: "authselect select {{ linux_authselect_profile }} --force"
+  register: "authselect_profile_change"
+  changed_when: "authselect_profile_change.rc == 0"
+  notify: "Apply authselect configuration changes"
+
+- name: "Enable missing authselect features"
+  when: "item not in authselect_current_features"
+  ansible.builtin.command:
+    cmd: "authselect enable-feature {{ item }}"
+  loop: "{{ linux_authselect_features }}"
+  register: "authselect_feature_change"
+  changed_when: "authselect_feature_change.rc == 0"
+  notify: "Apply authselect configuration changes"
+
+- name: "Configure pwquality parameters in /etc/security/pwquality.conf"
+  ansible.builtin.lineinfile:
+    path: "/etc/security/pwquality.conf"
+    regexp: "^{{ item.key }} ="
+    line: "{{ item.key }} = {{ item.value }}"
+    create: true
+    mode: "0644"
+    backup: true
+  loop: "{{ linux_authselect_pwquality | dict2items }}"
+  register: "pwquality_updated"
+  changed_when: "pwquality_updated.changed"
+
+- name: "Configure faillock parameters in /etc/security/faillock.conf"
+  ansible.builtin.lineinfile:
+    path: "/etc/security/faillock.conf"
+    regexp: "^{{ item.key }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+    create: true
+    mode: "0644"
+    backup: true
+  loop: "{{ linux_authselect_faillock | dict2items }}"
+  register: "faillock_updated"
+  changed_when: "faillock_updated.changed"
+
+- name: "Apply authselect changes if any modifications occurred"
+  when:
+    - "authselect_profile_change.changed or
+       (authselect_feature_change.results | default([]) | selectattr('changed', 'equalto', true) | list | length > 0) or
+       pwquality_updated.changed or faillock_updated.changed"
+  ansible.builtin.command: "authselect apply-changes"
+  changed_when: true
+  notify: "Restart sssd if active"
+
+# Optional debug output (visible with -v or higher)
+- name: "Debug authselect status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Current profile: {{ authselect_current_profile }}"
+      - "Desired profile: {{ linux_authselect_profile }}"
+      - "Enabled features: {{ authselect_current_features }}"
+      - "Any changes applied: {{ (authselect_profile_change.changed | default(false)) or (authselect_feature_change.changed | default(false)) }}"
+
+...

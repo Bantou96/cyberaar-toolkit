@@ -1,0 +1,11 @@
+---
+
+linux_crypto_policies_policy: "FUTURE"
+linux_crypto_policies_reload: true
+linux_crypto_policies_disabled: false
+
+# List of subpolicy names (filename without .pmod) - extend as needed
+linux_crypto_policies_subpolicies:
+  - "no-sha1"
+
+...

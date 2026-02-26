@@ -1,0 +1,16 @@
+---
+
+- name: "SELinux configuration changed - reboot required"
+  ansible.builtin.debug:
+    msg: >
+      SELinux mode/policy was changed (or set for the first time).
+      A **reboot is required** for the change to take full effect.
+      Current desired state: {{ linux_selinux_mode }} / {{ linux_selinux_policy }}
+
+- name: "Full relabel scheduled - reboot required"
+  ansible.builtin.debug:
+    msg: >
+      /.autorelabel file created → full SELinux relabel will run on next boot.
+      **Reboot the server** to apply.
+
+...

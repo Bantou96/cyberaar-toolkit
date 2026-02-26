@@ -1,0 +1,8 @@
+---
+
+- name: "Apply kernel hardening sysctls (RHEL 9 family)"
+  when: "linux_kernel_hardening_disabled is not defined or not linux_kernel_hardening_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_kernel_hardening_rhel9"
+
+...

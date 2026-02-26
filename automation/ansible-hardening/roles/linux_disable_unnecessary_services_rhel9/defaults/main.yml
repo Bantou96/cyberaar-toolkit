@@ -1,0 +1,42 @@
+---
+
+# Main toggle
+linux_disable_unnecessary_services_enabled: true
+
+# Services to mask/disable (even if installed)
+linux_services_to_mask:
+  - "avahi-daemon"           # mDNS – unnecessary on servers, potential info leak
+  - "cups"                   # printing – almost never needed on servers
+  - "cups-browsed"
+  - "bluetooth"
+  - "ModemManager"           # mobile broadband – server irrelevant
+  - "nfs-server"             # if no NFS exports
+  - "rpcbind"                # if no NFS/RPC
+  - "postfix"                # mail transfer – disable unless relay needed
+
+# Services to stop/disable but NOT mask (if they might be needed occasionally)
+linux_services_to_disable:
+  - "NetworkManager-wait-online"  # desktop-oriented
+  - "atd"                    # at jobs – rarely used
+  - "lpd"                    # legacy printing
+
+# Packages to remove (optional – set to false if you prefer just disable/mask)
+linux_packages_to_remove:
+  enabled: false
+  list:
+    - "avahi"
+    - "cups"
+    - "cups-client"
+    - "cups-libs"
+    - "ModemManager"
+    - "bluetooth"
+
+# Keep these even if in lists above (overrides)
+linux_services_exceptions:
+  - "chronyd"                # keep NTP if you use it instead of timesyncd
+  - "sshd"                   # obviously
+
+# Role global disable
+linux_unnecessary_services_disabled: false
+
+...

@@ -1,0 +1,109 @@
+---
+
+- name: "Ensure auditd packages are installed"
+  ansible.builtin.package:
+    name:
+      - "audit"
+      - "audit-libs"
+      - "audispd-plugins"
+    state: "present"
+
+- name: "Deploy auditd.conf template"
+  ansible.builtin.template:
+    src: "auditd.conf.j2"
+    dest: "{{ linux_auditd_conf_file }}"
+    mode: "0640"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "auditd_conf_result"
+  notify: "Restart auditd"
+
+- name: "Deploy CIS audit rules template"
+  ansible.builtin.template:
+    src: "99-cis-audit.rules.j2"
+    dest: "{{ linux_auditd_rules_file }}"
+    mode: "0640"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "audit_rules_result"
+  notify: "Restart auditd"
+
+- name: "Enable and start auditd service"
+  ansible.builtin.service:
+    name: "auditd"
+    state: "started"
+    enabled: true
+
+- name: "Enable boot-time auditing in GRUB if configured"
+  when: "linux_auditd_enable_boot_auditing | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/default/grub"
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="{{ ansible_default_ipv4.gateway | default('') }} audit=1"'
+    backrefs: true
+  register: "grub_audit_result"
+
+- name: "Rebuild GRUB config if boot auditing enabled"
+  when: "grub_audit_result.changed"
+  ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
+  changed_when: true
+  notify: "Reboot required notice"   # optional separate handler
+
+# Optional debug / notice
+- name: "Notify about potential reboot for boot auditing"
+  when: "grub_audit_result.changed"
+  ansible.builtin.debug:
+    msg: "Boot-time auditing changes applied. Reboot required for full effect if GRUB was modified."
+
+- name: "Enable auditd syslog plugin if forwarding to local rsyslog requested"
+  when:
+    - "linux_auditd_forward_to_syslog | bool"
+    - "not linux_auditing_forwarding_disabled | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/audisp/plugins.d/syslog.conf"
+    regexp: '^active ='
+    line: 'active = {{ linux_auditd_syslog_plugin_active }}'
+    mode: "0640"
+  notify: "Restart auditd"
+
+- name: "Ensure rsyslog is installed and enabled"
+  ansible.builtin.package:
+    name: "rsyslog"
+    state: "present"
+
+- name: "Enable and start rsyslog service"
+  ansible.builtin.service:
+    name: "rsyslog"
+    state: "started"
+    enabled: true
+
+- name: "Deploy rsyslog remote forwarding configuration (TCP/TLS/RELP)"
+  when:
+    - "linux_rsyslog_forward_enabled | bool"
+    - "linux_rsyslog_remote_host != ''"
+    - "not linux_auditing_forwarding_disabled | bool"
+  ansible.builtin.template:
+    src: "rsyslog-remote-forward.j2"
+    dest: "/etc/rsyslog.d/10-audit-remote-forward.conf"
+    mode: "0640"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "rsyslog_forward_result"
+  notify:
+    - "Restart rsyslog"
+    - "Restart auditd"   # ensure audit events flow through if plugin active
+
+# Optional: disk queue directory
+- name: "Create rsyslog disk queue directory if enabled"
+  when: "linux_rsyslog_queue_disk | bool and linux_rsyslog_forward_enabled | bool"
+  ansible.builtin.file:
+    path: "{{ linux_rsyslog_queue_file | dirname }}"
+    state: "directory"
+    mode: "0700"
+    owner: "root"
+    group: "root"
+
+...

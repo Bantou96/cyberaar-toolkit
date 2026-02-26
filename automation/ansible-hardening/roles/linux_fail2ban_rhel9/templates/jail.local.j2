@@ -1,0 +1,17 @@
+# Managed by Ansible role: linux_fail2ban_rhel9
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[DEFAULT]
+backend = {{ linux_fail2ban_backend }}
+bantime  = {{ linux_fail2ban_bantime }}
+findtime = {{ linux_fail2ban_findtime }}
+maxretry = {{ linux_fail2ban_maxretry }}
+ignoreip = {{ linux_fail2ban_ignoreip | join(' ') }}
+
+{% if linux_fail2ban_email_notify | bool %}
+destemail = {{ linux_fail2ban_email_dest }}
+sender    = {{ linux_fail2ban_email_sender }}
+action    = %(action_mwl)s   # mail + whois + log
+{% else %}
+action    = %(action_)s       # default log-only
+{% endif %}

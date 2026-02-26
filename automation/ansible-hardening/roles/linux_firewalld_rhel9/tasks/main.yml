@@ -1,0 +1,8 @@
+---
+
+- name: "Apply firewalld hardening (RHEL 9 family)"
+  when: "linux_firewalld_disabled is not defined or not linux_firewalld_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_firewalld_rhel9"
+
+...

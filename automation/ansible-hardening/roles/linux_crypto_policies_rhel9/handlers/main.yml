@@ -1,0 +1,11 @@
+---
+
+- name: "Reload services affected by crypto policy change"
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: "reloaded"
+  loop:
+    - "sshd" # add others like httpd, nginx, postfix, etc. if present
+  when: "policy_update.changed | default(false)"
+
+...
