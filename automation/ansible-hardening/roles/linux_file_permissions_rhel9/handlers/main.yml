@@ -1,0 +1,11 @@
+---
+
+- name: "Umask changes require new login"
+  ansible.builtin.debug:
+    msg: "Umask updated in profile.d and root .bashrc. New logins/sessions will have umask {{ linux_umask_default }}. Existing sessions unchanged."
+
+- name: "PAM changes applied"
+  ansible.builtin.debug:
+    msg: "pam_wheel.so enabled for su restriction. Test with non-wheel user."
+
+...

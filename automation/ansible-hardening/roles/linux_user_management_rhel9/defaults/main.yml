@@ -1,0 +1,40 @@
+---
+
+# Lock root account (disable direct login – CIS 5.2.1 / 5.3.3.4.3)
+linux_root_login_disabled: true
+linux_root_ssh_disabled: true           # Deny root login via SSH
+
+# Remove or lock legacy/unused system accounts (CIS 5.2.1 – many are obsolete)
+linux_legacy_accounts_to_lock:
+  - "games"
+  - "news"
+  - "uucp"
+  - "gopher"
+  - "ftp"
+  - "operator"
+  - "lp"
+  - "adm"
+  - "sync"
+  - "shutdown"
+  - "halt"
+
+# Password policy enforcement (CIS 5.4.x)
+linux_password_min_days: 1              # Min days before change (prevent immediate reuse)
+linux_password_max_days: 90             # Max days before expiry
+linux_password_warn_days: 7             # Warn 7 days before expiry
+linux_password_history: 5               # Remember 5 previous passwords
+
+# Enforce wheel group for sudo (CIS 5.7 – restrict su/sudo)
+linux_restrict_sudo_to_wheel: true
+linux_sudo_wheel_group_members: []      # List of allowed sudo users – leave empty to keep current
+
+# Remove users with empty/null passwords (critical security)
+linux_remove_empty_password_users: true
+
+# Shell for system accounts (should be /sbin/nologin or /bin/false)
+linux_system_shell: "/sbin/nologin"
+
+# Role disable var
+linux_user_management_disabled: false
+
+...

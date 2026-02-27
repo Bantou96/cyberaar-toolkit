@@ -1,0 +1,33 @@
+# CIS / STIG / Critical Infra hardened remote forwarding for audit + system logs
+# Managed by Ansible role: linux_auditing_rhel9
+# Generated: {{ ansible_date_time.iso8601 }}
+
+{% if linux_rsyslog_queue_disk | bool %}
+$WorkDirectory /var/spool/rsyslog
+$ActionQueueType LinkedList           # in-memory queue
+$ActionQueueFileName audit_fwd_queue  # disk file prefix
+$ActionQueueMaxDiskSpace 1g           # 1 GB max disk usage
+$ActionQueueSaveOnShutdown on         # save queue on shutdown
+$ActionResumeRetryCount -1            # infinite retries
+{% endif %}
+
+# Forward ALL logs (including audit via audisp-syslog) to central server
+{% if linux_rsyslog_remote_protocol == "relp" %}
+*.* action(type="omrelp"
+     server="{{ linux_rsyslog_remote_host }}"
+     port="{{ linux_rsyslog_remote_port }}"
+     Template="RSYSLOG_SyslogProtocol23Format"
+{% else %}
+*.* @@{{ linux_rsyslog_remote_host }}:{{ linux_rsyslog_remote_port }};RSYSLOG_SyslogProtocol23Format
+{% endif %}
+
+{% if linux_rsyslog_remote_use_tls | bool %}
+  StreamDriver.Name="gtls"
+  StreamDriver.Mode="1"               # 1 = TLS
+  StreamDriver.AuthMode="x509/name"   # or "anon" if no client cert
+  StreamDriverCAFile="{{ linux_rsyslog_remote_tls_ca_cert }}"
+{% if linux_rsyslog_remote_tls_cert | length > 0 %}
+  StreamDriverCertFile="{{ linux_rsyslog_remote_tls_cert }}"
+  StreamDriverKeyFile="{{ linux_rsyslog_remote_tls_key }}"
+{% endif %}
+{% endif %}

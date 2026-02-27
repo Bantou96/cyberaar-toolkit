@@ -1,0 +1,36 @@
+---
+
+# Desired authselect profile (sssd is common for enterprise with AD/IdM)
+linux_authselect_profile: "sssd"
+
+# Features to enable (CIS-aligned: faillock for lockout, pwquality for complexity)
+linux_authselect_features:
+  - "with-faillock"
+  - "with-pwquality"
+  - "with-mkhomedir"       # optional - create home on login
+  - "with-pamaccess"       # optional - access.conf control
+
+# Password quality settings (CIS Level 1/2 Server: minlen 14, 3 classes min)
+linux_authselect_pwquality:
+  minlen: "14"
+  dcredit: "-1"
+  ucredit: "-1"
+  ocredit: "-1"
+  lcredit: "-1"
+  minclass: "3"            # at least 3 character classes
+  maxrepeat: "3"
+  maxclassrepeat: "4"
+  dictcheck: "1"           # check against dictionary
+
+# Account lockout (CIS recommends deny=5, unlock_time ≥600)
+linux_authselect_faillock:
+  deny: "5"
+  fail_interval: "900"     # 15 minutes
+  unlock_time: "600"       # 10 minutes
+  even_deny_root: "true"   # apply to root too (stronger security)
+  root_unlock_time: "never"
+
+# Role disable var
+linux_authselect_disabled: false
+
+...

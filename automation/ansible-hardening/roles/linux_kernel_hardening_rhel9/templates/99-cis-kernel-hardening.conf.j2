@@ -1,0 +1,61 @@
+# CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (or latest) - Kernel Parameters
+# Managed by Ansible role: linux_kernel_hardening_rhel9
+# Last applied: {{ ansible_date_time.iso8601 }}
+
+{% if linux_kernel_apply_aslr | bool %}
+# 1.5.1 Ensure address space layout randomization is enabled (L1)
+kernel.randomize_va_space = 2
+{% endif %}
+
+{% if linux_kernel_apply_ptrace | bool %}
+# 1.5.2 Ensure ptrace_scope is restricted (L1)
+kernel.yama.ptrace_scope = 1
+{% endif %}
+
+{% if linux_kernel_apply_dmesg | bool %}
+# 1.5.3 Ensure kernel.dmesg_restrict is enabled (L1)
+kernel.dmesg_restrict = 1
+{% endif %}
+
+{% if linux_kernel_apply_perf | bool %}
+# Restrict performance events (L2 - may impact monitoring tools)
+kernel.perf_event_paranoid = 3
+{% endif %}
+
+{% if linux_kernel_apply_coredump | bool %}
+# 1.5.4 Ensure core dumps are restricted (L1)
+fs.suid_dumpable = 0
+kernel.core_uses_pid = 1
+{% endif %}
+
+{% if linux_kernel_apply_network_ipv4 | bool %}
+# 3.3.1 Ensure IP forwarding is disabled (if not router) - usually set elsewhere
+# net.ipv4.ip_forward = 0
+
+# 3.3.2-3.3.7 Network parameters (L1)
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.tcp_syncookies = 1
+{% endif %}
+
+{% if linux_kernel_apply_network_ipv6 | bool %}
+# IPv6 equivalent protections (L1 when IPv6 is in use)
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.default.accept_ra = 0
+{% endif %}
+
+# Additional defense-in-depth (L2)
+kernel.kptr_restrict = 2

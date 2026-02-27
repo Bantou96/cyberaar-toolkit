@@ -1,0 +1,60 @@
+---
+
+# auditd.conf settings (CIS-aligned defaults)
+linux_auditd_max_log_file: "8"                  # MB per file
+linux_auditd_max_log_file_action: "keep_logs"   # don't delete old logs
+linux_auditd_space_left_action: "email"         # or syslog/sysadmin
+linux_auditd_admin_space_left_action: "single"  # halt to single-user if critical
+linux_auditd_disk_full_action: "suspend"        # or halt
+linux_auditd_flush: "incremental_async"         # performance + reliability
+
+# Enable boot-time auditing (grub cmdline)
+linux_auditd_enable_boot_auditing: true
+
+# Path for main config
+linux_auditd_conf_file: "/etc/audit/auditd.conf"
+
+# Path for rules (we'll use one main file for simplicity; can split later)
+linux_auditd_rules_file: "/etc/audit/rules.d/99-cis-audit.rules"
+
+# Role disable
+linux_auditing_disabled: false
+
+# Rule category toggles – set to false to skip entire category
+linux_audit_rules_identity: true                # passwd, shadow, group, gshadow, opasswd
+linux_audit_rules_privileged: true              # chage, chfn, chsh, gpasswd, mount, newgrp, passwd, su, sudo, umount, etc.
+linux_audit_rules_perm_mod: true                # chmod, chown, fchmod*, fchown*, lchown, etc.
+linux_audit_rules_mounts: true                  # mount, umount2
+linux_audit_rules_actions: true                 # sudoers, cron, at, systemd timers, etc.
+linux_audit_rules_delete: false                 # unlink, rename, rmdir – high volume!
+linux_audit_rules_selinux: true                 # chcon, setenforce, semanage, restorecon
+linux_audit_rules_network: false                # socket calls, bind, connect – very noisy
+linux_audit_rules_exec: false                   # all execve (broad – can be noisy on heavy workload)
+linux_audit_rules_time: true                    # adjtimex, settimeofday, stime, clock_settime
+
+# Extra dangerous/noisy rules – disabled by default
+linux_audit_rules_file_integrity_high: false    # watch /bin, /sbin, /usr/bin, /usr/sbin – many events
+linux_audit_rules_kernel_modules: false         # init_module, finit_module, delete_module
+linux_audit_rules_ptrace: false                 # ptrace syscalls (debugging attempts) 
+
+# Audit → rsyslog forwarding (first hop – recommended)
+linux_auditd_forward_to_syslog: true
+linux_auditd_syslog_plugin_active: "yes"  # active = yes / no
+
+# rsyslog → remote central server (second hop – strongly recommended)
+linux_rsyslog_forward_enabled: true
+linux_rsyslog_remote_host: ""               # e.g. "192.168.10.50" or "logserver.daf.sn"
+linux_rsyslog_remote_port: "514"
+linux_rsyslog_remote_protocol: "tcp"        # tcp | udp | relp
+linux_rsyslog_remote_use_tls: true          # true = use TLS (recommended)
+linux_rsyslog_remote_tls_ca_cert: "/etc/pki/ca-trust/source/anchors/ca-bundle.crt"  # adjust
+linux_rsyslog_remote_tls_cert: ""           # client cert if mutual auth
+linux_rsyslog_remote_tls_key: ""            # client key if mutual auth
+linux_rsyslog_queue_disk: true              # spool to disk if remote unavailable
+linux_rsyslog_queue_file: "/var/spool/rsyslog/queue"  # disk queue path
+linux_rsyslog_queue_size: "100000"          # max queued messages
+
+# Disable entire forwarding section
+linux_auditing_forwarding_disabled: false
+
+...

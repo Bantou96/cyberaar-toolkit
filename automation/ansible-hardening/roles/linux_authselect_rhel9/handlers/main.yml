@@ -1,0 +1,12 @@
+---
+- name: "Apply authselect configuration changes"
+  ansible.builtin.command: "authselect apply-changes"
+  changed_when: true
+
+- name: "Restart sssd if active"
+  ansible.builtin.service:
+    name: "sssd"
+    state: "restarted"
+  when: "ansible_facts.services['sssd.service'] is defined and ansible_facts.services['sssd.service'].state == 'running'"
+
+...

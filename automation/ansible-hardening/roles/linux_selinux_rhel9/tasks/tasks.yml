@@ -1,0 +1,43 @@
+---
+
+- name: "Ensure SELinux is configured to desired mode and policy"
+  ansible.posix.selinux:
+    policy: "{{ linux_selinux_policy }}"
+    state: "{{ linux_selinux_mode }}"
+  register: "selinux_config_result"
+  notify:
+    - "SELinux configuration changed - reboot required"
+
+- name: "Set SELinux booleans for hardening"
+  ansible.posix.seboolean:
+    name: "{{ item.name }}"
+    state: "{{ item.state == 'on' }}"
+    persistent: true
+  loop: "{{ linux_selinux_booleans }}"
+  register: "selinux_boolean_result"
+  changed_when: "selinux_boolean_result.changed"
+
+- name: "Restore default SELinux contexts on critical paths"
+  ansible.builtin.command: "restorecon -R -v {{ item }}"
+  loop: "{{ linux_selinux_relabel_paths }}"
+  changed_when: false
+  register: "restorecon_result"
+  failed_when: "restorecon_result.rc != 0 and 'No such file or directory' not in restorecon_result.stderr"
+
+- name: "Force full filesystem relabel on next boot if requested"
+  when: "linux_selinux_force_autorelabel | bool"
+  ansible.builtin.file:
+    path: "/.autorelabel"
+    state: "touch"
+    mode: "0644"
+  notify: "Full relabel scheduled - reboot required"
+
+- name: "Debug SELinux configuration status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "SELinux config changed: {{ selinux_config_result.changed | default(false) }}"
+      - "Booleans changed: {{ selinux_boolean_result.results | selectattr('changed', 'equalto', true) | map(attribute='item.name') | list | default([]) }}"
+      - "Restorecon output (last): {{ restorecon_result.results[-1].stdout | default('none') if restorecon_result.results | length > 0 else 'none' }}"
+
+...

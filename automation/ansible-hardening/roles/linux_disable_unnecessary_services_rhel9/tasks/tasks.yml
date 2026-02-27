@@ -1,0 +1,56 @@
+---
+
+- name: "Gather the package facts"
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: "Gather the service facts"
+  ansible.builtin.service_facts:
+
+- name: "Mask and disable services from the mask list"
+  block:
+    - name: "Mask service {{ item }}"
+      when:
+        - "item in ansible_facts.services"
+        - "item not in linux_services_exceptions"
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        masked: true
+        state: stopped
+      loop: "{{ linux_services_to_mask }}"
+
+    - name: "Disable and stop service {{ item }}"
+      when:
+        - "item in ansible_facts.services"
+        - "item not in linux_services_exceptions"
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      loop: "{{ linux_services_to_mask + linux_services_to_disable }}"
+
+- name: "Remove unnecessary packages if enabled"
+  when:
+    - "linux_packages_to_remove.enabled | bool"
+    - "item in ansible_facts.packages"
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ linux_packages_to_remove.list }}"
+
+- name: "Verify masked/disabled services status (debug verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: >-
+      {% for svc in (linux_services_to_mask + linux_services_to_disable) | unique %}
+      {{ svc }}: masked={{ ansible_facts.services[svc].status.Masked | default('no') }},
+      enabled={{ ansible_facts.services[svc].status.Enabled | default('unknown') }},
+      state={{ ansible_facts.services[svc].status.Active | default('unknown') }}
+      {% endfor %}
+
+- name: "Notify about services changes"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "Unnecessary services masked/disabled. Review with 'systemctl list-unit-files --type=service' and 'systemctl status <service>'"
+
+...

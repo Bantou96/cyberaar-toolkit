@@ -1,0 +1,54 @@
+---
+
+- name: "Ensure fail2ban is installed"
+  ansible.builtin.package:
+    name: "fail2ban"
+    state: "present"
+
+- name: "Deploy global fail2ban configuration"
+  ansible.builtin.template:
+    src: "jail.local.j2"
+    dest: "/etc/fail2ban/jail.local"
+    mode: "0644"
+    backup: true
+  register: "jail_global_result"
+  notify: "Restart fail2ban"
+
+- name: "Deploy SSH jail configuration"
+  when: "linux_fail2ban_jail_sshd_enabled | bool"
+  ansible.builtin.template:
+    src: "jail.sshd.local.j2"
+    dest: "/etc/fail2ban/jail.d/sshd.local"
+    mode: "0644"
+    backup: true
+  register: "jail_sshd_result"
+  notify: "Restart fail2ban"
+
+- name: "Deploy firewalld ban jail (synergy with firewalld)"
+  when: "linux_fail2ban_jail_firewalld_enabled | bool"
+  ansible.builtin.template:
+    src: "jail.firewalld.local.j2"
+    dest: "/etc/fail2ban/jail.d/firewalld.local"
+    mode: "0644"
+    backup: true
+  register: "jail_firewalld_result"
+  notify: "Restart fail2ban"
+
+- name: "Enable and start fail2ban service"
+  ansible.builtin.service:
+    name: "fail2ban"
+    state: "started"
+    enabled: true
+
+- name: "Ensure fail2ban is running and jail status"
+  ansible.builtin.command: "fail2ban-client status"
+  changed_when: false
+  register: "fail2ban_status"
+  failed_when: "fail2ban_status.rc != 0"
+
+- name: "Debug fail2ban status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "{{ fail2ban_status.stdout_lines }}"
+
+...

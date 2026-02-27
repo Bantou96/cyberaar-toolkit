@@ -1,0 +1,80 @@
+---
+
+- name: "Ensure sysctl.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/sysctl.d"
+    state: "directory"
+    mode: "0755"
+
+- name: "Deploy CIS-aligned kernel hardening sysctl template"
+  ansible.builtin.template:
+    src: "99-cis-kernel-hardening.conf.j2"
+    dest: "{{ linux_kernel_sysctl_file }}"
+    mode: "0644"
+    backup: true
+  register: "sysctl_template_result"
+
+- name: "Reload sysctl only if template changed"
+  when:
+    - "sysctl_template_result.changed"
+    - "linux_kernel_sysctl_reload | bool"
+  ansible.builtin.command: "sysctl --system"
+  changed_when: false
+  register: "sysctl_reload_result"
+
+# Optional: quick validation of key setting
+- name: "Verify ASLR is active (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "sysctl -n kernel.randomize_va_space"
+  changed_when: false
+  register: "aslr_value"
+
+- name: "Debug key kernel parameters"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "ASLR value: {{ aslr_value.stdout | default('not checked') }}"
+      - "Sysctl file updated: {{ sysctl_template_result.changed | default(false) }}"
+      - "Sysctl reloaded: {{ sysctl_reload_result.changed | default(false) }}"
+
+- name: "Ensure modprobe.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/modprobe.d"
+    state: "directory"
+    mode: "0755"
+
+- name: "Deploy CIS-aligned kernel module blacklist template"
+  ansible.builtin.template:
+    src: "99-cis-modprobe-blacklist.conf.j2"
+    dest: "{{ linux_kernel_modprobe_file }}"
+    mode: "0644"
+    backup: true
+  register: "modprobe_template_result"
+
+- name: "Attempt to unload blacklisted modules if currently loaded (optional)"
+  when:
+    - "linux_kernel_unload_blacklisted | bool"
+    - "modprobe_template_result.changed"
+  ansible.builtin.command: "modprobe -r {{ item }}"
+  loop:
+    - "cramfs"
+    - "freevxfs"
+    - "hfs"
+    - "hfsplus"
+    - "jffs2"
+    - "squashfs"
+    - "udf"
+    - "usb_storage"
+    # Add others from template if enabled
+  failed_when: false  # many won't be loaded: ignore errors
+  register: "module_unload"
+  changed_when: "module_unload.rc == 0"
+
+- name: "Notify admin about reboot requirement for module blacklisting"
+  when: "modprobe_template_result.changed"
+  ansible.builtin.debug:
+    msg: "Kernel module blacklisting applied. Full effect requires reboot (or manual unload). Changes made: {{ modprobe_template_result.changed }}"
+
+# No automatic reboot — production safety
+
+...

@@ -1,0 +1,92 @@
+---
+
+- name: "Ensure firewalld is installed"
+  ansible.builtin.package:
+    name: "firewalld"
+    state: "present"
+
+- name: "Enable and start firewalld service"
+  ansible.builtin.service:
+    name: "firewalld"
+    state: "started"
+    enabled: true
+
+- name: "Set default zone"
+  when: "linux_firewalld_enabled | bool"
+  ansible.posix.firewalld:
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    state: present
+    immediate: true
+
+- name: "Allow required services in default zone"
+  when: "linux_firewalld_enabled | bool"
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ linux_firewalld_allowed_services }}"
+
+- name: "Allow additional ports in default zone"
+  when: "linux_firewalld_enabled | bool"
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ linux_firewalld_allowed_ports }}"
+
+- name: "Restrict SSH to specific source addresses (rich rules)"
+  when:
+    - "linux_firewalld_enabled | bool"
+    - "linux_firewalld_ssh_sources | length > 0"
+  ansible.posix.firewalld:
+    rich_rule: "rule family='ipv4' source address='{{ item }}' service name='ssh' accept"
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ linux_firewalld_ssh_sources }}"
+
+- name: "Apply SSH rate limiting (rich rule)"
+  when:
+    - "linux_firewalld_enabled | bool"
+    - "linux_firewalld_ssh_rate_limit != ''"
+  ansible.posix.firewalld:
+    rich_rule: "rule family='ipv4' service name='ssh' limit value='{{ linux_firewalld_ssh_rate_limit }}' accept"
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name: "Enable logging of denied packets"
+  when: "linux_firewalld_enabled | bool"
+  ansible.posix.firewalld:
+    zone: "{{ linux_firewalld_default_zone }}"
+    log_denied: "{{ linux_firewalld_log_denied }}"
+    permanent: true
+    immediate: true
+    state: present
+
+# Optional: Remove any unexpected services (defense-in-depth)
+- name: "Gather current services in default zone"
+  ansible.posix.firewalld_info:
+    zone: "{{ linux_firewalld_default_zone }}"
+  register: "fw_info"
+
+- name: "Remove unexpected services from default zone"
+  when:
+    - "linux_firewalld_enabled | bool"
+    - "fw_info.firewalld_zones[linux_firewalld_default_zone].services | default([]) | difference(linux_firewalld_allowed_services) | length > 0"
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    zone: "{{ linux_firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: disabled
+  loop: "{{ fw_info.firewalld_zones[linux_firewalld_default_zone].services | default([]) | difference(linux_firewalld_allowed_services) }}"
+
+...

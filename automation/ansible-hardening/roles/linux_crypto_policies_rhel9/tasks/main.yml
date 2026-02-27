@@ -1,0 +1,8 @@
+---
+
+- name: "Apply crypto policies hardening (RHEL 9 family)"
+  when: "linux_crypto_policies_disabled is not defined or not linux_crypto_policies_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_crypto_policies_rhel9"
+
+...

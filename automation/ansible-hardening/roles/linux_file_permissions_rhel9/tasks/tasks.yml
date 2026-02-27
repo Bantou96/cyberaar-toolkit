@@ -1,0 +1,67 @@
+---
+
+- name: "Set default umask for all users (via profile.d)"
+  when: "linux_umask_apply_profile | bool"
+  ansible.builtin.template:
+    src: "umask.sh.j2"
+    dest: "/etc/profile.d/99-cis-umask.sh"
+    mode: "0644"
+  notify: "Umask changes require new login"
+
+- name: "Set root umask in /root/.bashrc"
+  ansible.builtin.lineinfile:
+    path: "/root/.bashrc"
+    regexp: '^umask'
+    line: "umask {{ linux_umask_default }}"
+    create: true
+    mode: "0600"
+
+- name: "Apply strict permissions on critical files"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    state: file
+  loop: "{{ linux_critical_files }}"
+  register: "critical_files_result"
+
+- name: "Restrict su to wheel group only (pam_wheel)"
+  when: "linux_restrict_su_to_wheel | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/pam.d/su"
+    regexp: '^#?auth\s+required\s+pam_wheel.so'
+    line: "auth            required        pam_wheel.so use_uid"
+    insertafter: '^#.*pam_wheel.so'
+  notify: "PAM changes applied"
+
+- name: "Find and report (but do not auto-fix) world-writable files in sensitive dirs"
+  when: "linux_remove_world_writable | bool"
+  ansible.builtin.find:
+    paths:
+      - "/etc"
+      - "/boot"
+      - "/var/log"
+    recurse: true
+    file_type: any
+    mode: "o+w"
+  register: "world_writable_files"
+
+- name: "Warn about world-writable files found (manual review required)"
+  when:
+    - "linux_remove_world_writable | bool"
+    - "world_writable_files.matched > 0"
+  ansible.builtin.debug:
+    msg:
+      - "WARNING: World-writable files detected (CIS recommends removal):"
+      - "{{ world_writable_files.files | map(attribute='path') | list }}"
+
+# Optional: auto-fix world-writable (dangerous – only if you trust the scan)
+#- name: "Remove world-writable bit from sensitive files"
+#  ansible.builtin.file:
+#    path: "{{ item.path }}"
+#    mode: "{{ item.mode | int - 2 if (item.mode | int & 2) else item.mode }}"
+#  loop: "{{ world_writable_files.files }}"
+#  when: "linux_remove_world_writable | bool and world_writable_files.matched > 0"
+
+...

@@ -1,0 +1,10 @@
+# Managed by Ansible role: linux_fail2ban_rhel9
+
+[sshd]
+enabled  = true
+port     = {{ linux_fail2ban_jail_sshd_port }}
+filter   = sshd
+logpath  = /var/log/secure
+maxretry = {{ linux_fail2ban_jail_sshd_maxretry }}
+bantime  = {{ linux_fail2ban_jail_sshd_bantime }}
+findtime = {{ linux_fail2ban_jail_sshd_findtime }}

@@ -1,0 +1,19 @@
+---
+
+# Enable GRUB password protection (CIS Level 1)
+linux_bootloader_password_enabled: true
+
+# GRUB superuser name (default root – can be changed for obfuscation)
+linux_bootloader_superuser: "root"
+
+# Password source: prefer environment variable: fail if not set
+# Usage: export LINUX_BOOTLOADER_PASSWORD="MyVeryStrongPass2026!"
+linux_bootloader_password: "{{ lookup('env', 'LINUX_BOOTLOADER_PASSWORD') | default(Undefined) }}"
+
+# Set to true only in very controlled/test environments where you accept password in logs
+linux_bootloader_disable_nolog: false
+
+# Role disable var
+linux_bootloader_password_disabled: false
+
+...

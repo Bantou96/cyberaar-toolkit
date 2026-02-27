@@ -1,0 +1,53 @@
+---
+
+# Global umask for users and root (CIS recommends 027)
+linux_umask_default: "027"
+
+# Apply umask to /etc/profile.d/ (affects login shells)
+linux_umask_apply_profile: true
+
+# Critical files & expected permissions/mode/owner/group (CIS 6.1.x family)
+linux_critical_files:
+  - path: "/etc/passwd"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  - path: "/etc/shadow"
+    mode: "0000"          # or "0640" if pam_unix needs read
+    owner: "root"
+    group: "root"
+  - path: "/etc/group"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  - path: "/etc/gshadow"
+    mode: "0000"
+    owner: "root"
+    group: "root"
+  - path: "/etc/ssh/sshd_config"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  - path: "/boot/grub2/grub.cfg"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  - path: "/etc/security/opasswd"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  - path: "/var/log/lastlog"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+
+# Restrict su to wheel group only (CIS 5.7)
+linux_restrict_su_to_wheel: true
+
+# Remove world-writable files in /etc, /boot, /var/log (careful scan)
+linux_remove_world_writable: false   # set true only after testing
+
+# Role disable
+linux_file_permissions_disabled: false
+
+...

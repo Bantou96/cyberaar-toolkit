@@ -1,0 +1,75 @@
+---
+
+- name: "Fail if GRUB password is not provided via environment variable"
+  when: "linux_bootloader_password is undefined or linux_bootloader_password == ''"
+  ansible.builtin.fail:
+    msg: >
+      GRUB bootloader password is not defined.
+      Set it via environment variable:
+        export LINUX_BOOTLOADER_PASSWORD="YourVeryStrongPasswordHere"
+      Then re-run the playbook.
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Ensure grub2-tools are installed (needed for mkpasswd-pbkdf2)"
+  ansible.builtin.package:
+    name: "grub2-tools"
+    state: "present"
+
+- name: "Generate PBKDF2 hashed password for GRUB"
+  ansible.builtin.command: >-
+    grub2-mkpasswd-pbkdf2 --iteration-count=100000
+  args:
+    stdin: "{{ linux_bootloader_password }}"
+  changed_when: false
+  register: "grub_pbkdf2_output"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Parse the generated GRUB PBKDF2 hash"
+  ansible.builtin.set_fact:
+    grub_pbkdf2_hash: "{{ grub_pbkdf2_output.stdout | regex_search('password_pbkdf2 .* (grub\\.pbkdf2\\.sha512\\..*)', '\\1') | first }}"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Deploy GRUB password configuration file (/etc/grub.d/01_users)"
+  ansible.builtin.template:
+    src: "01_users.j2"
+    dest: "/etc/grub.d/01_users"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+  register: "grub_users_result"
+  notify: "Rebuild GRUB config"
+
+- name: "Ensure /boot/grub2/grub.cfg is regenerated if password config changed"
+  when: "grub_users_result.changed"
+  ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
+  changed_when: true
+  notify: "GRUB config updated - reboot recommended"
+
+- name: "Ensure GRUB config file has strict permissions"
+  ansible.builtin.file:
+    path: "/boot/grub2/grub.cfg"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+
+- name: "Remove legacy / obsolete GRUB user.cfg in EFI path (if exists)"
+  when:
+    - ansible_distribution == 'RedHat' or ansible_distribution in ['AlmaLinux', 'Rocky']
+    - ansible_distribution_major_version == '9'
+    - ansible_facts['mounts'] | selectattr('mount', 'equalto', '/boot/efi') | list | length > 0  # only if EFI present
+  ansible.builtin.file:
+    path: "/boot/efi/EFI/redhat/user.cfg"
+    state: "absent"
+  changed_when: false  # safe no-op if missing
+  register: legacy_efi_user_cfg_removed
+  failed_when: false
+
+- name: "Debug GRUB password application status"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "GRUB password protection applied: {{ 'yes' if grub_users_result.changed else 'already present' }}"
+      - "Superuser defined: {{ linux_bootloader_superuser }}"
+
+...

@@ -1,0 +1,9 @@
+# Managed by Ansible role: linux_fail2ban_rhel9
+# Bans IPs that firewalld already rejected multiple times
+
+[firewalld]
+enabled  = true
+filter   = firewalld
+logpath  = /var/log/firewalld
+maxretry = {{ linux_fail2ban_jail_firewalld_maxretry }}
+bantime  = {{ linux_fail2ban_jail_firewalld_bantime }}

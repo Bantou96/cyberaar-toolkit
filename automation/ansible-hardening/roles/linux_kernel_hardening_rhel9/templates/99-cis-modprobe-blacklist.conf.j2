@@ -1,0 +1,66 @@
+# CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 - Disable unused kernel modules
+# Managed by Ansible role: linux_kernel_hardening_rhel9
+# Last applied: {{ ansible_date_time.iso8601 }}
+#
+# Rationale: Reducing available kernel modules shrinks attack surface (rare filesystems,
+# legacy interfaces often targeted by exploits/rootkits). See CIS 1.1.1.x controls.
+
+{% if linux_kernel_blacklist_filesystems | bool %}
+# 1.1.1.1 cramfs - compressed read-only FS (embedded/old)
+install cramfs /bin/false
+blacklist cramfs
+
+# 1.1.1.2 freevxfs - Veritas filesystem (HP-UX legacy)
+install freevxfs /bin/false
+blacklist freevxfs
+
+# 1.1.1.3 hfs - Apple Hierarchical FS
+install hfs /bin/false
+blacklist hfs
+
+# 1.1.1.4 hfsplus - Apple HFS+ (extended)
+install hfsplus /bin/false
+blacklist hfsplus
+
+# 1.1.1.5 jffs2 - Journaling Flash FS (embedded)
+install jffs2 /bin/false
+blacklist jffs2
+
+# 1.1.1.6 squashfs - compressed read-only (live CDs/containers, often unused on servers)
+install squashfs /bin/false
+blacklist squashfs
+
+# 1.1.1.7 udf - Universal Disk Format (optical media)
+install udf /bin/false
+blacklist udf
+{% endif %}
+
+{% if linux_kernel_blacklist_usb_storage | bool %}
+# 1.1.1.8 usb-storage - USB mass storage (disable on servers to block rogue USB devices)
+install usb_storage /bin/false
+blacklist usb_storage
+{% endif %}
+
+{% if linux_kernel_blacklist_firewire | bool %}
+# FireWire (IEEE 1394) - legacy, DMA attacks possible
+install firewire-core /bin/false
+blacklist firewire-core
+install firewire-ohci /bin/false
+blacklist firewire-ohci
+install firewire-sbp2 /bin/false
+blacklist firewire-sbp2
+{% endif %}
+
+{% if linux_kernel_blacklist_thunderbolt | bool %}
+# Thunderbolt networking/DMA - high-risk if exposed
+install thunderbolt /bin/false
+blacklist thunderbolt
+install thunderbolt-net /bin/false
+blacklist thunderbolt-net
+{% endif %}
+
+{% if linux_kernel_blacklist_atm | bool %}
+# ATM networking - very rare, disable per STIG guidance
+install atm /bin/false
+blacklist atm
+{% endif %}

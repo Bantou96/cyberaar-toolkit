@@ -1,0 +1,84 @@
+---
+
+- name: "Harden RHEL 9 family servers (CIS aligned baseline)"
+  hosts: "{{ target | default('linux,linux_servers') }}"
+  become: true
+  gather_facts: true
+
+  vars:
+    # Global control variables – override via --extra-vars or inventory/group_vars
+    hardening_run_crypto:           true
+    hardening_run_authselect:       true
+    hardening_run_kernel:           true
+    hardening_run_auditing:         true
+    hardening_run_firewalld:        true
+    hardening_run_fail2ban:         true
+    hardening_run_services:         true
+    hardening_run_file_perms:       true
+    hardening_run_selinux:          true
+    hardening_run_bootloader:       true
+    hardening_run_users:            true
+
+  pre_tasks:
+    - name: Gather facts (required by many roles)
+      ansible.builtin.setup:
+
+  roles:
+    # Order is important – some roles depend on previous ones
+    # (example: file permissions before SELinux relabel, users before sudo restrictions)
+
+    - role: linux_crypto_policies_rhel9
+      when: hardening_run_crypto | bool
+      tags: [crypto, hardening]
+
+    - role: linux_authselect_rhel9
+      when: hardening_run_authselect | bool
+      tags: [auth, hardening]
+
+    - role: linux_kernel_hardening_rhel9
+      when: hardening_run_kernel | bool
+      tags: [kernel, sysctl, modules, hardening]
+
+    - role: linux_auditing_rhel9
+      when: hardening_run_auditing | bool
+      tags: [audit, logging, hardening]
+
+    - role: linux_firewalld_rhel9
+      when: hardening_run_firewalld | bool
+      tags: [firewall, network, hardening]
+
+    - role: linux_fail2ban_rhel9
+      when: hardening_run_fail2ban | bool
+      tags: [fail2ban, brute-force, hardening]
+
+    - role: linux_disable_unnecessary_services_rhel9
+      when: hardening_run_services | bool
+      tags: [services, daemons, hardening]
+
+    - role: linux_file_permissions_rhel9
+      when: hardening_run_file_perms | bool
+      tags: [permissions, umask, hardening]
+
+    - role: linux_selinux_rhel9
+      when: hardening_run_selinux | bool
+      tags: [selinux, mac, hardening]
+
+    - role: linux_bootloader_password_rhel9
+      when: hardening_run_bootloader | bool
+      tags: [bootloader, grub, hardening]
+
+    - role: linux_user_management_rhel9
+      when: hardening_run_users | bool
+      tags: [users, accounts, hardening]
+
+  post_tasks:
+    - name: Final hardening status summary
+      ansible.builtin.debug:
+        msg: |
+          Hardening completed on {{ inventory_hostname }}
+          - SELinux: {{ ansible_selinux.status | default('unknown') }}
+          - Firewall: {{ ansible_facts.services['firewalld.service'].status | default('unknown') }}
+          - Fail2ban: {{ ansible_facts.services['fail2ban.service'].status | default('unknown') }}
+          - SSH root login: {{ 'disabled' if 'PermitRootLogin no' in ansible_facts.sshd_config else 'enabled' }}
+
+...

@@ -1,0 +1,52 @@
+---
+
+- name: "Ensure crypto-policies package is present"
+  ansible.builtin.package:
+    name: "crypto-policies"
+    state: "present"
+
+- name: "Register the current active crypto policy"
+  ansible.builtin.command: "update-crypto-policies --show"
+  changed_when: false
+  check_mode: false
+  register: "linux_crypto_policies_current"
+
+- name: "Set fact for current policy"
+  ansible.builtin.set_fact:
+    linux_crypto_policies_active: "{{ linux_crypto_policies_current.stdout | trim }}"
+
+- name: "Create local.d directory if subpolicies are defined"
+  when: "linux_crypto_policies_subpolicies | length > 0"
+  ansible.builtin.file:
+    path: "/etc/crypto-policies/local.d"
+    state: "directory"
+    mode: "0755"
+
+- name: "Apply custom subpolicy '{{ item }}'"
+  ansible.builtin.copy:
+    content: "{{ item.content | default('hash = -SHA1') }}"   # for no-sha1; extend with template or per-item content later
+    dest: "/etc/crypto-policies/local.d/{{ item.name }}.pmod"
+    mode: "0644"
+    backup: true
+  loop: "{{ linux_crypto_policies_subpolicies | default([]) | map('combine', {'name': item if item is string else item.name}) }}"
+  register: "linux_crypto_policies_subpolicy_result"
+  loop_control:
+    label: "{{ item.name }}.pmod"
+
+- name: "Update crypto policy only if needed"
+  when:
+    - "linux_crypto_policies_policy is defined"
+    - "linux_crypto_policies_policy != linux_crypto_policies_active or linux_crypto_policies_subpolicy_result.changed"
+  ansible.builtin.command:
+    cmd: "update-crypto-policies {{ '--no-reload' if not linux_crypto_policies_reload | bool else '' }} --set {{ linux_crypto_policies_policy }}"
+  register: "policy_update"
+  changed_when: "policy_update.rc == 0"
+  notify: "Reload services affected by crypto policy change"
+
+# Optional debug (remove or keep behind verbosity)
+- name: "Debug current vs desired policy"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "Current: '{{ linux_crypto_policies_active }}' | Desired: '{{ linux_crypto_policies_policy }}' | Subpolicy changed: {{ linux_crypto_policies_subpolicy_result.changed }}"
+
+...
