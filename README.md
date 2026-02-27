@@ -8,6 +8,12 @@
 
 Inspired by recent attacks (e.g., DAF breach in 2026), we unite Senegalese talents (home & diaspora) + global allies to build a living guide in French & English.
 
+# Act
+
+Hardening Ansible RHEL 9 → [automation/ansible/README.md](automation/ansible/README.md)
+
+Documentation complète : [docs/](automation/ansible/docs/)
+
 ## Goal
 Create a free, community-maintained resource (PDF/whitepaper eventually) with practical, context-adapted advice for sectors like:
 - Energy & utilities
