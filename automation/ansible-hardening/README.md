@@ -8,6 +8,10 @@ Provide a practical, maintainable, and mostly idempotent set of Ansible roles to
 **Current focus**  
 RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & selected Level 2)
 
+**Current version**: v1.1.0 (March 2026)  
+**Total roles**: 21  
+**License**: [GPL-3.0](../../LICENSE)
+
 ## Included Roles
 
 | Role                                   | Purpose                                      | CIS Section(s)        | Tags                 |
@@ -23,6 +27,8 @@ RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & sel
 | linux_selinux_rhel9                    | Enforcing mode + booleans + restorecon       | 1.6                   | selinux             |
 | linux_bootloader_password_rhel9        | GRUB2 PBKDF2 password                        | 1.4                   | bootloader, grub    |
 | linux_user_management_rhel9            | Root lock, legacy users, password policy     | 5.2, 5.3, 5.4, 5.5    | users, accounts     |
+
+Added in v1.1.0: 
 
 | Category             | Role                                   | Purpose                                      |
 |----------------------|----------------------------------------|----------------------------------------------|
