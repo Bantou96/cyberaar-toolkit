@@ -23,6 +23,9 @@ RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & sel
 | linux_selinux_rhel9                    | Enforcing mode + booleans + restorecon       | 1.6                   | selinux             |
 | linux_bootloader_password_rhel9        | GRUB2 PBKDF2 password                        | 1.4                   | bootloader, grub    |
 | linux_user_management_rhel9            | Root lock, legacy users, password policy     | 5.2, 5.3, 5.4, 5.5    | users, accounts     |
+
+| Category             | Role                                   | Purpose                                      |
+|----------------------|----------------------------------------|----------------------------------------------|
 | New in v1.1.0        | linux_aide_rhel9                       | File integrity monitoring (AIDE)             |
 | New in v1.1.0        | linux_chrony_rhel9                     | Secure NTP with Chrony                       |
 | New in v1.1.0        | linux_ssh_hardening_rhel9              | Deep SSH server hardening                    |
