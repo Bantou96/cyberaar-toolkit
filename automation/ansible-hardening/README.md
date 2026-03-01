@@ -23,7 +23,16 @@ RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & sel
 | linux_selinux_rhel9                    | Enforcing mode + booleans + restorecon       | 1.6                   | selinux             |
 | linux_bootloader_password_rhel9        | GRUB2 PBKDF2 password                        | 1.4                   | bootloader, grub    |
 | linux_user_management_rhel9            | Root lock, legacy users, password policy     | 5.2, 5.3, 5.4, 5.5    | users, accounts     |
-
+| New in v1.1.0        | linux_aide_rhel9                       | File integrity monitoring (AIDE)             |
+| New in v1.1.0        | linux_chrony_rhel9                     | Secure NTP with Chrony                       |
+| New in v1.1.0        | linux_ssh_hardening_rhel9              | Deep SSH server hardening                    |
+| New in v1.1.0        | linux_tmp_mounts_rhel9                 | noexec/nodev/nosuid on temp dirs             |
+| New in v1.1.0        | linux_dnf_automatic_rhel9              | Automatic security updates                   |
+| New in v1.1.0        | linux_core_dumps_rhel9                 | Restrict core dumps                          |
+| New in v1.1.0        | linux_ip_forwarding_rhel9              | Disable IP forwarding & redirects            |
+| New in v1.1.0        | linux_login_banner_rhel9               | SSH & console banners (CyberAar branding)    |
+| New in v1.1.0        | linux_ctrl_alt_del_rhel9               | Disable Ctrl+Alt+Del reboot                  |
+| New in v1.1.0        | linux_secure_boot_rhel9                | Enforce Secure Boot verification             |
 ## Quick Start
 
 ```bash
