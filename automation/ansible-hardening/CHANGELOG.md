@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-01
+
+### Added
+
+- 10 new hardening roles for RHEL 9 family servers:  
+  - linux_aide_rhel9: File integrity monitoring (AIDE)  
+  - linux_chrony_rhel9: Secure NTP with Chrony  
+  - linux_ssh_hardening_rhel9: Deep SSH server hardening  
+  - linux_tmp_mounts_rhel9: noexec/nodev/nosuid on temp dirs  
+  - linux_dnf_automatic_rhel9: Automatic security updates  
+  - linux_core_dumps_rhel9: Restrict core dumps  
+  - linux_ip_forwarding_rhel9: Disable IP forwarding & redirects  
+  - linux_login_banner_rhel9: SSH & console banners (CyberAar branding)  
+  - linux_ctrl_alt_del_rhel9: Disable Ctrl+Alt+Del reboot    
+  - linux_secure_boot_rhel9: Enforce Secure Boot verification  
+
+- Per-role detailed documentation in docs/ (purpose, CIS refs, vars, usage, testing, notes)  
+- Consistent formatting across all roles (double quotes, when after name, ---/...)  
+- Updated root README with new structure, roles table, and quick-start  
+- LICENSE aligned to GPL-3.0 everywhere
+
+### Changed
+
+- Minor refinements in existing roles (e.g. banner templates with CyberAar branding in English)
+
+### Security
+
+- Enhanced protections like Secure Boot enforcement, core dump restrictions, IP forwarding disable
+
 ## [1.0.0] - 2026-02-26
 
 ### Added
