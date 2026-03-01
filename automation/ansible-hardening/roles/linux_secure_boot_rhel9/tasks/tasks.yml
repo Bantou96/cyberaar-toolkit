@@ -1,0 +1,21 @@
+---
+
+- name: "Check Secure Boot status via mokutil"
+  ansible.builtin.command: "mokutil --sb-state"
+  changed_when: false
+  register: "secure_boot_status"
+  failed_when: "secure_boot_status.rc != 0"
+
+- name: "Fail if Secure Boot is not enabled (enforce mode)"
+  when:
+    - "linux_secure_boot_enforce | bool"
+    - "'SecureBoot enabled' not in secure_boot_status.stdout"
+  ansible.builtin.fail:
+    msg: "Secure Boot is disabled! Current state: {{ secure_boot_status.stdout }}. This server should have Secure Boot enabled."
+
+- name: "Debug Secure Boot status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "Secure Boot state: {{ secure_boot_status.stdout }}"
+
+...

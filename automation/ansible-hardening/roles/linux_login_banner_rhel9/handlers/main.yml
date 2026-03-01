@@ -1,0 +1,9 @@
+---
+
+# No handlers needed – banner changes are immediate (shown on next login)
+# If you want to force a message on current sessions, you could add:
+# - name: "Notify banner updated"
+#   ansible.builtin.debug:
+#     msg: "Login banners updated – visible on next login/console session"
+
+...

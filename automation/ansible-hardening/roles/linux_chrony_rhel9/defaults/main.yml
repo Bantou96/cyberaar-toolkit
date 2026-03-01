@@ -1,0 +1,27 @@
+---
+
+# Enable Chrony hardening (default true)
+linux_chrony_enabled: true
+
+# Chrony mode: client (default), server, or both
+linux_chrony_mode: "client"          # client | server | both
+
+# NTP servers (CIS recommends at least 3–4 trusted sources)
+linux_chrony_servers:
+  - "0.pool.ntp.org iburst"
+  - "1.pool.ntp.org iburst"
+  - "2.pool.ntp.org iburst"
+  - "3.pool.ntp.org iburst"
+
+# Enable NTS (Network Time Security) – preferred when available
+linux_chrony_use_nts: true
+
+# Restrict access (no queries from untrusted networks)
+linux_chrony_allow:
+  - "127.0.0.1"
+  - "::1"
+
+# Role disable var
+linux_chrony_disabled: false
+
+...

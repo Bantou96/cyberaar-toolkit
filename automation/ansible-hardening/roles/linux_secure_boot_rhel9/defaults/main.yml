@@ -1,0 +1,9 @@
+---
+
+linux_secure_boot_enabled: true
+
+linux_secure_boot_enforce: true
+
+linux_secure_boot_disabled: false
+
+...

@@ -1,0 +1,6 @@
+---
+
+# No handlers needed – sysctl module applies changes live
+# If you want a reload handler later, you can add it here
+
+...

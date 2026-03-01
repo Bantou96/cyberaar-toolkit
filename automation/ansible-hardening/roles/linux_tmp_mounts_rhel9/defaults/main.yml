@@ -1,0 +1,21 @@
+---
+
+# Enable tmp mounts hardening (CIS 1.1.2–1.1.5)
+linux_tmp_mounts_enabled: true
+
+# Mount options (CIS recommended)
+linux_tmp_mount_options:
+  - "noexec"
+  - "nodev"
+  - "nosuid"
+
+# Paths to harden (standard temp dirs)
+linux_tmp_mount_paths:
+  - "/tmp"
+  - "/var/tmp"
+  - "/dev/shm"
+
+# Role disable var
+linux_tmp_mounts_disabled: false
+
+...

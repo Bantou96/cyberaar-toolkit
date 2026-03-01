@@ -1,0 +1,8 @@
+---
+
+- name: "Apply Secure Boot hardening checks (RHEL 9 family)"
+  when: "linux_secure_boot_disabled is not defined or not linux_secure_boot_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_secure_boot_rhel9"
+
+...

@@ -1,0 +1,23 @@
+---
+
+# Enable automatic security updates (CIS 1.7.1)
+linux_dnf_automatic_enabled: true
+
+# Apply only security updates (recommended for servers)
+linux_dnf_automatic_apply_updates: "security"
+
+# Email notifications (optional – requires mail setup)
+linux_dnf_automatic_email_notify: true
+linux_dnf_automatic_email_to: "root@localhost"
+linux_dnf_automatic_email_from: "dnf-automatic@{{ ansible_fqdn }}"
+
+# When to apply updates (daily is CIS default)
+linux_dnf_automatic_schedule: "daily"
+
+# Random delay (minutes) to avoid thundering herd
+linux_dnf_automatic_random_sleep: 300
+
+# Role disable var
+linux_dnf_automatic_disabled: false
+
+...
