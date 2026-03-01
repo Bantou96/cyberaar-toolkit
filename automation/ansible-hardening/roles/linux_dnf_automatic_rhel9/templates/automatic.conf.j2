@@ -1,0 +1,22 @@
+# Managed by Ansible role linux_dnf_automatic_rhel9
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[commands]
+# Only apply security updates (CIS safe choice)
+upgrade_type = {{ linux_dnf_automatic_apply_updates }}
+
+# Random delay before starting (minutes)
+random_sleep = {{ linux_dnf_automatic_random_sleep }}
+
+[emit_via]
+# Emit via email (requires postfix or mail setup)
+emit_via = {{ 'email' if linux_dnf_automatic_email_notify | bool else 'stdio' }}
+
+# Email settings
+email_from = {{ linux_dnf_automatic_email_from }}
+email_to = {{ linux_dnf_automatic_email_to }}
+email_host = localhost
+
+[base]
+# Debug level (0-10, higher = more verbose)
+debuglevel = 1

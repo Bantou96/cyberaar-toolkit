@@ -1,0 +1,55 @@
+---
+
+- name: "Set core dump limit to 0 in limits.conf"
+  ansible.builtin.lineinfile:
+    path: "/etc/security/limits.conf"
+    regexp: "^\\*\\s+hard\\s+core\\s+"
+    line: "* hard core {{ linux_core_dumps_limit }}"
+    create: true
+    mode: "0644"
+  register: "limits_conf_result"
+
+- name: "Set core dump limit to 0 for root in limits.conf"
+  ansible.builtin.lineinfile:
+    path: "/etc/security/limits.conf"
+    regexp: "^root\\s+hard\\s+core\\s+"
+    line: "root hard core {{ linux_core_dumps_limit }}"
+    create: true
+    mode: "0644"
+  register: "root_limits_result"
+
+- name: "Disable setuid core dumps (fs.suid_dumpable)"
+  ansible.posix.sysctl:
+    name: "fs.suid_dumpable"
+    value: "{{ linux_core_suid_dumpable }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-core-dumps.conf"
+    reload: true
+  register: "suid_dumpable_result"
+
+- name: "Set core pattern to /dev/null (prevent core files in cwd)"
+  ansible.posix.sysctl:
+    name: "kernel.core_pattern"
+    value: "{{ linux_core_pattern }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-core-dumps.conf"
+    reload: true
+  register: "core_pattern_result"
+
+- name: "Apply sysctl changes immediately if needed"
+  when: "suid_dumpable_result.changed or core_pattern_result.changed"
+  ansible.builtin.command: "sysctl --system"
+  changed_when: false
+
+- name: "Debug core dump hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Core limit applied: {{ limits_conf_result.changed | default(false) }}"
+      - "Root core limit applied: {{ root_limits_result.changed | default(false) }}"
+      - "fs.suid_dumpable: {{ linux_core_suid_dumpable }}"
+      - "kernel.core_pattern: {{ linux_core_pattern }}"
+
+...

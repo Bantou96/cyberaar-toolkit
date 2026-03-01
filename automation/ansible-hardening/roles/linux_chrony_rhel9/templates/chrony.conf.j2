@@ -1,0 +1,33 @@
+# Managed by Ansible role linux_chrony_rhel9
+# Generated: {{ ansible_date_time.iso8601 }}
+
+# CIS-aligned NTP hardening
+
+# Use trusted servers (with iburst for fast sync)
+{% for server in linux_chrony_servers %}
+{{ server }}
+{% endfor %}
+
+# Enable NTS if supported
+{% if linux_chrony_use_nts | bool %}
+nts
+{% endif %}
+
+# Allow only local queries
+{% for allow in linux_chrony_allow %}
+allow {{ allow }}
+{% endfor %}
+
+# Deny all other access
+deny all
+
+# Drift file location
+driftfile /var/lib/chrony/drift
+
+# Log statistics
+makestep 1.0 3
+rtcsync
+
+# Logging
+logdir /var/log/chrony
+log measurements statistics tracking

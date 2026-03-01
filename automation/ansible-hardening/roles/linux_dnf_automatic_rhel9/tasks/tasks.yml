@@ -1,0 +1,37 @@
+---
+
+- name: "Install dnf-automatic package"
+  ansible.builtin.package:
+    name: "dnf-automatic"
+    state: "present"
+
+- name: "Deploy dnf-automatic configuration"
+  ansible.builtin.template:
+    src: "automatic.conf.j2"
+    dest: "/etc/dnf/automatic.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "dnf_auto_config_result"
+  notify: "Restart dnf-automatic timer"
+
+- name: "Enable and start dnf-automatic timer (daily)"
+  ansible.builtin.systemd:
+    name: "dnf-automatic.timer"
+    state: "started"
+    enabled: true
+    masked: false
+
+- name: "Debug dnf-automatic status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "systemctl status dnf-automatic.timer"
+  changed_when: false
+  register: "dnf_timer_status"
+
+- name: "Show dnf-automatic timer status"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "{{ dnf_timer_status.stdout_lines | default([]) }}"
+
+...

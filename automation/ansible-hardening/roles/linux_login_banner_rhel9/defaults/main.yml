@@ -1,0 +1,18 @@
+---
+
+# Enable login banners (CIS 5.6)
+linux_login_banner_enabled: true
+
+# Pre-login banner (/etc/issue.net) – shown before SSH login
+linux_login_banner_prelogin: true
+
+# Post-login banner (/etc/motd) – shown after successful login
+linux_login_banner_postlogin: true
+
+# Additional static issue file (/etc/issue) – shown on console/TTY
+linux_login_banner_issue: true
+
+# Role disable var
+linux_login_banner_disabled: false
+
+...

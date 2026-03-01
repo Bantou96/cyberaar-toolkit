@@ -1,0 +1,18 @@
+---
+
+# Enable core dump hardening (CIS 1.5.4)
+linux_core_dumps_enabled: true
+
+# Disable core dumps globally (recommended for servers)
+linux_core_dumps_limit: "0"
+
+# Disable setuid core dumps (CIS 1.5.4)
+linux_core_suid_dumpable: "0"
+
+# Restrict core pattern (no executable core files in cwd)
+linux_core_pattern: "/dev/null"
+
+# Role disable var
+linux_core_dumps_disabled: false
+
+...

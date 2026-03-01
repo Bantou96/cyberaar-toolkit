@@ -1,0 +1,61 @@
+---
+
+- name: "Disable IP forwarding (IPv4)"
+  ansible.posix.sysctl:
+    name: "net.ipv4.ip_forward"
+    value: "{{ linux_ip_forwarding }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-ip-forwarding.conf"
+    reload: true
+  register: "ipv4_forward_result"
+
+- name: "Disable IP forwarding (IPv6)"
+  ansible.posix.sysctl:
+    name: "net.ipv6.conf.all.forwarding"
+    value: "{{ linux_ipv6_forwarding }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-ip-forwarding.conf"
+    reload: true
+  register: "ipv6_forward_result"
+
+- name: "Disable accept redirects (IPv4)"
+  ansible.posix.sysctl:
+    name: "net.ipv4.conf.all.accept_redirects"
+    value: "{{ linux_accept_redirects }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-ip-forwarding.conf"
+    reload: true
+  register: "ipv4_redirects_result"
+
+- name: "Disable accept redirects (IPv6)"
+  ansible.posix.sysctl:
+    name: "net.ipv6.conf.all.accept_redirects"
+    value: "{{ linux_accept_redirects }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-ip-forwarding.conf"
+    reload: true
+  register: "ipv6_redirects_result"
+
+- name: "Apply sysctl changes immediately"
+  when: >
+    ipv4_forward_result.changed or
+    ipv6_forward_result.changed or
+    ipv4_redirects_result.changed or
+    ipv6_redirects_result.changed
+  ansible.builtin.command: "sysctl --system"
+  changed_when: false
+
+- name: "Debug IP forwarding status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "net.ipv4.ip_forward: {{ linux_ip_forwarding }}"
+      - "net.ipv6.conf.all.forwarding: {{ linux_ipv6_forwarding }}"
+      - "accept_redirects (IPv4/IPv6): {{ linux_accept_redirects }}"
+      - "Any changes applied: {{ (ipv4_forward_result.changed or ipv6_forward_result.changed or ipv4_redirects_result.changed or ipv6_redirects_result.changed) | default(false) }}"
+
+...

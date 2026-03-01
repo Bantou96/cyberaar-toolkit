@@ -1,0 +1,37 @@
+---
+
+- name: "Mask Ctrl+Alt+Del target to prevent reboot"
+  when: "linux_ctrl_alt_del_enabled | bool"
+  ansible.builtin.systemd:
+    name: "ctrl-alt-del.target"
+    masked: true
+    state: "stopped"
+  register: "cad_mask_result"
+
+- name: "Create /etc/systemd/system/ctrl-alt-del.target override to ensure mask"
+  when: "linux_ctrl_alt_del_enabled | bool"
+  ansible.builtin.copy:
+    content: "[Unit]\nDescription=Ctrl-Alt-Del disabled by CyberAar hardening\n"
+    dest: "/etc/systemd/system/ctrl-alt-del.target.d/override.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  register: "cad_override_result"
+
+- name: "Reload systemd daemon after mask/override"
+  when: "cad_mask_result.changed or cad_override_result.changed"
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: "Debug Ctrl+Alt+Del status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "systemctl is-enabled ctrl-alt-del.target"
+  changed_when: false
+  register: "cad_status"
+
+- name: "Show Ctrl+Alt+Del mask status"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "ctrl-alt-del.target masked: {{ cad_status.stdout | default('unknown') }}"
+
+...

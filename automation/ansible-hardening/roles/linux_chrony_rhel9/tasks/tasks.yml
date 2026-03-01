@@ -1,0 +1,36 @@
+---
+
+- name: "Install chrony package"
+  ansible.builtin.package:
+    name: "chrony"
+    state: "present"
+
+- name: "Deploy chrony.conf configuration"
+  ansible.builtin.template:
+    src: "chrony.conf.j2"
+    dest: "/etc/chrony.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "chrony_config_result"
+  notify: "Restart chronyd"
+
+- name: "Enable and start chronyd service"
+  ansible.builtin.service:
+    name: "chronyd"
+    state: "started"
+    enabled: true
+
+- name: "Verify chronyd status"
+  ansible.builtin.command: "chronyc tracking"
+  changed_when: false
+  register: "chrony_status"
+  failed_when: "chrony_status.rc != 0"
+
+- name: "Debug chrony status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "{{ chrony_status.stdout_lines | default([]) }}"
+
+...

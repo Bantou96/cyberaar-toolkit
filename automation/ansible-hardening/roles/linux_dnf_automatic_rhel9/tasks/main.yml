@@ -1,0 +1,8 @@
+---
+
+- name: "Apply dnf-automatic security updates (RHEL 9 family)"
+  when: "linux_dnf_automatic_disabled is not defined or not linux_dnf_automatic_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_dnf_automatic_rhel9"
+
+...

@@ -1,0 +1,47 @@
+---
+
+- name: "Deploy CyberAar pre-login banner (/etc/issue.net)"
+  when: "linux_login_banner_prelogin | bool"
+  ansible.builtin.template:
+    src: "issue.net.j2"
+    dest: "/etc/issue.net"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "prelogin_banner_result"
+  changed_when: "prelogin_banner_result.changed"
+
+- name: "Deploy CyberAar post-login banner (/etc/motd)"
+  when: "linux_login_banner_postlogin | bool"
+  ansible.builtin.template:
+    src: "motd.j2"
+    dest: "/etc/motd"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "motd_result"
+  changed_when: "motd_result.changed"
+
+- name: "Deploy CyberAar console login banner (/etc/issue)"
+  when: "linux_login_banner_issue | bool"
+  ansible.builtin.template:
+    src: "issue.j2"
+    dest: "/etc/issue"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "issue_banner_result"
+  changed_when: "issue_banner_result.changed"
+
+- name: "Debug login banner status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Pre-login banner (/etc/issue.net) updated: {{ prelogin_banner_result.changed | default(false) }}"
+      - "Post-login banner (/etc/motd) updated: {{ motd_result.changed | default(false) }}"
+      - "Console banner (/etc/issue) updated: {{ issue_banner_result.changed | default(false) }}"
+
+...
