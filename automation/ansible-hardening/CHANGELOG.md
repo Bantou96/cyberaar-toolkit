@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-03-03
+
+### Added
+
+- **21 Ubuntu/Debian hardening roles** — complete CIS-aligned hardening library
+  for Debian-family systems, mirroring the RHEL9 role structure:
+  - `linux_ssh_hardening_ubuntu` — SSH server hardening (Protocol 2, key auth, CIS ciphers)
+  - `linux_kernel_hardening_ubuntu` — sysctl hardening + module blacklisting
+  - `linux_auditing_ubuntu` — auditd + 14-category audit rules + rsyslog forwarding
+  - `linux_aide_ubuntu` — AIDE file integrity with template-based config
+  - `linux_bootloader_password_ubuntu` — GRUB PBKDF2 password protection
+  - `linux_firewall_ubuntu` — UFW hardening (replaces firewalld)
+  - `linux_apparmor_ubuntu` — AppArmor enforce-all (replaces SELinux)
+  - `linux_authselect_ubuntu` — PAM/pwquality/faillock hardening (replaces authselect)
+  - `linux_unattended_upgrades_ubuntu` — Automatic security updates (replaces dnf-automatic)
+  - `linux_chrony_ubuntu` — NTP hardening, disables systemd-timesyncd
+  - `linux_login_banner_ubuntu` — Login banners, disables Ubuntu dynamic MOTD
+  - `linux_crypto_policies_ubuntu` — OpenSSL + GnuTLS TLS hardening
+  - `linux_disable_unnecessary_services_ubuntu` — Stop/mask 20+ unnecessary services
+  - `linux_user_management_ubuntu` — System accounts, umask, inactive policy
+  - `linux_fail2ban_ubuntu` — fail2ban with systemd backend
+  - `linux_ip_forwarding_ubuntu` — IP forwarding sysctl with validation
+  - `linux_ctrl_alt_del_ubuntu` — Mask ctrl-alt-del.target
+  - `linux_core_dumps_ubuntu` — Core dump restriction (limits.d + sysctl + systemd)
+  - `linux_tmp_mounts_ubuntu` — /tmp and /dev/shm mount hardening
+  - `linux_secure_boot_ubuntu` — Secure Boot check + /boot permissions
+  - `linux_file_permissions_ubuntu` — Critical file and directory permissions
+
+### Fixed
+
+- **HIGH** `linux_kernel_hardening_rhel9`: sysctl and modprobe template files
+  moved from role root to `templates/` directory — fixes "template not found" on all runs
+- **HIGH** `linux_auditing_rhel9`: `99-cis-audit.rules.j2` was empty — deployed
+  a blank ruleset on every run, wiping all audit configuration
+- **HIGH** `linux_auditing_rhel9`: GRUB cmdline `lineinfile` used
+  `ansible_default_ipv4.gateway` instead of backreference, corrupting kernel params
+- **MEDIUM** `linux_auditing_rhel9`: removed `audispd-plugins` package (merged
+  into `audit` on RHEL9, caused dnf failure)
+
 ## [1.1.0] - 2026-03-01
 
 ### Added
