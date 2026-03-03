@@ -1,0 +1,13 @@
+---
+# =============================================================================
+#  CyberAar — Ansible Collections Requirements
+#  Install: ansible-galaxy collection install -r requirements.yml
+# =============================================================================
+collections:
+  - name: community.general
+    version: ">=7.0.0"
+    # Required for:
+    #   - community.general.ufw    (linux_firewall_ubuntu)
+    #   - community.general.ini_file
+    #   - community.general.sysctl (fallback)
+...

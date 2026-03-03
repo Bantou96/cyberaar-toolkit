@@ -1,0 +1,55 @@
+---
+# =============================================================================
+#  CyberAar — Complete Hardening Pipeline
+#  Pipeline complet de sécurisation — RHEL9 + Ubuntu/Debian
+#
+#  Platforms: RHEL 9 / AlmaLinux 9 / Rocky Linux 9
+#             Ubuntu 20.04 / 22.04 / 24.04
+#             Debian 11 / 12
+#
+#  Steps:
+#    1. Pre-hardening baseline (measure current posture)
+#    2. Hardening (apply all CIS-aligned roles)
+#    3. Post-hardening baseline (measure improvement)
+#
+#  Usage:
+#    # Full pipeline
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml
+#
+#    # Audit only (no hardening)
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml \
+#      --tags baseline --skip-tags hardening
+#
+#    # Hardening only (skip baselines)
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml \
+#      --tags hardening
+#
+#    # One category only (e.g. SSH hardening only)
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml \
+#      --tags ssh
+#
+#    # Dry run (check + diff, no changes)
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml \
+#      --check --diff
+#
+#    # Limit to specific hosts or groups
+#    ansible-playbook -i inventory/hosts.yml playbooks/site.yml \
+#      -l rhel_servers
+#
+#  Requirements:
+#    ansible-galaxy collection install community.general  # for UFW (Ubuntu)
+# =============================================================================
+
+- name: "CyberAar | Step 1 — Pre-Hardening Baseline"
+  ansible.builtin.import_playbook: 1_baseline_before.yml
+  tags: [baseline, before]
+
+- name: "CyberAar | Step 2 — System Hardening"
+  ansible.builtin.import_playbook: 2_hardening.yml
+  tags: [hardening]
+
+- name: "CyberAar | Step 3 — Post-Hardening Baseline"
+  ansible.builtin.import_playbook: 3_baseline_after.yml
+  tags: [baseline, after]
+
+...
