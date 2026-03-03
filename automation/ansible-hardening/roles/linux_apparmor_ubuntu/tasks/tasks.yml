@@ -1,0 +1,78 @@
+---
+
+- name: "Ensure AppArmor packages are installed"
+  ansible.builtin.package:
+    name:
+      - "apparmor"
+      - "apparmor-utils"
+      - "apparmor-profiles"
+      - "apparmor-profiles-extra"
+    state: "present"
+
+- name: "Ensure AppArmor is enabled in GRUB cmdline"
+  ansible.builtin.lineinfile:
+    path: "/etc/default/grub"
+    regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=")(.*)"$'
+    line: '\g<1>\2 apparmor=1 security=apparmor"'
+    backrefs: true
+  register: "grub_apparmor_result"
+
+- name: "Rebuild GRUB config if AppArmor cmdline changed"
+  when: "grub_apparmor_result.changed"
+  ansible.builtin.command: "update-grub"
+  changed_when: true
+
+- name: "Enable and start AppArmor service"
+  ansible.builtin.service:
+    name: "apparmor"
+    state: "started"
+    enabled: true
+
+- name: "Collect currently loaded AppArmor profiles"
+  ansible.builtin.command: "apparmor_status --profiled"
+  changed_when: false
+  register: "aa_profiled"
+
+- name: "Collect profiles in complain mode"
+  ansible.builtin.command: "apparmor_status --complaining"
+  changed_when: false
+  failed_when: false
+  register: "aa_complaining"
+
+- name: "Set all complain-mode profiles to enforce mode"
+  when: "linux_apparmor_enforce_all | bool"
+  ansible.builtin.command: "aa-enforce /etc/apparmor.d/*"
+  changed_when: true
+  failed_when: false
+  register: "aa_enforce_result"
+
+- name: "Set specific profiles to enforce mode"
+  when:
+    - "not linux_apparmor_enforce_all | bool"
+    - "linux_apparmor_enforce_profiles | length > 0"
+  ansible.builtin.command: "aa-enforce {{ item }}"
+  loop: "{{ linux_apparmor_enforce_profiles }}"
+  changed_when: true
+  failed_when: false
+
+- name: "Deploy AppArmor local overrides if defined"
+  when: "linux_apparmor_local_overrides | length > 0"
+  ansible.builtin.template:
+    src: "apparmor-local-override.j2"
+    dest: "/etc/apparmor.d/local/{{ item.profile }}"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  loop: "{{ linux_apparmor_local_overrides }}"
+  register: "aa_override_result"
+  notify: "Reload AppArmor profiles"
+
+- name: "Debug AppArmor status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Profiles loaded: {{ aa_profiled.stdout | default('unknown') }}"
+      - "Profiles in complain mode: {{ aa_complaining.stdout | default('0') }}"
+      - "Enforce-all triggered: {{ aa_enforce_result.changed | default(false) }}"
+
+...

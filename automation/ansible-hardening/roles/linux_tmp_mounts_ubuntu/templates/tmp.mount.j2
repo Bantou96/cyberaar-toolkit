@@ -1,0 +1,18 @@
+# /tmp mount hardening
+# Managed by Ansible role linux_tmp_mounts_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 1.1.2.x
+
+[Unit]
+Description=Temporary Directory (/tmp) - CyberAar hardened
+Documentation=man:hier(7)
+After=local-fs-pre.target
+
+[Mount]
+What=tmpfs
+Where=/tmp
+Type=tmpfs
+Options={{ linux_tmp_mounts_options }}{% if linux_tmp_mounts_size | length > 0 %},size={{ linux_tmp_mounts_size }}{% endif %}
+
+[Install]
+WantedBy=local-fs.target

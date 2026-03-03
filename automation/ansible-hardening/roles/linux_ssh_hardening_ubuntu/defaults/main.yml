@@ -1,0 +1,49 @@
+---
+
+# Disable root login over SSH (CIS 5.1.3.1)
+linux_ssh_permit_root_login: "no"
+
+# Disable password authentication – force key-based auth (CIS 5.1.3.2)
+linux_ssh_password_auth: "no"
+
+# Disable empty passwords (CIS 5.1.8)
+linux_ssh_permit_empty_passwords: "no"
+
+# Disable X11 forwarding (CIS 5.1.10)
+linux_ssh_x11_forwarding: "no"
+
+# Disable TCP forwarding (CIS 5.1.11)
+linux_ssh_allow_tcp_forwarding: "no"
+
+# Disable gateway ports and tunneling
+linux_ssh_gateway_ports: "no"
+linux_ssh_permit_tunnel: "no"
+
+# Strong ciphers/MACs/KexAlgorithms (CIS 5.1.13-5.1.15)
+linux_ssh_ciphers: "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+linux_ssh_macs: "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"
+linux_ssh_kexalgorithms: "curve25519-sha256,curve448-sha512,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512"
+
+# Banner (CIS 5.1.7)
+linux_ssh_banner: "/etc/issue.net"
+
+# Anti-brute-force / anti-DoS (CIS 5.1.5, 5.1.6, 5.1.21)
+linux_ssh_max_auth_tries: 4
+linux_ssh_max_sessions: 4
+linux_ssh_max_startups: "10:30:60"
+linux_ssh_login_grace_time: "30"
+
+# Keepalive
+linux_ssh_client_alive_interval: 300
+linux_ssh_client_alive_count_max: 0
+
+# Subsystem sftp
+linux_ssh_subsystem: "sftp internal-sftp"
+
+# Ubuntu sshd binary path
+linux_ssh_sshd_binary: "/usr/sbin/sshd"
+
+# Role disable var
+linux_ssh_hardening_disabled: false
+
+...

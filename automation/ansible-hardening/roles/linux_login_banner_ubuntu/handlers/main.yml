@@ -1,0 +1,8 @@
+---
+
+# No service restart needed for banner changes
+- name: "Login banner notice"
+  ansible.builtin.debug:
+    msg: "Login banners updated. New banner will be shown on next login."
+
+...

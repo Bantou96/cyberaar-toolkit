@@ -1,0 +1,6 @@
+#!/bin/sh
+exec tail -n +3 $0
+# GRUB password protection - managed by Ansible role linux_bootloader_password_ubuntu
+
+set superusers="{{ linux_bootloader_superuser }}"
+password_pbkdf2 {{ linux_bootloader_superuser }} {{ grub_pbkdf2_hash }}

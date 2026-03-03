@@ -1,0 +1,8 @@
+---
+
+- name: "Apply NTP time synchronization hardening (Ubuntu/Debian family)"
+  when: "linux_chrony_disabled is not defined or not linux_chrony_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_chrony_ubuntu"
+
+...

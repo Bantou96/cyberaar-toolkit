@@ -1,0 +1,77 @@
+---
+
+- name: "Ensure shadow utilities are installed"
+  ansible.builtin.package:
+    name: "passwd"
+    state: "present"
+
+- name: "Lock system accounts that should not be interactive"
+  when: "linux_user_management_lock_system_accounts | bool"
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: "/usr/sbin/nologin"
+    password_lock: true
+  loop: "{{ linux_user_management_system_accounts }}"
+  failed_when: false
+  register: "system_accounts_locked"
+
+- name: "Ensure root is the only UID 0 account"
+  ansible.builtin.shell: >
+    awk -F: '($3 == 0 && $1 != "root") {print $1}' /etc/passwd
+  changed_when: false
+  register: "uid0_non_root"
+  failed_when: "uid0_non_root.stdout | length > 0"
+
+- name: "Set root account shell"
+  ansible.builtin.user:
+    name: "root"
+    shell: "{{ linux_user_management_root_shell }}"
+
+- name: "Ensure root PATH does not include unsafe directories"
+  ansible.builtin.lineinfile:
+    path: "/root/.bashrc"
+    regexp: '^export PATH='
+    line: 'export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    create: true
+    mode: "0640"
+
+- name: "Set umask in /etc/login.defs"
+  ansible.builtin.lineinfile:
+    path: "/etc/login.defs"
+    regexp: '^UMASK'
+    line: "UMASK           {{ linux_user_management_umask }}"
+
+- name: "Set umask in /etc/profile"
+  ansible.builtin.lineinfile:
+    path: "/etc/profile"
+    regexp: '^umask'
+    line: "umask {{ linux_user_management_umask }}"
+
+- name: "Set default umask in /etc/bash.bashrc"
+  ansible.builtin.lineinfile:
+    path: "/etc/bash.bashrc"
+    regexp: '^umask'
+    line: "umask {{ linux_user_management_umask }}"
+    create: true
+    mode: "0644"
+
+- name: "Ensure inactive accounts are locked after grace period"
+  ansible.builtin.command: "useradd -D -f {{ linux_user_management_inactive_days }}"
+  changed_when: true
+
+- name: "Collect users with empty passwords"
+  ansible.builtin.shell: >
+    awk -F: '($2 == "" || $2 == "!!" ) {print $1}' /etc/shadow
+  changed_when: false
+  register: "empty_password_users"
+  failed_when: "empty_password_users.stdout | length > 0"
+
+- name: "Debug user management status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "UID-0 non-root accounts: {{ uid0_non_root.stdout | default('none') }}"
+      - "System accounts locked: {{ system_accounts_locked.changed | default(false) }}"
+      - "Empty password users found: {{ empty_password_users.stdout | default('none') }}"
+
+...

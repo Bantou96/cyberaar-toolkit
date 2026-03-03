@@ -1,0 +1,52 @@
+---
+
+- name: "Ensure /etc/systemd/system directory exists"
+  ansible.builtin.file:
+    path: "/etc/systemd/system"
+    state: "directory"
+    mode: "0755"
+
+- name: "Deploy hardened tmp.mount systemd override"
+  ansible.builtin.template:
+    src: "tmp.mount.j2"
+    dest: "/etc/systemd/system/tmp.mount"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "tmp_mount_result"
+  notify: "Reload and restart tmp.mount"
+
+- name: "Enable tmp.mount to start at boot"
+  ansible.builtin.service:
+    name: "tmp.mount"
+    enabled: true
+
+- name: "Deploy /dev/shm mount hardening via fstab"
+  ansible.builtin.lineinfile:
+    path: "/etc/fstab"
+    regexp: '^tmpfs\s+/dev/shm'
+    line: "tmpfs /dev/shm tmpfs defaults,noexec,nosuid,nodev 0 0"
+    create: false
+  register: "shm_result"
+
+- name: "Remount /dev/shm to apply options without reboot"
+  when: "shm_result.changed"
+  ansible.builtin.command: "mount -o remount /dev/shm"
+  changed_when: true
+  failed_when: false
+
+- name: "Verify /tmp mount options"
+  ansible.builtin.command: "findmnt -n -o OPTIONS /tmp"
+  changed_when: false
+  register: "tmp_options"
+  failed_when: false
+
+- name: "Debug /tmp mount status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "tmp.mount updated: {{ tmp_mount_result.changed | default(false) }}"
+      - "/tmp options: {{ tmp_options.stdout | default('not mounted') }}"
+
+...

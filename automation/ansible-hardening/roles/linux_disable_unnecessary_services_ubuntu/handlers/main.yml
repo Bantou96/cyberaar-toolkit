@@ -1,0 +1,8 @@
+---
+
+# No handlers needed — service module handles state directly
+- name: "Services hardening notice"
+  ansible.builtin.debug:
+    msg: "Unnecessary services disabled. Review list in defaults if a service was unintentionally stopped."
+
+...

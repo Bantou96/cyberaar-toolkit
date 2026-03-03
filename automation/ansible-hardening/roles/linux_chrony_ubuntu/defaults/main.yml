@@ -1,0 +1,30 @@
+---
+
+# NTP servers (use regional/government servers for Senegal infra)
+linux_chrony_servers:
+  - "0.pool.ntp.org"
+  - "1.pool.ntp.org"
+  - "2.pool.ntp.org"
+  - "3.pool.ntp.org"
+# For Senegalese government networks, consider:
+# - "ntp.arc.sn"  (if available)
+
+# NTP server options (iburst = fast initial sync)
+linux_chrony_server_options: "iburst"
+
+# Restrict NTP access (only localhost by default — no NTP server role)
+linux_chrony_allow_networks: []
+# Example:
+# linux_chrony_allow_networks:
+#   - "192.168.1.0/24"
+
+# Step threshold for time adjustment (seconds — 0.5 = 500ms max step)
+linux_chrony_makestep: "1.0 3"
+
+# Enable hardware timestamping if available
+linux_chrony_hwtimestamp: false
+
+# Role disable var
+linux_chrony_disabled: false
+
+...

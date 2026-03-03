@@ -1,0 +1,31 @@
+# OpenSSL configuration
+# Managed by Ansible role linux_crypto_policies_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+openssl_conf = openssl_init
+
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+MinProtocol = {{ linux_crypto_min_tls_version }}
+CipherString = {{ linux_crypto_tls12_ciphers }}
+CipherSuites = {{ linux_crypto_tls13_ciphers }}
+{% if linux_crypto_disable_legacy_tls | bool %}
+# Disable SSLv2, SSLv3, TLS 1.0, TLS 1.1
+Options = ServerPreference,PrioritizeChaCha
+{% endif %}
+
+[req]
+default_bits       = 4096
+default_md         = sha256
+distinguished_name = req_distinguished_name
+prompt             = no
+
+[req_distinguished_name]
+C  = SN
+ST = Dakar
+O  = CyberAar

@@ -1,0 +1,26 @@
+# AIDE configuration
+# Managed by Ansible role linux_aide_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+database_in=file:/var/lib/aide/aide.db
+database_out=file:/var/lib/aide/aide.db.new
+database_new=file:/var/lib/aide/aide.db.new
+gzip_dbout=yes
+verbose=5
+report_url=file:/var/log/aide/aide-report.log
+report_url=stdout
+
+CYBERAAR = {{ linux_aide_check_attributes }}
+
+{% for path in linux_aide_monitored_paths %}
+{{ path }} CYBERAAR
+{% endfor %}
+
+!/var/log/.*
+!/var/spool/.*
+!/var/run/.*
+!/proc
+!/sys
+!/dev
+!/tmp
+!/var/tmp

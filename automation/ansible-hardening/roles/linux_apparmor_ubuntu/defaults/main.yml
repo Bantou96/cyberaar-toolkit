@@ -1,0 +1,24 @@
+---
+
+# Set ALL complain-mode profiles to enforce automatically
+# Set to false to manage profiles individually via linux_apparmor_enforce_profiles
+linux_apparmor_enforce_all: true
+
+# Specific profiles to enforce (used when linux_apparmor_enforce_all is false)
+linux_apparmor_enforce_profiles: []
+# Example:
+# linux_apparmor_enforce_profiles:
+#   - "/etc/apparmor.d/usr.sbin.sshd"
+#   - "/etc/apparmor.d/usr.sbin.nginx"
+
+# Local profile overrides — list of {profile, content}
+linux_apparmor_local_overrides: []
+# Example:
+# linux_apparmor_local_overrides:
+#   - profile: "usr.sbin.sshd"
+#     content: "# custom rules"
+
+# Role disable var
+linux_apparmor_disabled: false
+
+...

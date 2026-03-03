@@ -1,0 +1,9 @@
+---
+
+# Ubuntu/Debian SSH service is "ssh" (not "sshd" as on RHEL)
+- name: "Restart ssh"
+  ansible.builtin.service:
+    name: "ssh"
+    state: "restarted"
+
+...

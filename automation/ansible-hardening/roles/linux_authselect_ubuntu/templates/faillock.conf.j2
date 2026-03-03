@@ -1,0 +1,12 @@
+# faillock configuration
+# Managed by Ansible role linux_authselect_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 5.4.2
+
+deny = {{ linux_authselect_deny }}
+unlock_time = {{ linux_authselect_unlock_time }}
+fail_interval = {{ linux_authselect_fail_interval }}
+{% if linux_authselect_even_deny_root | bool %}
+even_deny_root
+root_unlock_time = {{ linux_authselect_root_unlock_time }}
+{% endif %}

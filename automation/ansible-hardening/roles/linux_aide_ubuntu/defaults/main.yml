@@ -1,0 +1,26 @@
+---
+
+# Paths to monitor (CIS recommended + critical infra)
+linux_aide_monitored_paths:
+  - "/bin"
+  - "/sbin"
+  - "/usr/bin"
+  - "/usr/sbin"
+  - "/etc"
+  - "/boot"
+  - "/var/log"
+  - "/root"
+  - "/lib"
+  - "/lib64"
+  - "/usr/lib"
+
+# AIDE check attributes
+linux_aide_check_attributes: "p+i+n+u+g+s+acl+xattrs+sha512"
+
+# Cron schedule for daily checks (CIS Level 2)
+linux_aide_cron_time: "0 5 * * *"
+
+# Role disable var
+linux_aide_disabled: false
+
+...

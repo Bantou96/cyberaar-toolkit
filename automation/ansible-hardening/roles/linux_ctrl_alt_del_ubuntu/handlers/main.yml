@@ -1,0 +1,8 @@
+---
+
+# No handlers needed — mask is applied directly via command
+- name: "Ctrl-Alt-Del notice"
+  ansible.builtin.debug:
+    msg: "ctrl-alt-del.target masked. Ctrl+Alt+Del will no longer trigger reboot."
+
+...

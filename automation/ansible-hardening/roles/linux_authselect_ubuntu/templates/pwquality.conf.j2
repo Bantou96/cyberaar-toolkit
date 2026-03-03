@@ -1,0 +1,15 @@
+# Password quality configuration
+# Managed by Ansible role linux_authselect_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 5.4.1
+
+minlen = {{ linux_authselect_minlen }}
+minclass = {{ linux_authselect_minclass }}
+dcredit = {{ linux_authselect_dcredit }}
+ucredit = {{ linux_authselect_ucredit }}
+ocredit = {{ linux_authselect_ocredit }}
+lcredit = {{ linux_authselect_lcredit }}
+maxrepeat = {{ linux_authselect_maxrepeat }}
+maxsequence = {{ linux_authselect_maxsequence }}
+gecoscheck = {{ 1 if linux_authselect_gecoscheck | bool else 0 }}
+dictcheck = {{ 1 if linux_authselect_dictcheck | bool else 0 }}

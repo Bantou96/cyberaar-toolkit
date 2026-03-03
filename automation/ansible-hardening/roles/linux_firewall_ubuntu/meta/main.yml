@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: linux_firewall_ubuntu
+  author: CyberAar Team
+  description: "UFW firewall hardening for Ubuntu/Debian (replaces firewalld on RHEL)"
+  license: GPL-3.0
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+dependencies:
+  - role: community.general
+...

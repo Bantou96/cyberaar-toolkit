@@ -1,0 +1,51 @@
+---
+
+- name: "Ensure unattended-upgrades packages are installed"
+  ansible.builtin.package:
+    name:
+      - "unattended-upgrades"
+      - "apt-listchanges"
+      - "update-notifier-common"
+    state: "present"
+
+- name: "Deploy unattended-upgrades configuration"
+  ansible.builtin.template:
+    src: "50unattended-upgrades.j2"
+    dest: "/etc/apt/apt.conf.d/50unattended-upgrades"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "unattended_conf_result"
+
+- name: "Deploy APT periodic auto-upgrade settings"
+  ansible.builtin.template:
+    src: "20auto-upgrades.j2"
+    dest: "/etc/apt/apt.conf.d/20auto-upgrades"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "auto_upgrades_result"
+
+- name: "Enable and start unattended-upgrades service"
+  ansible.builtin.service:
+    name: "unattended-upgrades"
+    state: "started"
+    enabled: true
+
+- name: "Run unattended-upgrades dry-run to validate configuration"
+  ansible.builtin.command: "unattended-upgrades --dry-run"
+  changed_when: false
+  register: "uu_dryrun"
+  failed_when: false
+
+- name: "Debug unattended-upgrades status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "50unattended-upgrades updated: {{ unattended_conf_result.changed | default(false) }}"
+      - "20auto-upgrades updated: {{ auto_upgrades_result.changed | default(false) }}"
+      - "Dry-run output: {{ uu_dryrun.stdout_lines | default([]) }}"
+
+...

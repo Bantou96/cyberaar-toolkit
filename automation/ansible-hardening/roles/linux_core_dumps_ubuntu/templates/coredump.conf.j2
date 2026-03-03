@@ -1,0 +1,8 @@
+# systemd coredump configuration
+# Managed by Ansible role linux_core_dumps_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[Coredump]
+Storage={{ linux_core_dumps_systemd_storage }}
+ProcessSizeMax=0
+ExternalSizeMax=0

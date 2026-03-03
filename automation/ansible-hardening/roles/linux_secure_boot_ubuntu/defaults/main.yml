@@ -1,0 +1,13 @@
+---
+
+# Warn in output if Secure Boot is not enabled (does not enforce — hardware setting)
+linux_secure_boot_warn_if_disabled: true
+
+# GRUB config paths for Ubuntu/Debian (BIOS and EFI)
+linux_secure_boot_grub_dir: "/boot/grub"
+linux_secure_boot_grub_cfg: "/boot/grub/grub.cfg"
+
+# Role disable var
+linux_secure_boot_disabled: false
+
+...

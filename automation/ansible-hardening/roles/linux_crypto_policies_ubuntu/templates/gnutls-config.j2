@@ -1,0 +1,12 @@
+# GnuTLS system-wide configuration
+# Managed by Ansible role linux_crypto_policies_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[overrides]
+tls-disabled-version = SSL3.0
+tls-disabled-version = TLS1.0
+tls-disabled-version = TLS1.1
+{% if linux_crypto_min_tls_version == "TLSv1.3" %}
+tls-disabled-version = TLS1.2
+{% endif %}
+min-verification-profile = medium

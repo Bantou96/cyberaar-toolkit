@@ -1,0 +1,42 @@
+# CIS Ubuntu Linux Benchmark - Disable unused kernel modules
+# Managed by Ansible role: linux_kernel_hardening_ubuntu
+# Last applied: {{ ansible_date_time.iso8601 }}
+
+{% if linux_kernel_blacklist_filesystems | bool %}
+install cramfs /bin/false
+blacklist cramfs
+install freevxfs /bin/false
+blacklist freevxfs
+install hfs /bin/false
+blacklist hfs
+install hfsplus /bin/false
+blacklist hfsplus
+install jffs2 /bin/false
+blacklist jffs2
+install squashfs /bin/false
+blacklist squashfs
+install udf /bin/false
+blacklist udf
+{% endif %}
+
+{% if linux_kernel_blacklist_usb_storage | bool %}
+install usb_storage /bin/false
+blacklist usb_storage
+{% endif %}
+
+{% if linux_kernel_blacklist_firewire | bool %}
+install firewire-core /bin/false
+blacklist firewire-core
+install firewire-ohci /bin/false
+blacklist firewire-ohci
+{% endif %}
+
+{% if linux_kernel_blacklist_thunderbolt | bool %}
+install thunderbolt /bin/false
+blacklist thunderbolt
+{% endif %}
+
+{% if linux_kernel_blacklist_atm | bool %}
+install atm /bin/false
+blacklist atm
+{% endif %}

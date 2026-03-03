@@ -1,0 +1,71 @@
+---
+
+- name: "Ensure PAM password quality packages are installed"
+  ansible.builtin.package:
+    name:
+      - "libpam-pwquality"
+      - "libpam-runtime"
+      - "passwd"
+    state: "present"
+
+- name: "Deploy pwquality configuration"
+  ansible.builtin.template:
+    src: "pwquality.conf.j2"
+    dest: "/etc/security/pwquality.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "pwquality_result"
+
+- name: "Deploy PAM common-password configuration"
+  ansible.builtin.template:
+    src: "pam-common-password.j2"
+    dest: "/etc/pam.d/common-password"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "pam_password_result"
+
+- name: "Deploy PAM common-auth configuration (faillock)"
+  ansible.builtin.template:
+    src: "pam-common-auth.j2"
+    dest: "/etc/pam.d/common-auth"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "pam_auth_result"
+
+- name: "Deploy faillock configuration"
+  ansible.builtin.template:
+    src: "faillock.conf.j2"
+    dest: "/etc/security/faillock.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "faillock_result"
+
+- name: "Configure login.defs password policy"
+  ansible.builtin.template:
+    src: "login.defs.j2"
+    dest: "/etc/login.defs"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "logindefs_result"
+
+- name: "Debug PAM hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "pwquality updated: {{ pwquality_result.changed | default(false) }}"
+      - "pam common-password updated: {{ pam_password_result.changed | default(false) }}"
+      - "pam common-auth updated: {{ pam_auth_result.changed | default(false) }}"
+      - "faillock updated: {{ faillock_result.changed | default(false) }}"
+      - "login.defs updated: {{ logindefs_result.changed | default(false) }}"
+
+...

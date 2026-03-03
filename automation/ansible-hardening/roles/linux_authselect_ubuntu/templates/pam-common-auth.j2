@@ -1,0 +1,11 @@
+# PAM common-auth
+# Managed by Ansible role linux_authselect_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 5.4.2 (faillock)
+
+auth    required      pam_faillock.so preauth silent
+auth    [success=1 default=ignore]  pam_unix.so nullok
+auth    [default=die]  pam_faillock.so authfail
+auth    sufficient    pam_faillock.so authsucc
+auth    requisite     pam_deny.so
+auth    required      pam_permit.so

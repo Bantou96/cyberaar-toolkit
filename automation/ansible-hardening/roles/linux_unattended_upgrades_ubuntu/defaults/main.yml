@@ -1,0 +1,28 @@
+---
+
+# Automatically install security updates
+linux_unattended_upgrades_security: true
+
+# Automatically install all upgrades (not just security) — more aggressive
+linux_unattended_upgrades_all: false
+
+# Auto-remove unused dependencies
+linux_unattended_upgrades_autoremove: true
+
+# Email notification on upgrade or error
+linux_unattended_upgrades_mail: ""
+linux_unattended_upgrades_mail_on_error: false
+
+# Automatically reboot if required (e.g. after kernel update)
+linux_unattended_upgrades_reboot: false
+linux_unattended_upgrades_reboot_time: "03:00"
+
+# APT periodic settings
+linux_unattended_upgrades_update_package_lists: "1"   # Run apt update daily
+linux_unattended_upgrades_download_upgradeable: "1"
+linux_unattended_upgrades_autoclean_interval: "7"
+
+# Role disable var
+linux_unattended_upgrades_disabled: false
+
+...

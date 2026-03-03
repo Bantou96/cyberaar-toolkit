@@ -1,0 +1,45 @@
+---
+
+- name: "Disable systemd-timesyncd before installing chrony (prevents conflict)"
+  ansible.builtin.service:
+    name: "systemd-timesyncd"
+    state: "stopped"
+    enabled: false
+  failed_when: false
+
+- name: "Ensure chrony is installed"
+  ansible.builtin.package:
+    name: "chrony"
+    state: "present"
+
+- name: "Deploy chrony configuration"
+  ansible.builtin.template:
+    src: "chrony.conf.j2"
+    dest: "/etc/chrony/chrony.conf"
+    mode: "0640"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "chrony_conf_result"
+  notify: "Restart chrony"
+
+- name: "Enable and start chrony service"
+  ansible.builtin.service:
+    name: "chrony"
+    state: "started"
+    enabled: true
+
+- name: "Verify chrony is synchronizing"
+  ansible.builtin.command: "chronyc tracking"
+  changed_when: false
+  register: "chrony_tracking"
+  failed_when: false
+
+- name: "Debug chrony status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "chrony.conf updated: {{ chrony_conf_result.changed | default(false) }}"
+      - "chrony tracking: {{ chrony_tracking.stdout_lines | default(['not available']) }}"
+
+...

@@ -1,0 +1,63 @@
+---
+
+- name: "Deploy /etc/issue (local console pre-login banner)"
+  ansible.builtin.template:
+    src: "issue.j2"
+    dest: "/etc/issue"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "issue_result"
+
+- name: "Deploy /etc/issue.net (SSH pre-login banner)"
+  ansible.builtin.template:
+    src: "issue.net.j2"
+    dest: "/etc/issue.net"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "issue_net_result"
+
+- name: "Deploy /etc/motd (post-login message of the day)"
+  ansible.builtin.template:
+    src: "motd.j2"
+    dest: "/etc/motd"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "motd_result"
+
+- name: "Disable dynamic MOTD scripts if configured"
+  when: "linux_login_banner_disable_dynamic_motd | bool"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  loop:
+    - "/etc/update-motd.d/10-help-text"
+    - "/etc/update-motd.d/50-motd-news"
+    - "/etc/update-motd.d/80-esm"
+    - "/etc/update-motd.d/80-livepatch"
+    - "/etc/update-motd.d/91-contract-ua-esm-status"
+  failed_when: false
+
+- name: "Remove executable bit from dynamic MOTD scripts"
+  when: "linux_login_banner_disable_dynamic_motd | bool"
+  ansible.builtin.command: >
+    find /etc/update-motd.d/ -type f -exec chmod a-x {} \;
+  changed_when: true
+  failed_when: false
+
+- name: "Debug banner deployment (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "/etc/issue updated: {{ issue_result.changed | default(false) }}"
+      - "/etc/issue.net updated: {{ issue_net_result.changed | default(false) }}"
+      - "/etc/motd updated: {{ motd_result.changed | default(false) }}"
+
+...

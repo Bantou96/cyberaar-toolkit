@@ -1,0 +1,7 @@
+# CyberAar SSL/TLS policy
+# Managed by Ansible role linux_crypto_policies_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[system_default_sect]
+MinProtocol = {{ linux_crypto_min_tls_version }}
+DHParameters = {{ linux_crypto_dh_min_bits }}

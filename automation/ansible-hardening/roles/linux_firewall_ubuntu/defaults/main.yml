@@ -1,0 +1,27 @@
+---
+
+# SSH port to allow before enabling UFW (prevents lockout)
+linux_firewall_ssh_port: "22"
+
+# Custom allow rules — list of {port, proto, src, comment}
+linux_firewall_allow_rules: []
+# Example:
+# linux_firewall_allow_rules:
+#   - port: "443"
+#     proto: "tcp"
+#     comment: "HTTPS"
+#   - port: "80"
+#     proto: "tcp"
+#     src: "192.168.1.0/24"
+#     comment: "HTTP from LAN only"
+
+# Custom deny rules
+linux_firewall_deny_rules: []
+
+# Disable IP forwarding in UFW sysctl (unless this is a router)
+linux_firewall_disable_ip_forward: true
+
+# Role disable var
+linux_firewall_disabled: false
+
+...

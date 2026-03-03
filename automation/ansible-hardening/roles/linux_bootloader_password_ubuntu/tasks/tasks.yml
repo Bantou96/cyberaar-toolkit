@@ -1,0 +1,61 @@
+---
+
+- name: "Fail if GRUB password is not provided via environment variable"
+  when: "linux_bootloader_password is undefined or linux_bootloader_password == ''"
+  ansible.builtin.fail:
+    msg: >
+      GRUB bootloader password is not defined.
+      Set it via environment variable:
+        export LINUX_BOOTLOADER_PASSWORD="YourVeryStrongPasswordHere"
+      Then re-run the playbook.
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Ensure grub2-common package is installed"
+  ansible.builtin.package:
+    name:
+      - "grub2-common"
+      - "grub-common"
+    state: "present"
+
+- name: "Generate PBKDF2 hashed password for GRUB"
+  ansible.builtin.shell: >
+    printf '%s
+%s
+' '{{ linux_bootloader_password }}' '{{ linux_bootloader_password }}'
+    | grub-mkpasswd-pbkdf2 | grep -o 'grub\.pbkdf2.*'
+  changed_when: false
+  register: "grub_pbkdf2_output"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Set GRUB PBKDF2 hash fact"
+  ansible.builtin.set_fact:
+    grub_pbkdf2_hash: "{{ grub_pbkdf2_output.stdout | trim }}"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+
+- name: "Deploy GRUB password configuration file (/etc/grub.d/01_users)"
+  ansible.builtin.template:
+    src: "01_users.j2"
+    dest: "/etc/grub.d/01_users"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+  no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
+  register: "grub_users_result"
+  notify: "Rebuild GRUB config"
+
+- name: "Ensure GRUB config file has strict permissions"
+  ansible.builtin.file:
+    path: "{{ linux_bootloader_grub_cfg_path }}"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  failed_when: false
+
+- name: "Debug GRUB password application status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "GRUB password protection applied: {{ 'yes' if grub_users_result.changed else 'already present' }}"
+      - "Superuser defined: {{ linux_bootloader_superuser }}"
+
+...

@@ -1,0 +1,52 @@
+---
+
+# auditd.conf settings (CIS-aligned defaults)
+linux_auditd_max_log_file: "8"
+linux_auditd_max_log_file_action: "keep_logs"
+linux_auditd_space_left_action: "email"
+linux_auditd_admin_space_left_action: "single"
+linux_auditd_disk_full_action: "suspend"
+linux_auditd_flush: "incremental_async"
+
+# Enable boot-time auditing (grub cmdline)
+linux_auditd_enable_boot_auditing: true
+
+# Config paths
+linux_auditd_conf_file: "/etc/audit/auditd.conf"
+linux_auditd_rules_file: "/etc/audit/rules.d/99-cis-audit.rules"
+
+# Role disable
+linux_auditing_disabled: false
+
+# Rule category toggles
+linux_audit_rules_identity: true
+linux_audit_rules_privileged: true
+linux_audit_rules_perm_mod: true
+linux_audit_rules_mounts: true
+linux_audit_rules_actions: true
+linux_audit_rules_delete: false
+linux_audit_rules_apparmor: true
+linux_audit_rules_network: false
+linux_audit_rules_exec: false
+linux_audit_rules_time: true
+linux_audit_rules_file_integrity_high: false
+linux_audit_rules_kernel_modules: false
+linux_audit_rules_ptrace: false
+
+# Forwarding
+linux_auditd_forward_to_syslog: true
+linux_auditd_syslog_plugin_active: "yes"
+linux_rsyslog_forward_enabled: true
+linux_rsyslog_remote_host: ""
+linux_rsyslog_remote_port: "514"
+linux_rsyslog_remote_protocol: "tcp"
+linux_rsyslog_remote_use_tls: true
+linux_rsyslog_remote_tls_ca_cert: "/etc/ssl/certs/ca-certificates.crt"
+linux_rsyslog_remote_tls_cert: ""
+linux_rsyslog_remote_tls_key: ""
+linux_rsyslog_queue_disk: true
+linux_rsyslog_queue_file: "/var/spool/rsyslog/queue"
+linux_rsyslog_queue_size: "100000"
+linux_auditing_forwarding_disabled: false
+
+...

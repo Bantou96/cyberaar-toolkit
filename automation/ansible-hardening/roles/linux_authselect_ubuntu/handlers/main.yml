@@ -1,0 +1,9 @@
+---
+
+# PAM changes take effect immediately — no service restart needed
+# Placeholder for future use
+- name: "PAM configuration updated notice"
+  ansible.builtin.debug:
+    msg: "PAM configuration updated. Changes take effect on next login."
+
+...

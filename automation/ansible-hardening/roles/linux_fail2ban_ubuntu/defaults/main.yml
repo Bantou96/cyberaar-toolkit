@@ -1,0 +1,23 @@
+---
+
+# SSH jail settings
+linux_fail2ban_ssh_enabled: true
+linux_fail2ban_ssh_port: "ssh"
+linux_fail2ban_ssh_filter: "sshd"
+linux_fail2ban_ssh_logpath: "/var/log/auth.log"
+linux_fail2ban_ssh_maxretry: 5
+linux_fail2ban_ssh_bantime: 3600
+linux_fail2ban_ssh_findtime: 600
+
+# Backend for log monitoring
+linux_fail2ban_backend: "systemd"
+
+# Email notification (optional)
+linux_fail2ban_destemail: "root@localhost"
+linux_fail2ban_sendername: "CyberAar-Fail2ban"
+linux_fail2ban_action: "%(action_)s"
+
+# Role disable var
+linux_fail2ban_disabled: false
+
+...

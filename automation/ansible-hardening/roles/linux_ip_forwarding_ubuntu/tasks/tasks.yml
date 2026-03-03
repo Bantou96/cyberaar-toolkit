@@ -1,0 +1,36 @@
+---
+
+- name: "Deploy IP forwarding sysctl configuration"
+  ansible.builtin.template:
+    src: "99-cis-ip-forwarding.conf.j2"
+    dest: "{{ linux_ip_forwarding_sysctl_file }}"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "sysctl_result"
+  notify: "Reload sysctl configuration"
+
+- name: "Verify IPv4 forwarding is disabled"
+  when: "not linux_ip_forwarding_enable_ipv4 | bool"
+  ansible.builtin.command: "sysctl -n net.ipv4.ip_forward"
+  changed_when: false
+  register: "ipv4_fwd_check"
+
+- name: "Fail if IPv4 forwarding is unexpectedly enabled"
+  when:
+    - "not linux_ip_forwarding_enable_ipv4 | bool"
+    - "ipv4_fwd_check.stdout | trim != '0'"
+  ansible.builtin.fail:
+    msg: >
+      net.ipv4.ip_forward is still enabled (value={{ ipv4_fwd_check.stdout | trim }})
+      after applying sysctl settings. Please check for conflicting sysctl files.
+
+- name: "Debug IP forwarding status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "sysctl file updated: {{ sysctl_result.changed | default(false) }}"
+      - "IPv4 forward value: {{ ipv4_fwd_check.stdout | default('not checked') }}"
+
+...

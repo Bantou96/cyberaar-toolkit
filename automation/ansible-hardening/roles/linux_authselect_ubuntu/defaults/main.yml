@@ -1,0 +1,34 @@
+---
+
+# Password quality settings (CIS 5.4.x)
+linux_authselect_minlen: 14
+linux_authselect_minclass: 4
+linux_authselect_dcredit: -1
+linux_authselect_ucredit: -1
+linux_authselect_ocredit: -1
+linux_authselect_lcredit: -1
+linux_authselect_maxrepeat: 3
+linux_authselect_maxsequence: 3
+linux_authselect_gecoscheck: true
+linux_authselect_dictcheck: true
+
+# Account lockout (faillock) settings (CIS 5.4.2)
+linux_authselect_deny: 5
+linux_authselect_unlock_time: 900
+linux_authselect_fail_interval: 900
+linux_authselect_even_deny_root: true
+linux_authselect_root_unlock_time: 60
+
+# Password aging (CIS 5.5.1.x)
+linux_authselect_pass_max_days: 365
+linux_authselect_pass_min_days: 1
+linux_authselect_pass_warn_age: 7
+linux_authselect_pass_min_len: 14
+
+# Password history (CIS 5.4.3)
+linux_authselect_remember: 24
+
+# Role disable var
+linux_authselect_disabled: false
+
+...

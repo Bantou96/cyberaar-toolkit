@@ -1,0 +1,37 @@
+---
+
+# Critical authentication file permissions (CIS 6.1.x)
+linux_file_permissions_auth_files:
+  - { path: "/etc/passwd",       owner: "root", group: "root", mode: "0644" }
+  - { path: "/etc/passwd-",      owner: "root", group: "root", mode: "0644" }
+  - { path: "/etc/shadow",       owner: "root", group: "shadow", mode: "0640" }
+  - { path: "/etc/shadow-",      owner: "root", group: "shadow", mode: "0640" }
+  - { path: "/etc/group",        owner: "root", group: "root", mode: "0644" }
+  - { path: "/etc/group-",       owner: "root", group: "root", mode: "0644" }
+  - { path: "/etc/gshadow",      owner: "root", group: "shadow", mode: "0640" }
+  - { path: "/etc/gshadow-",     owner: "root", group: "shadow", mode: "0640" }
+  - { path: "/etc/sudoers",      owner: "root", group: "root", mode: "0440" }
+
+# Critical system file permissions (CIS 6.1.x)
+linux_file_permissions_system_files:
+  - { path: "/etc/ssh/sshd_config",  owner: "root", group: "root", mode: "0600" }
+  - { path: "/etc/crontab",          owner: "root", group: "root", mode: "0600" }
+  - { path: "/etc/cron.hourly",      owner: "root", group: "root", mode: "0700" }
+  - { path: "/etc/cron.daily",       owner: "root", group: "root", mode: "0700" }
+  - { path: "/etc/cron.weekly",      owner: "root", group: "root", mode: "0700" }
+  - { path: "/etc/cron.monthly",     owner: "root", group: "root", mode: "0700" }
+  - { path: "/etc/cron.d",           owner: "root", group: "root", mode: "0700" }
+
+# Scan for world-writable files
+linux_file_permissions_find_world_writable: true
+
+# Fail the play if world-writable files found in critical paths
+linux_file_permissions_fail_on_world_writable: false
+
+# Scan for unowned files
+linux_file_permissions_find_unowned: true
+
+# Role disable var
+linux_file_permissions_disabled: false
+
+...

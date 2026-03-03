@@ -1,0 +1,8 @@
+---
+
+- name: "Restrict core dumps (Ubuntu/Debian family)"
+  when: "linux_core_dumps_disabled is not defined or not linux_core_dumps_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_core_dumps_ubuntu"
+
+...

@@ -1,0 +1,8 @@
+---
+
+- name: "Disable unnecessary services (Ubuntu/Debian family)"
+  when: "linux_disable_services_disabled is not defined or not linux_disable_services_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_disable_unnecessary_services_ubuntu"
+
+...
