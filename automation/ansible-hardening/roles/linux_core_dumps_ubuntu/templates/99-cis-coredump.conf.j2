@@ -1,0 +1,7 @@
+# Core dump sysctl settings
+# Managed by Ansible role linux_core_dumps_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 1.5.1 / 1.5.4
+
+fs.suid_dumpable = {{ linux_core_dumps_suid_dumpable }}
+kernel.core_uses_pid = {{ linux_core_dumps_use_pid }}

@@ -1,0 +1,23 @@
+# fail2ban jail.local
+# Managed by Ansible role linux_fail2ban_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+
+[DEFAULT]
+destemail = {{ linux_fail2ban_destemail }}
+sendername = {{ linux_fail2ban_sendername }}
+action = {{ linux_fail2ban_action }}
+backend = {{ linux_fail2ban_backend }}
+bantime = {{ linux_fail2ban_ssh_bantime }}
+findtime = {{ linux_fail2ban_ssh_findtime }}
+maxretry = {{ linux_fail2ban_ssh_maxretry }}
+
+{% if linux_fail2ban_ssh_enabled | bool %}
+[sshd]
+enabled = true
+port    = {{ linux_fail2ban_ssh_port }}
+filter  = {{ linux_fail2ban_ssh_filter }}
+logpath = {{ linux_fail2ban_ssh_logpath }}
+maxretry = {{ linux_fail2ban_ssh_maxretry }}
+bantime  = {{ linux_fail2ban_ssh_bantime }}
+findtime = {{ linux_fail2ban_ssh_findtime }}
+{% endif %}

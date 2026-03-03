@@ -1,0 +1,20 @@
+---
+
+# GRUB superuser name
+linux_bootloader_superuser: "root"
+
+# Password source: prefer environment variable
+linux_bootloader_password: "{{ lookup('env', 'LINUX_BOOTLOADER_PASSWORD') | default(Undefined) }}"
+
+# Set to true only in test environments
+linux_bootloader_disable_nolog: false
+
+# Ubuntu/Debian GRUB config paths
+# BIOS:  /boot/grub/grub.cfg
+# EFI:   /boot/efi/EFI/ubuntu/grub.cfg
+linux_bootloader_grub_cfg_path: "/boot/grub/grub.cfg"
+
+# Role disable var
+linux_bootloader_password_disabled: false
+
+...

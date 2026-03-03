@@ -1,0 +1,18 @@
+---
+
+# Sysctl file path
+linux_core_dumps_sysctl_file: "/etc/sysctl.d/99-cis-coredump.conf"
+
+# Disable SUID core dumps (CIS 1.5.1)
+linux_core_dumps_suid_dumpable: 0
+
+# Use PID in core filename for easier identification
+linux_core_dumps_use_pid: 1
+
+# Coredump storage via systemd (none = disable)
+linux_core_dumps_systemd_storage: "none"
+
+# Role disable var
+linux_core_dumps_disabled: false
+
+...

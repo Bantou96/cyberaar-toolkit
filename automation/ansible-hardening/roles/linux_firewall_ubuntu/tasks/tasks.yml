@@ -1,0 +1,81 @@
+---
+
+- name: "Ensure ufw package is installed"
+  ansible.builtin.package:
+    name: "ufw"
+    state: "present"
+
+- name: "Set UFW default incoming policy to deny"
+  community.general.ufw:
+    direction: "incoming"
+    policy: "deny"
+
+- name: "Set UFW default outgoing policy to allow"
+  community.general.ufw:
+    direction: "outgoing"
+    policy: "allow"
+
+- name: "Set UFW default forward policy to deny"
+  community.general.ufw:
+    direction: "routed"
+    policy: "deny"
+
+- name: "Allow SSH through UFW before enabling (prevent lockout)"
+  community.general.ufw:
+    rule: "allow"
+    port: "{{ linux_firewall_ssh_port }}"
+    proto: "tcp"
+    comment: "CyberAar: SSH access"
+
+- name: "Apply custom UFW allow rules"
+  when: "linux_firewall_allow_rules | length > 0"
+  community.general.ufw:
+    rule: "allow"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+    src: "{{ item.src | default('any') }}"
+    comment: "{{ item.comment | default('CyberAar custom rule') }}"
+  loop: "{{ linux_firewall_allow_rules }}"
+
+- name: "Apply custom UFW deny rules"
+  when: "linux_firewall_deny_rules | length > 0"
+  community.general.ufw:
+    rule: "deny"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+    comment: "{{ item.comment | default('CyberAar deny rule') }}"
+  loop: "{{ linux_firewall_deny_rules }}"
+
+- name: "Enable UFW and set to start on boot"
+  community.general.ufw:
+    state: "enabled"
+
+- name: "Enable UFW service"
+  ansible.builtin.service:
+    name: "ufw"
+    state: "started"
+    enabled: true
+
+- name: "Deploy UFW sysctl hardening"
+  ansible.builtin.template:
+    src: "ufw-sysctl.conf.j2"
+    dest: "/etc/ufw/sysctl.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "ufw_sysctl_result"
+  notify: "Reload ufw"
+
+- name: "Show UFW status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "ufw status verbose"
+  changed_when: false
+  register: "ufw_status"
+
+- name: "Debug UFW status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "{{ ufw_status.stdout_lines }}"
+
+...

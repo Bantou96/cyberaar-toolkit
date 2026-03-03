@@ -1,0 +1,7 @@
+---
+
+- name: "Placeholder handler"
+  ansible.builtin.debug:
+    msg: "No handler triggered - AIDE changes handled directly in tasks"
+
+...

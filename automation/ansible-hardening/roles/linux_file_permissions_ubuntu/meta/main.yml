@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: linux_file_permissions_ubuntu
+  author: CyberAar Team
+  description: "Critical file permissions hardening for Ubuntu/Debian"
+  license: GPL-3.0
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+dependencies: []
+...

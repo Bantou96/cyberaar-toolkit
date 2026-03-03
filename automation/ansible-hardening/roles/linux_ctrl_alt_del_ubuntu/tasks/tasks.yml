@@ -1,0 +1,24 @@
+---
+
+- name: "Mask ctrl-alt-del.target to prevent accidental reboot (CIS 1.6.1)"
+  ansible.builtin.command: "systemctl mask ctrl-alt-del.target"
+  changed_when: true
+  register: "mask_result"
+  failed_when: false
+
+- name: "Reload systemd daemon to apply mask"
+  ansible.builtin.command: "systemctl daemon-reload"
+  changed_when: false
+
+- name: "Verify ctrl-alt-del.target is masked"
+  ansible.builtin.command: "systemctl status ctrl-alt-del.target"
+  changed_when: false
+  register: "cad_status"
+  failed_when: false
+
+- name: "Debug ctrl-alt-del status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg: "ctrl-alt-del.target status: {{ cad_status.stdout | default('unknown') }}"
+
+...

@@ -1,0 +1,68 @@
+---
+
+- name: "Ensure sysctl.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/sysctl.d"
+    state: "directory"
+    mode: "0755"
+
+- name: "Deploy CIS-aligned kernel hardening sysctl template"
+  ansible.builtin.template:
+    src: "99-cis-kernel-hardening.conf.j2"
+    dest: "{{ linux_kernel_sysctl_file }}"
+    mode: "0644"
+    backup: true
+  register: "sysctl_template_result"
+  notify: "Reload sysctl configuration"
+
+- name: "Ensure modprobe.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/modprobe.d"
+    state: "directory"
+    mode: "0755"
+
+- name: "Deploy CIS-aligned kernel module blacklist template"
+  ansible.builtin.template:
+    src: "99-cis-modprobe-blacklist.conf.j2"
+    dest: "{{ linux_kernel_modprobe_file }}"
+    mode: "0644"
+    backup: true
+  register: "modprobe_template_result"
+
+- name: "Attempt to unload blacklisted modules if currently loaded"
+  when:
+    - "linux_kernel_unload_blacklisted | bool"
+    - "modprobe_template_result.changed"
+  ansible.builtin.command: "modprobe -r {{ item }}"
+  loop:
+    - "cramfs"
+    - "freevxfs"
+    - "hfs"
+    - "hfsplus"
+    - "jffs2"
+    - "squashfs"
+    - "udf"
+    - "usb_storage"
+  failed_when: false
+  register: "module_unload"
+  changed_when: "module_unload.rc == 0"
+
+- name: "Notify about reboot requirement for module blacklisting"
+  when: "modprobe_template_result.changed"
+  ansible.builtin.debug:
+    msg: "Kernel module blacklisting applied. Full effect requires reboot."
+
+- name: "Verify ASLR is active (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "sysctl -n kernel.randomize_va_space"
+  changed_when: false
+  register: "aslr_value"
+
+- name: "Debug key kernel parameters (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "ASLR value: {{ aslr_value.stdout | default('not checked') }}"
+      - "Sysctl file updated: {{ sysctl_template_result.changed | default(false) }}"
+
+...

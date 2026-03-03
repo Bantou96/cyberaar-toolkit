@@ -1,0 +1,13 @@
+---
+
+# Path for sysctl config file
+linux_ip_forwarding_sysctl_file: "/etc/sysctl.d/99-cis-ip-forwarding.conf"
+
+# Set to true ONLY if this host is a router or VPN gateway
+linux_ip_forwarding_enable_ipv4: false
+linux_ip_forwarding_enable_ipv6: false
+
+# Role disable var
+linux_ip_forwarding_disabled: false
+
+...

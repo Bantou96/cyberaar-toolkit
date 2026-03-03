@@ -1,0 +1,60 @@
+---
+
+- name: "Deploy core dump limits configuration"
+  ansible.builtin.template:
+    src: "coredump-limits.conf.j2"
+    dest: "/etc/security/limits.d/99-cis-coredump.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "limits_result"
+
+- name: "Deploy core dump sysctl configuration"
+  ansible.builtin.template:
+    src: "99-cis-coredump.conf.j2"
+    dest: "{{ linux_core_dumps_sysctl_file }}"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "sysctl_result"
+  notify: "Reload sysctl configuration"
+
+- name: "Deploy systemd coredump configuration"
+  ansible.builtin.template:
+    src: "coredump.conf.j2"
+    dest: "/etc/systemd/coredump.conf.d/99-cis-coredump.conf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  register: "systemd_coredump_result"
+
+- name: "Ensure coredump.conf.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/systemd/coredump.conf.d"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: "Reload systemd daemon after coredump config"
+  when: "systemd_coredump_result.changed"
+  ansible.builtin.command: "systemctl daemon-reload"
+  changed_when: false
+
+- name: "Debug core dump status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.command: "sysctl -n fs.suid_dumpable"
+  changed_when: false
+  register: "suid_dumpable"
+
+- name: "Show core dump sysctl value (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "limits updated: {{ limits_result.changed | default(false) }}"
+      - "sysctl updated: {{ sysctl_result.changed | default(false) }}"
+      - "fs.suid_dumpable: {{ suid_dumpable.stdout | default('not checked') }}"
+
+...

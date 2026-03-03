@@ -1,0 +1,12 @@
+---
+
+# /tmp mount options (CIS 1.1.2.x)
+linux_tmp_mounts_options: "defaults,noexec,nosuid,nodev"
+
+# /tmp size limit (empty = no limit)
+linux_tmp_mounts_size: ""
+
+# Role disable var
+linux_tmp_mounts_disabled: false
+
+...

@@ -1,0 +1,65 @@
+---
+
+# Ubuntu/Debian does not have update-crypto-policies (RHEL-specific).
+# We configure OpenSSL, TLS, and cipher policies directly.
+
+- name: "Ensure openssl is installed"
+  ansible.builtin.package:
+    name:
+      - "openssl"
+      - "ca-certificates"
+    state: "present"
+
+- name: "Deploy hardened OpenSSL configuration"
+  ansible.builtin.template:
+    src: "openssl.cnf.j2"
+    dest: "/etc/ssl/openssl.cnf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "openssl_cnf_result"
+
+- name: "Deploy CyberAar TLS hardening for OpenSSL 3 (Ubuntu 22+)"
+  when: "ansible_distribution_version is version('22.04', '>=')"
+  ansible.builtin.template:
+    src: "openssl3-hardening.cnf.j2"
+    dest: "/etc/ssl/certs/cyberaar-tls-hardening.cnf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "openssl3_result"
+
+- name: "Deploy hardened /etc/gnutls/config if GnuTLS is present"
+  when: "linux_crypto_configure_gnutls | bool"
+  ansible.builtin.template:
+    src: "gnutls-config.j2"
+    dest: "/etc/gnutls/config"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "gnutls_result"
+
+- name: "Disable weak SSL/TLS versions via apt preferences for openssl"
+  ansible.builtin.template:
+    src: "ssl-policy.j2"
+    dest: "/etc/ssl/certs/cyberaar-policy.cnf"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  register: "ssl_policy_result"
+
+- name: "Update CA certificates"
+  ansible.builtin.command: "update-ca-certificates"
+  changed_when: false
+
+- name: "Debug crypto policy status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "openssl.cnf updated: {{ openssl_cnf_result.changed | default(false) }}"
+      - "GnuTLS configured: {{ gnutls_result.changed | default(false) }}"
+
+...

@@ -1,0 +1,8 @@
+---
+
+# No service restart needed for file permission changes
+- name: "File permissions notice"
+  ansible.builtin.debug:
+    msg: "Critical file permissions hardened. Changes effective immediately."
+
+...

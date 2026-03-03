@@ -1,0 +1,17 @@
+# /etc/login.defs - Shadow password suite configuration
+# Managed by Ansible role linux_authselect_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 5.5.1.x
+
+PASS_MAX_DAYS   {{ linux_authselect_pass_max_days }}
+PASS_MIN_DAYS   {{ linux_authselect_pass_min_days }}
+PASS_WARN_AGE   {{ linux_authselect_pass_warn_age }}
+PASS_MIN_LEN    {{ linux_authselect_pass_min_len }}
+
+LOGIN_RETRIES   5
+LOGIN_TIMEOUT   60
+DEFAULT_HOME    yes
+USERGROUPS_ENAB yes
+ENCRYPT_METHOD  YESCRYPT
+
+UMASK           027

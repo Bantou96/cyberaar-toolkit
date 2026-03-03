@@ -1,0 +1,32 @@
+---
+
+# Path where the sysctl configuration file will be placed
+linux_kernel_sysctl_file: "/etc/sysctl.d/99-cis-kernel-hardening.conf"
+
+# Sysctl hardening feature toggles
+linux_kernel_apply_aslr: true
+linux_kernel_apply_ptrace: true
+linux_kernel_apply_dmesg: true
+linux_kernel_apply_perf: true
+linux_kernel_apply_network_ipv4: true
+linux_kernel_apply_network_ipv6: true
+linux_kernel_apply_coredump: true
+linux_kernel_disable_ip_forward: true
+
+# Module blacklisting controls
+linux_kernel_blacklist_filesystems: true
+linux_kernel_blacklist_usb_storage: true
+linux_kernel_blacklist_firewire: false
+linux_kernel_blacklist_thunderbolt: false
+linux_kernel_blacklist_atm: false
+
+# Path for modprobe blacklist file
+linux_kernel_modprobe_file: "/etc/modprobe.d/99-cis-modprobe-blacklist.conf"
+
+# Attempt module unloads on change (reboot still required for full effect)
+linux_kernel_unload_blacklisted: false
+
+# Role disable var
+linux_kernel_hardening_disabled: false
+
+...

@@ -1,0 +1,84 @@
+---
+
+- name: "Install AIDE package"
+  ansible.builtin.package:
+    name: "aide"
+    state: "present"
+
+- name: "Ensure AIDE log directory exists"
+  ansible.builtin.file:
+    path: "/var/log/aide"
+    state: "directory"
+    mode: "0750"
+    owner: "root"
+    group: "root"
+
+- name: "Deploy AIDE configuration template"
+  ansible.builtin.template:
+    src: "aide.conf.j2"
+    dest: "/etc/aide/aide.conf"
+    mode: "0640"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "aide_conf_result"
+
+- name: "Check if AIDE database already exists"
+  ansible.builtin.stat:
+    path: "/var/lib/aide/aide.db"
+  register: "aide_db_stat"
+
+- name: "Check if AIDE new database exists (interrupted previous init)"
+  ansible.builtin.stat:
+    path: "/var/lib/aide/aide.db.new"
+  register: "aide_db_new_stat"
+
+- name: "Initialize AIDE database (first run or config changed)"
+  when:
+    - "not aide_db_stat.stat.exists or aide_conf_result.changed"
+    - "not aide_db_new_stat.stat.exists"
+  ansible.builtin.command: "aide --config /etc/aide/aide.conf --init"
+  register: "aide_init"
+  changed_when: "aide_init.rc == 0"
+
+- name: "Activate the newly initialized AIDE database"
+  when: "aide_init.changed | default(false)"
+  ansible.builtin.command: "mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db"
+  args:
+    removes: "/var/lib/aide/aide.db.new"
+  changed_when: true
+
+- name: "Activate interrupted AIDE database (recovery)"
+  when:
+    - "aide_db_new_stat.stat.exists"
+    - "not aide_init.changed | default(false)"
+  ansible.builtin.command: "mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db"
+  args:
+    removes: "/var/lib/aide/aide.db.new"
+  changed_when: true
+
+- name: "Ensure mailutils is installed for AIDE email reports"
+  ansible.builtin.package:
+    name: "mailutils"
+    state: "present"
+
+- name: "Set up cron job for daily AIDE checks"
+  ansible.builtin.cron:
+    name: "Daily AIDE integrity check"
+    minute: "{{ linux_aide_cron_time.split(' ')[0] }}"
+    hour: "{{ linux_aide_cron_time.split(' ')[1] }}"
+    day: "{{ linux_aide_cron_time.split(' ')[2] }}"
+    month: "{{ linux_aide_cron_time.split(' ')[3] }}"
+    weekday: "{{ linux_aide_cron_time.split(' ')[4] }}"
+    job: "/usr/bin/aide --config /etc/aide/aide.conf --check | tee -a /var/log/aide/aide-check.log | /usr/bin/mail -s 'AIDE Report on {{ ansible_hostname }}' root@localhost"
+    state: "present"
+
+- name: "Debug AIDE status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "AIDE db existed: {{ aide_db_stat.stat.exists }}"
+      - "AIDE config changed: {{ aide_conf_result.changed | default(false) }}"
+      - "AIDE init ran: {{ aide_init.changed | default(false) }}"
+
+...

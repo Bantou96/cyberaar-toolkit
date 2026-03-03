@@ -1,0 +1,51 @@
+---
+
+- name: "Ensure openssh-server is installed"
+  ansible.builtin.package:
+    name: "openssh-server"
+    state: "present"
+
+- name: "Deploy hardened sshd_config"
+  ansible.builtin.template:
+    src: "sshd_config.j2"
+    dest: "/etc/ssh/sshd_config"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+    backup: true
+    validate: "{{ linux_ssh_sshd_binary }} -T -f %s"
+  register: "sshd_config_result"
+  notify: "Restart ssh"
+
+- name: "Deploy CyberAar SSH pre-login banner (/etc/issue.net)"
+  when: "linux_ssh_banner != ''"
+  ansible.builtin.template:
+    src: "issue.net.j2"
+    dest: "/etc/issue.net"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "banner_result"
+
+- name: "Enable and start ssh service"
+  ansible.builtin.service:
+    name: "ssh"
+    state: "started"
+    enabled: true
+
+- name: "Verify SSH configuration is valid"
+  ansible.builtin.command: "{{ linux_ssh_sshd_binary }} -t"
+  changed_when: false
+  register: "sshd_test"
+  failed_when: "sshd_test.rc != 0"
+
+- name: "Debug SSH hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "sshd_config updated: {{ sshd_config_result.changed | default(false) }}"
+      - "Banner updated: {{ banner_result.changed | default(false) }}"
+      - "SSHD test rc: {{ sshd_test.rc | default('unknown') }}"
+
+...

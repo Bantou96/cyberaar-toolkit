@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: linux_secure_boot_ubuntu
+  author: CyberAar Team
+  description: "Secure Boot status check and bootloader hardening for Ubuntu/Debian"
+  license: GPL-3.0
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+dependencies: []
+...

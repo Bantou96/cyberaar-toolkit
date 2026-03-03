@@ -1,0 +1,36 @@
+# Managed by Ansible role linux_ssh_hardening_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — SSH Server Hardening
+
+Protocol 2
+UsePAM yes
+
+PermitRootLogin {{ linux_ssh_permit_root_login }}
+PasswordAuthentication {{ linux_ssh_password_auth }}
+PermitEmptyPasswords {{ linux_ssh_permit_empty_passwords }}
+X11Forwarding {{ linux_ssh_x11_forwarding }}
+AllowTcpForwarding {{ linux_ssh_allow_tcp_forwarding }}
+GatewayPorts {{ linux_ssh_gateway_ports }}
+PermitTunnel {{ linux_ssh_permit_tunnel }}
+
+Ciphers {{ linux_ssh_ciphers }}
+MACs {{ linux_ssh_macs }}
+KexAlgorithms {{ linux_ssh_kexalgorithms }}
+
+MaxAuthTries {{ linux_ssh_max_auth_tries }}
+MaxSessions {{ linux_ssh_max_sessions }}
+MaxStartups {{ linux_ssh_max_startups }}
+LoginGraceTime {{ linux_ssh_login_grace_time }}
+
+ClientAliveInterval {{ linux_ssh_client_alive_interval }}
+ClientAliveCountMax {{ linux_ssh_client_alive_count_max }}
+
+Banner {{ linux_ssh_banner }}
+
+Subsystem sftp {{ linux_ssh_subsystem }}
+
+# Additional hardening
+IgnoreRhosts yes
+PermitUserEnvironment no
+StrictModes yes
+PrintLastLog yes

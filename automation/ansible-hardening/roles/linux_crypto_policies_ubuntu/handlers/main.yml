@@ -1,0 +1,8 @@
+---
+
+# OpenSSL changes take effect on next application start — no global reload
+- name: "Crypto policy updated notice"
+  ansible.builtin.debug:
+    msg: "Cryptographic policy updated. Applications must be restarted to pick up new settings."
+
+...

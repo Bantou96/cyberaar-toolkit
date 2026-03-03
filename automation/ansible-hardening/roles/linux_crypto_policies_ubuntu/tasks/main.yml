@@ -1,0 +1,8 @@
+---
+
+- name: "Apply cryptographic policy hardening (Ubuntu/Debian family)"
+  when: "linux_crypto_disabled is not defined or not linux_crypto_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_crypto_policies_ubuntu"
+
+...

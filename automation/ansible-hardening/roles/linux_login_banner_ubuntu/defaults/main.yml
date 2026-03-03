@@ -1,0 +1,16 @@
+---
+
+# Organisation name for banner (customize per deployment)
+linux_login_banner_org: "CyberAar"
+
+# Custom banner text (leave empty to use the default template)
+linux_login_banner_text: ""
+
+# Disable Ubuntu's dynamic MOTD scripts (ads, ESM notices, etc.)
+# Recommended: true for server hardening (CIS 1.7.x)
+linux_login_banner_disable_dynamic_motd: true
+
+# Role disable var
+linux_login_banner_disabled: false
+
+...

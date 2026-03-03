@@ -1,0 +1,6 @@
+---
+
+# Role disable var
+linux_ctrl_alt_del_disabled: false
+
+...

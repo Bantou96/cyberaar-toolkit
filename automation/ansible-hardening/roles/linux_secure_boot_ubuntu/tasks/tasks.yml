@@ -1,0 +1,68 @@
+---
+
+- name: "Ensure mokutil is installed (Secure Boot status tool)"
+  ansible.builtin.package:
+    name: "mokutil"
+    state: "present"
+  failed_when: false
+
+- name: "Check Secure Boot status"
+  ansible.builtin.command: "mokutil --sb-state"
+  changed_when: false
+  register: "secure_boot_status"
+  failed_when: false
+
+- name: "Warn if Secure Boot is not enabled"
+  when:
+    - "linux_secure_boot_warn_if_disabled | bool"
+    - "'SecureBoot enabled' not in (secure_boot_status.stdout | default(''))"
+  ansible.builtin.debug:
+    msg: >
+      WARNING: Secure Boot does not appear to be enabled on {{ ansible_hostname }}.
+      Secure Boot provides protection against bootkit/rootkit attacks.
+      Enable it in BIOS/UEFI firmware settings if supported.
+
+- name: "Ensure GRUB configuration directory has correct permissions"
+  ansible.builtin.file:
+    path: "{{ linux_secure_boot_grub_dir }}"
+    state: "directory"
+    mode: "0700"
+    owner: "root"
+    group: "root"
+  failed_when: false
+
+- name: "Ensure GRUB config file has strict permissions"
+  ansible.builtin.file:
+    path: "{{ linux_secure_boot_grub_cfg }}"
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  failed_when: false
+
+- name: "Ensure /boot directory has strict permissions"
+  ansible.builtin.file:
+    path: "/boot"
+    state: "directory"
+    mode: "0700"
+    owner: "root"
+    group: "root"
+
+- name: "Deploy hardened GRUB defaults"
+  ansible.builtin.template:
+    src: "grub-hardening.j2"
+    dest: "/etc/default/grub.d/99-cis-hardening.cfg"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+    backup: true
+  register: "grub_defaults_result"
+  notify: "Rebuild GRUB config"
+
+- name: "Debug Secure Boot status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Secure Boot status: {{ secure_boot_status.stdout | default('unknown') }}"
+      - "GRUB defaults updated: {{ grub_defaults_result.changed | default(false) }}"
+
+...

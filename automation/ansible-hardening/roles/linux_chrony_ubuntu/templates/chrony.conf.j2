@@ -1,0 +1,31 @@
+# chrony configuration
+# Managed by Ansible role linux_chrony_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+# CIS Ubuntu Linux Benchmark — 2.1.1
+
+{% for server in linux_chrony_servers %}
+server {{ server }} {{ linux_chrony_server_options }}
+{% endfor %}
+
+driftfile /var/lib/chrony/drift
+makestep {{ linux_chrony_makestep }}
+rtcsync
+keyfile /etc/chrony/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
+log tracking measurements statistics
+
+{% if linux_chrony_allow_networks | length > 0 %}
+{% for network in linux_chrony_allow_networks %}
+allow {{ network }}
+{% endfor %}
+{% else %}
+# No remote NTP clients — this host is not an NTP server
+{% endif %}
+
+{% if linux_chrony_hwtimestamp | bool %}
+hwtimestamp *
+{% endif %}
+
+# Restrict NTP (no queries from other hosts unless allow is set above)
+deny all

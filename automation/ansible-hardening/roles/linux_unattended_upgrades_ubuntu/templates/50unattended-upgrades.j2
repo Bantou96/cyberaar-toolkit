@@ -1,0 +1,31 @@
+// Unattended-Upgrades configuration
+// Managed by Ansible role linux_unattended_upgrades_ubuntu
+// Generated: {{ ansible_date_time.iso8601 }}
+// CIS Ubuntu Linux Benchmark — 1.9
+
+Unattended-Upgrade::Allowed-Origins {
+{% if linux_unattended_upgrades_security | bool %}
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}ESMApps:${distro_codename}-apps-security";
+    "${distro_id}ESM:${distro_codename}-infra-security";
+{% endif %}
+{% if linux_unattended_upgrades_all | bool %}
+    "${distro_id}:${distro_codename}";
+    "${distro_id}:${distro_codename}-updates";
+{% endif %}
+};
+
+Unattended-Upgrade::Package-Blacklist {
+};
+
+Unattended-Upgrade::DevRelease "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "{{ 'true' if linux_unattended_upgrades_autoremove | bool else 'false' }}";
+
+{% if linux_unattended_upgrades_mail | length > 0 %}
+Unattended-Upgrade::Mail "{{ linux_unattended_upgrades_mail }}";
+Unattended-Upgrade::MailOnlyOnError "{{ 'true' if linux_unattended_upgrades_mail_on_error | bool else 'false' }}";
+{% endif %}
+
+Unattended-Upgrade::Automatic-Reboot "{{ 'true' if linux_unattended_upgrades_reboot | bool else 'false' }}";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ linux_unattended_upgrades_reboot_time }}";
