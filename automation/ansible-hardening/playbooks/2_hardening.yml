@@ -1,0 +1,277 @@
+---
+# =============================================================================
+#  CyberAar — Step 2: System Hardening
+#  Étape 2 : Durcissement du système
+#
+#  Applies CIS-aligned hardening roles for RHEL9 / AlmaLinux / Rocky Linux
+#  AND Ubuntu 20.04/22.04/24.04 / Debian 11/12.
+#
+#  OS detection is automatic — the correct role set is applied per host
+#  based on ansible_os_family (RedHat or Debian).
+#
+#  Role execution order follows CIS benchmark dependency order:
+#    kernel → MAC (SELinux/AppArmor) → auth → SSH → network →
+#    crypto → audit → integrity → time → boot → services → filesystem
+#
+#  Usage:
+#    # Full hardening (all roles)
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml
+#
+#    # Specific category only
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags ssh
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags audit,logging
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags filesystem,permissions
+#
+#    # Dry run
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --check --diff
+#
+#    # Skip specific roles using disable vars (preferred — no tag conflicts)
+#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml \
+#      -e "linux_bootloader_password_rhel9_disabled=true linux_bootloader_password_ubuntu_disabled=true"
+#
+#  Requirements:
+#    ansible-galaxy collection install community.general  # Ubuntu UFW module
+#
+#  Tags reference:
+#    hardening      — all hardening roles
+#    kernel, sysctl — kernel parameters and module blacklisting
+#    mac            — SELinux (RHEL) / AppArmor (Ubuntu)
+#    auth, pam      — authentication, PAM, password policy
+#    users          — user account management
+#    ssh            — SSH server hardening
+#    firewall       — firewalld (RHEL) / UFW (Ubuntu)
+#    network        — network parameters, IP forwarding
+#    crypto, tls    — TLS/SSL crypto policies
+#    audit, logging — auditd, rsyslog
+#    integrity,aide — AIDE file integrity monitoring
+#    time, ntp      — chrony NTP configuration
+#    boot, grub     — GRUB bootloader protection
+#    secureboot     — Secure Boot status and /boot permissions
+#    banner         — login banners (/etc/issue, /etc/motd)
+#    services       — disable unnecessary services
+#    updates,patching — automatic security updates
+#    coredump       — core dump restriction
+#    system         — system-level controls (ctrl-alt-del, etc.)
+#    mounts         — filesystem mount hardening (/tmp, /dev/shm)
+#    filesystem     — filesystem permissions and mounts
+#    permissions    — critical file permissions
+#    fail2ban       — fail2ban brute-force protection (Ubuntu only)
+# =============================================================================
+
+- name: "CyberAar | System Hardening — RHEL9 + Ubuntu/Debian"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [hardening]
+
+  pre_tasks:
+    - name: "CyberAar | Verify supported OS"
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family in ['RedHat', 'Debian']
+        fail_msg: >
+          Unsupported OS family: { ansible_os_family }.
+          CyberAar hardening supports: RedHat (RHEL9/AlmaLinux/Rocky) and Debian (Ubuntu/Debian).
+        success_msg: >
+          OS supported: { ansible_distribution } { ansible_distribution_major_version }
+          ({ ansible_os_family } family) — applying appropriate role set.
+      tags: [always]
+
+    - name: "CyberAar | Hardening start notification"
+      ansible.builtin.debug:
+        msg:
+          - "════════════════════════════════════════════════════════"
+          - " 🛡️  CyberAar Hardening — Starting"
+          - " Host   : { inventory_hostname }"
+          - " OS     : { ansible_distribution } { ansible_distribution_version }"
+          - " Family : { ansible_os_family }"
+          - " Arch   : { ansible_architecture }"
+          - "════════════════════════════════════════════════════════"
+      tags: [always]
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # RHEL 9 / AlmaLinux 9 / Rocky Linux 9
+  # Applied when: ansible_os_family == "RedHat"
+  # ══════════════════════════════════════════════════════════════════════════
+  roles:
+
+    # ── RHEL9 Roles ────────────────────────────────────────────────────────
+    - role: "linux_kernel_hardening_rhel9"
+      tags: [hardening, kernel, sysctl]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_selinux_rhel9"
+      tags: [hardening, selinux, mac]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_authselect_rhel9"
+      tags: [hardening, auth, pam]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_user_management_rhel9"
+      tags: [hardening, auth, users]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_ssh_hardening_rhel9"
+      tags: [hardening, ssh]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_firewalld_rhel9"
+      tags: [hardening, network, firewall]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_ip_forwarding_rhel9"
+      tags: [hardening, network, sysctl]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_crypto_policies_rhel9"
+      tags: [hardening, crypto, tls]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_auditing_rhel9"
+      tags: [hardening, audit, logging]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_aide_rhel9"
+      tags: [hardening, integrity, aide]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_chrony_rhel9"
+      tags: [hardening, time, ntp]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_bootloader_password_rhel9"
+      tags: [hardening, boot, grub]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_login_banner_rhel9"
+      tags: [hardening, banner]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_disable_unnecessary_services_rhel9"
+      tags: [hardening, services]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_dnf_automatic_rhel9"
+      tags: [hardening, updates, patching]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_core_dumps_rhel9"
+      tags: [hardening, kernel, coredump]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_ctrl_alt_del_rhel9"
+      tags: [hardening, system]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_tmp_mounts_rhel9"
+      tags: [hardening, filesystem, mounts]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_secure_boot_rhel9"
+      tags: [hardening, boot, secureboot]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_file_permissions_rhel9"
+      tags: [hardening, filesystem, permissions]
+      when: ansible_os_family == "RedHat"
+
+    # ── Ubuntu / Debian Roles ──────────────────────────────────────────────
+    - role: "linux_kernel_hardening_ubuntu"
+      tags: [hardening, kernel, sysctl]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_apparmor_ubuntu"
+      tags: [hardening, apparmor, mac]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_authselect_ubuntu"
+      tags: [hardening, auth, pam]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_user_management_ubuntu"
+      tags: [hardening, auth, users]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_ssh_hardening_ubuntu"
+      tags: [hardening, ssh]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_firewall_ubuntu"
+      tags: [hardening, network, firewall]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_ip_forwarding_ubuntu"
+      tags: [hardening, network, sysctl]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_crypto_policies_ubuntu"
+      tags: [hardening, crypto, tls]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_auditing_ubuntu"
+      tags: [hardening, audit, logging]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_aide_ubuntu"
+      tags: [hardening, integrity, aide]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_chrony_ubuntu"
+      tags: [hardening, time, ntp]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_bootloader_password_ubuntu"
+      tags: [hardening, boot, grub]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_login_banner_ubuntu"
+      tags: [hardening, banner]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_disable_unnecessary_services_ubuntu"
+      tags: [hardening, services]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_unattended_upgrades_ubuntu"
+      tags: [hardening, updates, patching]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_core_dumps_ubuntu"
+      tags: [hardening, kernel, coredump]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_ctrl_alt_del_ubuntu"
+      tags: [hardening, system]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_tmp_mounts_ubuntu"
+      tags: [hardening, filesystem, mounts]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_secure_boot_ubuntu"
+      tags: [hardening, boot, secureboot]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_fail2ban_ubuntu"
+      tags: [hardening, network, fail2ban]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_file_permissions_ubuntu"
+      tags: [hardening, filesystem, permissions]
+      when: ansible_os_family == "Debian"
+
+
+  post_tasks:
+    - name: "CyberAar | Hardening complete notification"
+      ansible.builtin.debug:
+        msg:
+          - "════════════════════════════════════════════════════════"
+          - " ✅  CyberAar Hardening — Complete"
+          - " Host   : { inventory_hostname }"
+          - " OS     : { ansible_distribution } { ansible_distribution_version }"
+          - " Next   : Run 3_baseline_after.yml to measure impact"
+          - "════════════════════════════════════════════════════════"
+      tags: [always]
+
+...
