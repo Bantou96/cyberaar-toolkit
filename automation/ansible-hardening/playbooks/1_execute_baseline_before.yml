@@ -29,7 +29,7 @@
 
     - name: "Copy cyberaar-baseline script to remote host"
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../scripts/cyberaar-baseline.sh"
+        src: "{{ playbook_dir }}/../../scripts/cyberaar-baseline.sh"
         dest: "/usr/local/bin/cyberaar-baseline"
         mode: "0755"
         owner: root
@@ -51,14 +51,14 @@
     - name: "Fetch HTML report to controller"
       ansible.builtin.fetch:
         src: "{{ baseline_report_html }}"
-        dest: "{{ playbook_dir }}/reports/before/{{ baseline_host }}/"
+        dest: "{{ playbook_dir }}/../reports/before/{{ baseline_host }}/"
         flat: true
       ignore_errors: true
 
     - name: "Fetch JSON report to controller"
       ansible.builtin.fetch:
         src: "{{ baseline_report_json }}"
-        dest: "{{ playbook_dir }}/reports/before/{{ baseline_host }}/"
+        dest: "{{ playbook_dir }}/../reports/before/{{ baseline_host }}/"
         flat: true
       ignore_errors: true
 

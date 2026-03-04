@@ -61,7 +61,7 @@
     - "linux_auditd_forward_to_syslog | bool"
     - "not linux_auditing_forwarding_disabled | bool"
   ansible.builtin.lineinfile:
-    path: "/etc/audisp/plugins.d/syslog.conf"
+    path: "{{ linux_auditd_syslog_plugin_path }}"
     regexp: '^active ='
     line: 'active = {{ linux_auditd_syslog_plugin_active }}'
     mode: "0640"

@@ -33,14 +33,14 @@
     - name: "Fetch HTML report to controller"
       ansible.builtin.fetch:
         src: "{{ baseline_report_html }}"
-        dest: "{{ playbook_dir }}/reports/after/{{ baseline_host }}/"
+        dest: "{{ playbook_dir }}/../reports/after/{{ baseline_host }}/"
         flat: true
       ignore_errors: true
 
     - name: "Fetch JSON report to controller"
       ansible.builtin.fetch:
         src: "{{ baseline_report_json }}"
-        dest: "{{ playbook_dir }}/reports/after/{{ baseline_host }}/"
+        dest: "{{ playbook_dir }}/../reports/after/{{ baseline_host }}/"
         flat: true
       ignore_errors: true
 

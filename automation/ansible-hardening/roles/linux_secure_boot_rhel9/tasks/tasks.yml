@@ -1,21 +1,59 @@
 ---
 
+# FIX: mokutil is only present on EFI/UEFI systems. On BIOS systems or VMs
+# it may not be installed, returning rc != 0 before even checking Secure Boot.
+# Use failed_when: false + explicit result handling instead of hard fail.
+
+- name: "Check if mokutil is available"
+  ansible.builtin.command: "which mokutil"
+  changed_when: false
+  register: "mokutil_available"
+  failed_when: false
+
 - name: "Check Secure Boot status via mokutil"
+  when: "mokutil_available.rc == 0"
   ansible.builtin.command: "mokutil --sb-state"
   changed_when: false
   register: "secure_boot_status"
-  failed_when: "secure_boot_status.rc != 0"
+  failed_when: false
 
-- name: "Fail if Secure Boot is not enabled (enforce mode)"
+- name: "Set Secure Boot fact when mokutil ran"
+  when: "mokutil_available.rc == 0"
+  ansible.builtin.set_fact:
+    secure_boot_state: "{{ secure_boot_status.stdout | default('unknown') }}"
+    secure_boot_checked: true
+
+- name: "Set Secure Boot fact when mokutil unavailable (BIOS/VM)"
+  when: "mokutil_available.rc != 0"
+  ansible.builtin.set_fact:
+    secure_boot_state: "mokutil not available (BIOS system or package not installed)"
+    secure_boot_checked: false
+
+- name: "Warn if Secure Boot could not be verified"
+  when: "not secure_boot_checked"
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: mokutil not found on {{ inventory_hostname }}.
+      This host may be a BIOS/legacy system or a VM without Secure Boot support.
+      Skipping Secure Boot check. Install mokutil to enable this check.
+
+- name: "Fail if Secure Boot is not enabled and enforce mode is on"
   when:
     - "linux_secure_boot_enforce | bool"
-    - "'SecureBoot enabled' not in secure_boot_status.stdout"
+    - "secure_boot_checked"
+    - "'SecureBoot enabled' not in secure_boot_state"
   ansible.builtin.fail:
-    msg: "Secure Boot is disabled! Current state: {{ secure_boot_status.stdout }}. This server should have Secure Boot enabled."
+    msg: >-
+      Secure Boot is disabled on {{ inventory_hostname }}!
+      Current state: {{ secure_boot_state }}.
+      Set linux_secure_boot_enforce: false to skip this check on legacy systems.
 
-- name: "Debug Secure Boot status (verbosity >=1)"
+- name: "Debug Secure Boot status"
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
-    msg: "Secure Boot state: {{ secure_boot_status.stdout }}"
+    msg:
+      - "Host: {{ inventory_hostname }}"
+      - "Secure Boot state: {{ secure_boot_state }}"
+      - "Checked: {{ secure_boot_checked }}"
 
 ...

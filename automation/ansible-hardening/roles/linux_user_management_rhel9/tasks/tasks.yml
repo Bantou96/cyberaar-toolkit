@@ -63,7 +63,7 @@
 - name: "Remove any users with empty/null passwords"
   when:
     - "linux_remove_empty_password_users | bool"
-    - "item.value[1] == '' or item.value[1] == '!' or item.value[1] is none"
+    - "item.value[0] == '' or item.value[0] == '!' or item.value[0] is none"
   ansible.builtin.user:
     name: "{{ item.key }}"
     password: "!"   # Lock with invalid hash

@@ -70,11 +70,11 @@
         that:
           - ansible_os_family in ['RedHat', 'Debian']
         fail_msg: >
-          Unsupported OS family: { ansible_os_family }.
+          Unsupported OS family: {{ ansible_os_family }}.
           CyberAar hardening supports: RedHat (RHEL9/AlmaLinux/Rocky) and Debian (Ubuntu/Debian).
         success_msg: >
-          OS supported: { ansible_distribution } { ansible_distribution_major_version }
-          ({ ansible_os_family } family) — applying appropriate role set.
+          OS supported: {{ ansible_distribution }} {{ ansible_distribution_major_version }}
+          ( {{ ansible_os_family }} family) — applying appropriate role set.
       tags: [always]
 
     - name: "CyberAar | Hardening start notification"
@@ -82,10 +82,10 @@
         msg:
           - "════════════════════════════════════════════════════════"
           - " 🛡️  CyberAar Hardening — Starting"
-          - " Host   : { inventory_hostname }"
-          - " OS     : { ansible_distribution } { ansible_distribution_version }"
-          - " Family : { ansible_os_family }"
-          - " Arch   : { ansible_architecture }"
+          - " Host   : {{ inventory_hostname }}"
+          - " OS     : {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - " Family : {{ ansible_os_family }}"
+          - " Arch   : {{ ansible_architecture }}"
           - "════════════════════════════════════════════════════════"
       tags: [always]
 
@@ -268,8 +268,8 @@
         msg:
           - "════════════════════════════════════════════════════════"
           - " ✅  CyberAar Hardening — Complete"
-          - " Host   : { inventory_hostname }"
-          - " OS     : { ansible_distribution } { ansible_distribution_version }"
+          - " Host   : {{ inventory_hostname }}"
+          - " OS     : {{ ansible_distribution }} {{ ansible_distribution_version }}"
           - " Next   : Run 3_baseline_after.yml to measure impact"
           - "════════════════════════════════════════════════════════"
       tags: [always]

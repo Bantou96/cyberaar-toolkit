@@ -40,8 +40,25 @@
   register: "grub_users_result"
   notify: "Rebuild GRUB config"
 
-- name: "Ensure /boot/grub2/grub.cfg is regenerated if password config changed"
-  when: "grub_users_result.changed"
+- name: "Check if EFI grub.cfg exists"
+  ansible.builtin.stat:
+    path: "/boot/efi/EFI/{{ ansible_distribution | lower }}/grub.cfg"
+  register: "grub_efi_cfg_check"
+  failed_when: false
+
+- name: "Rebuild GRUB config after password deploy (EFI path)"
+  when:
+    - "grub_users_result.changed"
+    - "grub_efi_cfg_check.stat.exists | default(false)"
+  ansible.builtin.command: >-
+    grub2-mkconfig -o /boot/efi/EFI/{{ ansible_distribution | lower }}/grub.cfg
+  changed_when: true
+  notify: "GRUB config updated - reboot recommended"
+
+- name: "Rebuild GRUB config after password deploy (BIOS path)"
+  when:
+    - "grub_users_result.changed"
+    - "not (grub_efi_cfg_check.stat.exists | default(false))"
   ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
   changed_when: true
   notify: "GRUB config updated - reboot recommended"

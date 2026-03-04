@@ -8,7 +8,18 @@
     state: "stopped"
   register: "cad_mask_result"
 
-- name: "Create /etc/systemd/system/ctrl-alt-del.target override to ensure mask"
+# FIX: create the .target.d/ drop-in directory before writing into it.
+# ansible.builtin.copy does NOT create missing parent directories.
+- name: "Ensure ctrl-alt-del.target.d drop-in directory exists"
+  when: "linux_ctrl_alt_del_enabled | bool"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/ctrl-alt-del.target.d"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: "Deploy ctrl-alt-del override to reinforce mask"
   when: "linux_ctrl_alt_del_enabled | bool"
   ansible.builtin.copy:
     content: "[Unit]\nDescription=Ctrl-Alt-Del disabled by CyberAar hardening\n"
@@ -23,15 +34,16 @@
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: "Debug Ctrl+Alt+Del status (verbosity >=1)"
+- name: "Verify Ctrl+Alt+Del mask status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
   ansible.builtin.command: "systemctl is-enabled ctrl-alt-del.target"
   changed_when: false
   register: "cad_status"
+  failed_when: false
 
 - name: "Show Ctrl+Alt+Del mask status"
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
-    msg: "ctrl-alt-del.target masked: {{ cad_status.stdout | default('unknown') }}"
+    msg: "ctrl-alt-del.target status: {{ cad_status.stdout | default('unknown') }}"
 
 ...
