@@ -6,8 +6,7 @@
 # =============================================================================
 
 - name: "CyberAar | Pre-Hardening Baseline"
-  hosts: all
-  become: true
+  hosts: "{{ target | default('linux_servers') }}"
   gather_facts: true
   tags: [baseline, before]
 

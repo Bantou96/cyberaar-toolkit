@@ -1,5 +1,6 @@
 ---
 
+# ── Package install ───────────────────────────────────────────────────────────
 - name: "Ensure auditd packages are installed"
   ansible.builtin.package:
     name:
@@ -7,6 +8,10 @@
       - "audispd-plugins"
     state: "present"
 
+- name: "Refresh package facts after auditd install"
+  ansible.builtin.meta: flush_handlers
+
+# ── Config deployment ─────────────────────────────────────────────────────────
 - name: "Deploy auditd.conf template"
   ansible.builtin.template:
     src: "auditd.conf.j2"
@@ -29,14 +34,33 @@
   register: "audit_rules_result"
   notify: "Restart auditd"
 
+# ── Service management ────────────────────────────────────────────────────────
+# Ubuntu 22.04+ uses auditd but requires it to be started via service wrapper
+# as systemd may manage it under a different unit on some installs.
 - name: "Enable and start auditd service"
   ansible.builtin.service:
     name: "auditd"
     state: "started"
     enabled: true
+  failed_when: false
+  register: "auditd_service_result"
+
+- name: "Fallback — start auditd via command if service module failed"
+  when: "auditd_service_result.failed | default(false)"
+  ansible.builtin.command: "service auditd start"
+  changed_when: true
+  failed_when: false
+
+# ── GRUB boot auditing (skipped if /etc/default/grub absent) ─────────────────
+- name: "Check if GRUB config exists"
+  ansible.builtin.stat:
+    path: "/etc/default/grub"
+  register: "_grub_file"
 
 - name: "Enable boot-time auditing in GRUB cmdline"
-  when: "linux_auditd_enable_boot_auditing | bool"
+  when:
+    - "linux_auditd_enable_boot_auditing | bool"
+    - "_grub_file.stat.exists"
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
     regexp: '^(GRUB_CMDLINE_LINUX=")(.*)"$'
@@ -45,19 +69,59 @@
   register: "grub_audit_result"
 
 - name: "Rebuild GRUB config if boot auditing changed"
-  when: "grub_audit_result.changed"
+  when:
+    - "_grub_file.stat.exists"
+    - "grub_audit_result.changed | default(false)"
   ansible.builtin.command: "update-grub"
   changed_when: true
 
+- name: "Note: GRUB boot auditing skipped (no /etc/default/grub)"
+  when: "not _grub_file.stat.exists"
+  ansible.builtin.debug:
+    msg: "GRUB not found — boot-time audit=1 cmdline skipped."
+
 - name: "Notify about reboot for boot auditing"
-  when: "grub_audit_result.changed"
+  when: "grub_audit_result.changed | default(false)"
   ansible.builtin.debug:
     msg: "Boot-time auditing changes applied. Reboot required for full effect."
+
+# ── Syslog plugin ─────────────────────────────────────────────────────────────
+# audispd-plugins installs syslog.conf only after auditd has run once.
+# In check mode the file won't exist yet — skip gracefully.
+- name: "Check if syslog plugin file exists"
+  ansible.builtin.stat:
+    path: "/etc/audit/plugins.d/syslog.conf"
+  register: "_syslog_plugin_file"
+
+- name: "Ensure /etc/audit/plugins.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/audit/plugins.d"
+    state: "directory"
+    mode: "0750"
+    owner: "root"
+    group: "root"
+
+- name: "Create syslog.conf plugin file if missing"
+  when: "not _syslog_plugin_file.stat.exists and not ansible_check_mode"
+  ansible.builtin.copy:
+    dest: "/etc/audit/plugins.d/syslog.conf"
+    content: |
+      # Managed by Ansible role linux_auditing_ubuntu
+      active = no
+      direction = out
+      path = builtin_syslog
+      type = builtin
+      args = LOG_INFO
+      format = string
+    mode: "0640"
+    owner: "root"
+    group: "root"
 
 - name: "Enable auditd syslog plugin"
   when:
     - "linux_auditd_forward_to_syslog | bool"
     - "not linux_auditing_forwarding_disabled | bool"
+    - "_syslog_plugin_file.stat.exists or not ansible_check_mode"
   ansible.builtin.lineinfile:
     path: "/etc/audit/plugins.d/syslog.conf"
     regexp: '^active ='
@@ -65,6 +129,14 @@
     mode: "0640"
   notify: "Restart auditd"
 
+- name: "Note: syslog plugin skipped in check mode (file not yet created)"
+  when:
+    - "ansible_check_mode"
+    - "not _syslog_plugin_file.stat.exists"
+  ansible.builtin.debug:
+    msg: "Check mode — /etc/audit/plugins.d/syslog.conf does not exist yet. Will be created on first real run."
+
+# ── rsyslog ───────────────────────────────────────────────────────────────────
 - name: "Ensure rsyslog is installed and enabled"
   ansible.builtin.package:
     name: "rsyslog"

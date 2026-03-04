@@ -1,4 +1,5 @@
 ---
+
 galaxy_info:
   role_name: linux_firewall_ubuntu
   author: CyberAar Team
@@ -10,6 +11,11 @@ galaxy_info:
       versions: [focal, jammy, noble]
     - name: Debian
       versions: [bullseye, bookworm]
-dependencies:
-  - role: community.general
+
+# community.general is a collection, not a role — declare it here, not in dependencies
+collections:
+  - community.general
+
+dependencies: []
+
 ...

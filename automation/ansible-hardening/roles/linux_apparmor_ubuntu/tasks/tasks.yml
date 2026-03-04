@@ -1,5 +1,18 @@
 ---
 
+# ── WSL detection ─────────────────────────────────────────────────────────────
+# WSL does not use GRUB — skip any task that writes to /etc/default/grub or
+# runs update-grub. AppArmor service management still applies.
+- name: "Detect WSL environment"
+  ansible.builtin.stat:
+    path: "/proc/sys/fs/binfmt_misc/WSLInterop"
+  register: "_wsl_interop"
+
+- name: "Set WSL fact"
+  ansible.builtin.set_fact:
+    _is_wsl: "{{ _wsl_interop.stat.exists }}"
+
+# ── AppArmor packages ─────────────────────────────────────────────────────────
 - name: "Ensure AppArmor packages are installed"
   ansible.builtin.package:
     name:
@@ -9,7 +22,9 @@
       - "apparmor-profiles-extra"
     state: "present"
 
+# ── GRUB cmdline (skipped on WSL — no bootloader present) ────────────────────
 - name: "Ensure AppArmor is enabled in GRUB cmdline"
+  when: "not _is_wsl"
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
     regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=")(.*)"$'
@@ -18,22 +33,33 @@
   register: "grub_apparmor_result"
 
 - name: "Rebuild GRUB config if AppArmor cmdline changed"
-  when: "grub_apparmor_result.changed"
+  when:
+    - "not _is_wsl"
+    - "grub_apparmor_result.changed"
   ansible.builtin.command: "update-grub"
   changed_when: true
 
+- name: "Note: GRUB cmdline skipped on WSL (no bootloader)"
+  when: "_is_wsl"
+  ansible.builtin.debug:
+    msg: "WSL detected — skipping GRUB cmdline update. AppArmor is active via WSL kernel."
+
+# ── AppArmor service ──────────────────────────────────────────────────────────
 - name: "Enable and start AppArmor service"
+  when: "not ansible_check_mode"
   ansible.builtin.service:
     name: "apparmor"
     state: "started"
     enabled: true
 
 - name: "Collect currently loaded AppArmor profiles"
+  when: "not ansible_check_mode"
   ansible.builtin.command: "apparmor_status --profiled"
   changed_when: false
   register: "aa_profiled"
 
 - name: "Collect profiles in complain mode"
+  when: "not ansible_check_mode"
   ansible.builtin.command: "apparmor_status --complaining"
   changed_when: false
   failed_when: false
@@ -71,6 +97,7 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg:
+      - "WSL environment: {{ _is_wsl }}"
       - "Profiles loaded: {{ aa_profiled.stdout | default('unknown') }}"
       - "Profiles in complain mode: {{ aa_complaining.stdout | default('0') }}"
       - "Enforce-all triggered: {{ aa_enforce_result.changed | default(false) }}"

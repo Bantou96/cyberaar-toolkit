@@ -1,0 +1,24 @@
+---
+# =============================================================================
+#  group_vars/linux_servers.yml
+#  Variables shared across ALL Linux hosts (rhel_servers + ubuntu_servers).
+#  More specific group_vars files override these.
+# =============================================================================
+
+# ── Default NIC name — override per-host or per-group as needed ───────────────
+linux_network_interface_name: "eth0"
+
+# ── Shared hardening defaults ─────────────────────────────────────────────────
+# Login banner organisation name (used in issue.net / motd templates)
+linux_login_banner_org: "CyberAar"
+
+# NTP servers — override per site if you have local NTP infrastructure
+linux_chrony_ntp_servers:
+  - "0.pool.ntp.org"
+  - "1.pool.ntp.org"
+  - "2.pool.ntp.org"
+
+# rsyslog / auditd remote log server — set to your SIEM address
+linux_rsyslog_remote_host: ""
+linux_rsyslog_remote_port: "514"
+linux_rsyslog_remote_protocol: "tcp"

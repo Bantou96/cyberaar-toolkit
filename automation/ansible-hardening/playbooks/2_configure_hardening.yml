@@ -13,21 +13,37 @@
 #    kernel → MAC (SELinux/AppArmor) → auth → SSH → network →
 #    crypto → audit → integrity → time → boot → services → filesystem
 #
+#  Sensitive variables — set in shell, NEVER commit:
+#    read -sr LINUX_BOOTLOADER_PASSWORD ; export LINUX_BOOTLOADER_PASSWORD
+#    # ... run playbook ...
+#    unset LINUX_BOOTLOADER_PASSWORD
+#
 #  Usage:
-#    # Full hardening (all roles)
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml
+#    # 1. Dry-run against a single host (always start here)
+#    ANSIBLE_LOG_PATH=~/logs/$(date +%Y-%m-%d)-hardening.log \
+#    ansible-playbook --diff -u <admin_user> -b \
+#      -i inventory/hosts.yml \
+#      --extra-vars "target=my_test_server" \
+#      playbooks/2_configure_hardening.yml --tags hardening --check
 #
-#    # Specific category only
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags ssh
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags audit,logging
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --tags filesystem,permissions
+#    # 2. Apply to a specific group
+#    ANSIBLE_LOG_PATH=~/logs/$(date +%Y-%m-%d)-hardening.log \
+#    ansible-playbook --diff -u <admin_user> -b \
+#      -i inventory/hosts.yml \
+#      --extra-vars "target=rhel_servers" \
+#      playbooks/2_configure_hardening.yml --tags hardening
 #
-#    # Dry run
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml --check --diff
+#    # 3. Specific category only
+#    ansible-playbook --diff -u <admin_user> -b \
+#      -i inventory/hosts.yml \
+#      --extra-vars "target=my_test_server" \
+#      playbooks/2_configure_hardening.yml --tags ssh
 #
-#    # Skip specific roles using disable vars (preferred — no tag conflicts)
-#    ansible-playbook -i inventory/hosts.yml playbooks/2_hardening.yml \
-#      -e "linux_bootloader_password_rhel9_disabled=true linux_bootloader_password_ubuntu_disabled=true"
+#    # 4. Skip specific roles using disable vars (preferred over --skip-tags)
+#    ansible-playbook --diff -u <admin_user> -b \
+#      -i inventory/hosts.yml \
+#      --extra-vars "target=rhel_servers linux_bootloader_password_rhel9_disabled=true" \
+#      playbooks/2_configure_hardening.yml --tags hardening
 #
 #  Requirements:
 #    ansible-galaxy collection install community.general  # Ubuntu UFW module
@@ -59,8 +75,7 @@
 # =============================================================================
 
 - name: "CyberAar | System Hardening — RHEL9 + Ubuntu/Debian"
-  hosts: all
-  become: true
+  hosts: "{{ target | default('linux_servers') }}"
   gather_facts: true
   tags: [hardening]
 

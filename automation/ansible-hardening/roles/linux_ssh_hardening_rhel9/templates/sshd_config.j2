@@ -13,14 +13,16 @@ MACs {{ linux_ssh_macs }}
 KexAlgorithms {{ linux_ssh_kexalgorithms }}
 
 MaxAuthTries {{ linux_ssh_max_auth_tries }}
+MaxSessions {{ linux_ssh_max_sessions }}
+MaxStartups {{ linux_ssh_max_startups }}
 
 Banner {{ linux_ssh_banner }}
 
 Subsystem sftp {{ linux_ssh_subsystem }}
 
 # Additional security
-LoginGraceTime 30
-ClientAliveInterval 300
-ClientAliveCountMax 0
+LoginGraceTime {{ linux_ssh_login_grace_time }}
+ClientAliveInterval {{ linux_ssh_client_alive_interval }}
+ClientAliveCountMax {{ linux_ssh_client_alive_count_max }}
 IgnoreRhosts yes
 PermitUserEnvironment no

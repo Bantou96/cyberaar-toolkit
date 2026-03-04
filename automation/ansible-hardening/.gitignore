@@ -1,0 +1,6 @@
+
+# Generated reports — never commit
+reports/
+
+# Live inventory with real IPs — keep local only
+inventory/hosts
