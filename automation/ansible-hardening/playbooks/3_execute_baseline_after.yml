@@ -1,0 +1,54 @@
+---
+# =============================================================================
+#  CyberAar | Step 3 — Post-Hardening Baseline
+#  Runs the cyberaar-baseline script AFTER hardening to measure improvement
+# =============================================================================
+
+- name: "CyberAar | Post-Hardening Baseline"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [baseline, after]
+
+  vars:
+    baseline_output_dir: "/var/log/cyberaar/baseline"
+    baseline_timestamp: "{{ ansible_date_time.epoch }}"
+    baseline_host: "{{ inventory_hostname }}"
+    baseline_report_html: "{{ baseline_output_dir }}/after_{{ baseline_host }}_{{ baseline_timestamp }}.html"
+    baseline_report_json: "{{ baseline_output_dir }}/after_{{ baseline_host }}_{{ baseline_timestamp }}.json"
+
+  tasks:
+    - name: "Run post-hardening baseline scan"
+      ansible.builtin.command: >
+        cyberaar-baseline
+        --html-out {{ baseline_report_html }}
+        --json-out {{ baseline_report_json }}
+      register: baseline_after_result
+      changed_when: false
+
+    - name: "Show baseline scan output"
+      ansible.builtin.debug:
+        var: baseline_after_result.stdout_lines
+
+    - name: "Fetch HTML report to controller"
+      ansible.builtin.fetch:
+        src: "{{ baseline_report_html }}"
+        dest: "{{ playbook_dir }}/reports/after/{{ baseline_host }}/"
+        flat: true
+      ignore_errors: true
+
+    - name: "Fetch JSON report to controller"
+      ansible.builtin.fetch:
+        src: "{{ baseline_report_json }}"
+        dest: "{{ playbook_dir }}/reports/after/{{ baseline_host }}/"
+        flat: true
+      ignore_errors: true
+
+    - name: "Summary — baseline reports saved"
+      ansible.builtin.debug:
+        msg:
+          - "✅ Post-hardening baseline complete for {{ baseline_host }}"
+          - "📄 HTML → {{ baseline_report_html }}"
+          - "📄 JSON → {{ baseline_report_json }}"
+
+...

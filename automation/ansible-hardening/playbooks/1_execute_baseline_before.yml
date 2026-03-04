@@ -1,0 +1,65 @@
+---
+
+# =============================================================================
+#  CyberAar | Step 1 — Pre-Hardening Baseline
+#  Runs the cyberaar-baseline script BEFORE hardening to capture initial state
+# =============================================================================
+
+- name: "CyberAar | Pre-Hardening Baseline"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [baseline, before]
+
+  vars:
+    baseline_output_dir: "/var/log/cyberaar/baseline"
+    baseline_timestamp: "{{ ansible_date_time.epoch }}"
+    baseline_host: "{{ inventory_hostname }}"
+    baseline_report_html: "{{ baseline_output_dir }}/before_{{ baseline_host }}_{{ baseline_timestamp }}.html"
+    baseline_report_json: "{{ baseline_output_dir }}/before_{{ baseline_host }}_{{ baseline_timestamp }}.json"
+
+  pre_tasks:
+    - name: "Ensure baseline output directory exists"
+      ansible.builtin.file:
+        path: "{{ baseline_output_dir }}"
+        state: directory
+        mode: "0750"
+        owner: root
+        group: root
+
+    - name: "Copy cyberaar-baseline script to remote host"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../scripts/cyberaar-baseline.sh"
+        dest: "/usr/local/bin/cyberaar-baseline"
+        mode: "0755"
+        owner: root
+        group: root
+
+  tasks:
+    - name: "Run pre-hardening baseline scan"
+      ansible.builtin.command: >
+        cyberaar-baseline
+        --html-out {{ baseline_report_html }}
+        --json-out {{ baseline_report_json }}
+      register: baseline_before_result
+      changed_when: false
+
+    - name: "Show baseline scan output"
+      ansible.builtin.debug:
+        var: baseline_before_result.stdout_lines
+
+    - name: "Fetch HTML report to controller"
+      ansible.builtin.fetch:
+        src: "{{ baseline_report_html }}"
+        dest: "{{ playbook_dir }}/reports/before/{{ baseline_host }}/"
+        flat: true
+      ignore_errors: true
+
+    - name: "Fetch JSON report to controller"
+      ansible.builtin.fetch:
+        src: "{{ baseline_report_json }}"
+        dest: "{{ playbook_dir }}/reports/before/{{ baseline_host }}/"
+        flat: true
+      ignore_errors: true
+
+...
