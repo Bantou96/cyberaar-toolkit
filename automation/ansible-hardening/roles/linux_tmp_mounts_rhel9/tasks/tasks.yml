@@ -6,19 +6,19 @@
 
 - name: "Ensure tmp mounts have required options"
   ansible.posix.mount:
-    path: "{{ item.path }}"
-    src: "{{ item.src | default('tmpfs') }}"
-    fstype: "{{ item.fstype | default('tmpfs') }}"
+    path: "{{ item }}"
+    src: "tmpfs"
+    fstype: "tmpfs"
     opts: "{{ linux_tmp_mount_options | join(',') }}"
     state: "mounted"
     permanent: true
-  loop: "{{ linux_tmp_mount_paths | map('community.general.dict_kv', {'path': item}) | list }}"
+  loop: "{{ linux_tmp_mount_paths }}"
   register: "tmp_mount_result"
   notify: "Remount tmp filesystems if changed"
 
 - name: "Remount tmp filesystems if options were updated"
   when: "tmp_mount_result.results | selectattr('changed', 'equalto', true) | list | length > 0"
-  ansible.builtin.command: "mount -o remount {{ item.path }}"
+  ansible.builtin.command: "mount -o remount {{ item }}"
   loop: "{{ linux_tmp_mount_paths }}"
   changed_when: true
 

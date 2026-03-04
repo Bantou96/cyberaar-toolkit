@@ -17,6 +17,15 @@ linux_auditd_conf_file: "/etc/audit/auditd.conf"
 # Path for rules (we'll use one main file for simplicity; can split later)
 linux_auditd_rules_file: "/etc/audit/rules.d/99-cis-audit.rules"
 
+
+# Syslog plugin path — moved between RHEL8 (audit <3.0) and RHEL9 (audit >=3.0)
+# RHEL8: /etc/audisp/plugins.d/syslog.conf
+# RHEL9: /etc/audit/plugins.d/syslog.conf
+linux_auditd_syslog_plugin_path: >-
+  {{ '/etc/audit/plugins.d/syslog.conf'
+     if ansible_distribution_major_version | int >= 9
+     else '/etc/audisp/plugins.d/syslog.conf' }}
+
 # Role disable
 linux_auditing_disabled: false
 
