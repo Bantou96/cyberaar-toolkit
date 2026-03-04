@@ -1,36 +1,53 @@
 ---
 
-- name: "Deploy IP forwarding sysctl configuration"
-  ansible.builtin.template:
-    src: "99-cis-ip-forwarding.conf.j2"
-    dest: "{{ linux_ip_forwarding_sysctl_file }}"
-    mode: "0644"
-    owner: "root"
-    group: "root"
-    backup: true
-  register: "sysctl_result"
-  notify: "Reload sysctl configuration"
+- name: "Disable IP forwarding (IPv4)"
+  ansible.posix.sysctl:
+    name: "net.ipv4.ip_forward"
+    value: "{{ '1' if linux_ip_forwarding_enable_ipv4 | bool else '0' }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "{{ linux_ip_forwarding_sysctl_file }}"
+    reload: true
+  register: "ipv4_forward_result"
 
-- name: "Verify IPv4 forwarding is disabled"
-  when: "not linux_ip_forwarding_enable_ipv4 | bool"
-  ansible.builtin.command: "sysctl -n net.ipv4.ip_forward"
-  changed_when: false
-  register: "ipv4_fwd_check"
+- name: "Disable IP forwarding (IPv6)"
+  ansible.posix.sysctl:
+    name: "net.ipv6.conf.all.forwarding"
+    value: "{{ '1' if linux_ip_forwarding_enable_ipv6 | bool else '0' }}"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "{{ linux_ip_forwarding_sysctl_file }}"
+    reload: true
+  register: "ipv6_forward_result"
 
-- name: "Fail if IPv4 forwarding is unexpectedly enabled"
-  when:
-    - "not linux_ip_forwarding_enable_ipv4 | bool"
-    - "ipv4_fwd_check.stdout | trim != '0'"
-  ansible.builtin.fail:
-    msg: >
-      net.ipv4.ip_forward is still enabled (value={{ ipv4_fwd_check.stdout | trim }})
-      after applying sysctl settings. Please check for conflicting sysctl files.
+- name: "Disable accept redirects (IPv4)"
+  ansible.posix.sysctl:
+    name: "net.ipv4.conf.all.accept_redirects"
+    value: "0"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "{{ linux_ip_forwarding_sysctl_file }}"
+    reload: true
+  register: "ipv4_redirects_result"
+
+- name: "Disable accept redirects (IPv6)"
+  ansible.posix.sysctl:
+    name: "net.ipv6.conf.all.accept_redirects"
+    value: "0"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "{{ linux_ip_forwarding_sysctl_file }}"
+    reload: true
+  register: "ipv6_redirects_result"
 
 - name: "Debug IP forwarding status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg:
-      - "sysctl file updated: {{ sysctl_result.changed | default(false) }}"
-      - "IPv4 forward value: {{ ipv4_fwd_check.stdout | default('not checked') }}"
+      - "net.ipv4.ip_forward: {{ '1' if linux_ip_forwarding_enable_ipv4 | bool else '0' }}"
+      - "net.ipv6.conf.all.forwarding: {{ '1' if linux_ip_forwarding_enable_ipv6 | bool else '0' }}"
+      - "accept_redirects (IPv4/IPv6): 0"
+      - "IPv4 forward changed: {{ ipv4_forward_result.changed | default(false) }}"
+      - "IPv6 forward changed: {{ ipv6_forward_result.changed | default(false) }}"
 
 ...

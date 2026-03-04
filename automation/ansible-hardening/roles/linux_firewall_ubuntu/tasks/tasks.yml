@@ -1,10 +1,39 @@
 ---
 
+# ── WSL / systemd detection ───────────────────────────────────────────────────
+- name: "Detect WSL environment"
+  ansible.builtin.stat:
+    path: "/proc/sys/fs/binfmt_misc/WSLInterop"
+  register: "_wsl_interop"
+
+- name: "Check if systemd is the init process (PID 1)"
+  ansible.builtin.command: "ps -p 1 -o comm="
+  changed_when: false
+  register: "_pid1"
+  failed_when: false
+
+- name: "Set WSL / no-systemd fact"
+  ansible.builtin.set_fact:
+    _skip_service_mgmt: >-
+      {{ _wsl_interop.stat.exists and (_pid1.stdout | trim) != 'systemd' }}
+
+# ── Package install ───────────────────────────────────────────────────────────
 - name: "Ensure ufw package is installed"
   ansible.builtin.package:
     name: "ufw"
     state: "present"
 
+# Force package cache to flush so the ufw binary is available immediately
+- name: "Refresh package facts after ufw install"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Verify ufw binary is available"
+  ansible.builtin.command: "which ufw"
+  changed_when: false
+  register: "_ufw_bin"
+  failed_when: "_ufw_bin.rc != 0"
+
+# ── UFW rules ─────────────────────────────────────────────────────────────────
 - name: "Set UFW default incoming policy to deny"
   community.general.ufw:
     direction: "incoming"
@@ -50,12 +79,22 @@
   community.general.ufw:
     state: "enabled"
 
+# ── Service management (skipped on WSL without systemd) ───────────────────────
 - name: "Enable UFW service"
+  when: "not _skip_service_mgmt"
   ansible.builtin.service:
     name: "ufw"
     state: "started"
     enabled: true
 
+- name: "Note: UFW service management skipped (WSL without systemd)"
+  when: "_skip_service_mgmt"
+  ansible.builtin.debug:
+    msg: >
+      WSL without systemd detected — UFW rules applied but service
+      enable/start skipped. UFW state is active for this session.
+
+# ── Sysctl hardening ──────────────────────────────────────────────────────────
 - name: "Deploy UFW sysctl hardening"
   ansible.builtin.template:
     src: "ufw-sysctl.conf.j2"
@@ -67,6 +106,7 @@
   register: "ufw_sysctl_result"
   notify: "Reload ufw"
 
+# ── Debug ─────────────────────────────────────────────────────────────────────
 - name: "Show UFW status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
   ansible.builtin.command: "ufw status verbose"

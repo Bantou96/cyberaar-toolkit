@@ -25,6 +25,15 @@ linux_ssh_banner: "/etc/issue.net"
 
 # Max auth tries (anti-brute-force – CIS 5.1.5)
 linux_ssh_max_auth_tries: 4
+linux_ssh_max_sessions: 4
+linux_ssh_max_startups: "10:30:60"
+linux_ssh_login_grace_time: "60"
+
+# Keepalive — CountMax 3 means 3 missed probes before drop (15 min total)
+# Do NOT set CountMax to 0 — that drops the session on the first missed probe,
+# which kills Ansible connections during long package installs or AIDE init.
+linux_ssh_client_alive_interval: 300
+linux_ssh_client_alive_count_max: 3
 
 # Disable unused subsystems (e.g. sftp if not needed)
 linux_ssh_subsystem: "sftp internal-sftp"

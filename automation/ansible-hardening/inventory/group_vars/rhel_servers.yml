@@ -1,0 +1,32 @@
+---
+# =============================================================================
+#  group_vars/rhel_servers.yml
+#  Variables applied to every host in [rhel_servers].
+#
+#  Network addressing model:
+#    ansible_host is built from the provisioning network prefix + host index.
+#    Override per-host in inventory if a host uses a non-standard address.
+#
+#  Change the prefixes below to match your actual network plan.
+# =============================================================================
+
+# ── Network addressing ────────────────────────────────────────────────────────
+# Provisioning network (used by Ansible to reach the host)
+# Ansible connects via provisioning address
+linux_network_provisioning_address: "192.168.2.{{ index }}"
+linux_network_management_address: "192.168.2.{{ index }}"
+linux_network_management_gateway: "192.168.2.1"
+
+ansible_host: "{{ linux_network_provisioning_address }}"
+
+# ── Default NIC name ──────────────────────────────────────────────────────────
+# Override per-host in inventory when hardware differs: linux_network_interface_name="enp3s0"
+
+# ── CyberAar score threshold for RHEL servers ────────────────────────────────
+cyberaar_score_threshold: 20
+
+# ── OS-level hardening defaults specific to RHEL ─────────────────────────────
+# These can be overridden per-host or per-site group as needed.
+# Role-level defaults live in each role's defaults/main.yml.
+linux_selinux_mode: "enforcing"
+linux_crypto_policies_policy: "FUTURE"

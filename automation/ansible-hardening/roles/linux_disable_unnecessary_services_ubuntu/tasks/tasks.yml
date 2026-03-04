@@ -1,7 +1,9 @@
 ---
 
 - name: "Stop and disable unnecessary services"
-  when: "item.condition | default(true) | bool"
+  when:
+    - "item.condition | default(true) | bool"
+    - "not ansible_check_mode"
   ansible.builtin.service:
     name: "{{ item.name }}"
     state: "stopped"
@@ -19,7 +21,9 @@
   register: "packages_removed"
 
 - name: "Mask high-risk services via systemd (prevent re-enable)"
-  when: "linux_disable_services_mask | bool"
+  when:
+    - "linux_disable_services_mask | bool"
+    - "not ansible_check_mode"
   ansible.builtin.command: "systemctl mask {{ item }}"
   loop: "{{ linux_disable_services_masked }}"
   failed_when: false

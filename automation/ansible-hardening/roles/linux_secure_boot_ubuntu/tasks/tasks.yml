@@ -1,12 +1,32 @@
 ---
 
+# ── WSL detection ─────────────────────────────────────────────────────────────
+- name: "Detect WSL environment"
+  ansible.builtin.stat:
+    path: "/proc/sys/fs/binfmt_misc/WSLInterop"
+  register: "_wsl_interop"
+
+- name: "Set WSL fact"
+  ansible.builtin.set_fact:
+    _is_wsl: "{{ _wsl_interop.stat.exists }}"
+
+- name: "Note: Secure Boot and GRUB tasks skipped on WSL"
+  when: "_is_wsl"
+  ansible.builtin.debug:
+    msg: >
+      WSL detected — skipping Secure Boot and GRUB path tasks.
+      WSL boots via the Windows bootloader; GRUB and mokutil are not applicable.
+
+# ── Secure Boot check (skipped on WSL) ───────────────────────────────────────
 - name: "Ensure mokutil is installed (Secure Boot status tool)"
+  when: "not _is_wsl"
   ansible.builtin.package:
     name: "mokutil"
     state: "present"
   failed_when: false
 
 - name: "Check Secure Boot status"
+  when: "not _is_wsl"
   ansible.builtin.command: "mokutil --sb-state"
   changed_when: false
   register: "secure_boot_status"
@@ -14,15 +34,17 @@
 
 - name: "Warn if Secure Boot is not enabled"
   when:
+    - "not _is_wsl"
     - "linux_secure_boot_warn_if_disabled | bool"
     - "'SecureBoot enabled' not in (secure_boot_status.stdout | default(''))"
   ansible.builtin.debug:
     msg: >
       WARNING: Secure Boot does not appear to be enabled on {{ ansible_hostname }}.
-      Secure Boot provides protection against bootkit/rootkit attacks.
       Enable it in BIOS/UEFI firmware settings if supported.
 
+# ── GRUB / boot paths (skipped on WSL) ───────────────────────────────────────
 - name: "Ensure GRUB configuration directory has correct permissions"
+  when: "not _is_wsl"
   ansible.builtin.file:
     path: "{{ linux_secure_boot_grub_dir }}"
     state: "directory"
@@ -32,6 +54,7 @@
   failed_when: false
 
 - name: "Ensure GRUB config file has strict permissions"
+  when: "not _is_wsl"
   ansible.builtin.file:
     path: "{{ linux_secure_boot_grub_cfg }}"
     mode: "0600"
@@ -40,6 +63,7 @@
   failed_when: false
 
 - name: "Ensure /boot directory has strict permissions"
+  when: "not _is_wsl"
   ansible.builtin.file:
     path: "/boot"
     state: "directory"
@@ -48,6 +72,7 @@
     group: "root"
 
 - name: "Deploy hardened GRUB defaults"
+  when: "not _is_wsl"
   ansible.builtin.template:
     src: "grub-hardening.j2"
     dest: "/etc/default/grub.d/99-cis-hardening.cfg"
@@ -62,7 +87,8 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg:
-      - "Secure Boot status: {{ secure_boot_status.stdout | default('unknown') }}"
+      - "WSL environment: {{ _is_wsl }}"
+      - "Secure Boot status: {{ secure_boot_status.stdout | default('N/A — WSL') }}"
       - "GRUB defaults updated: {{ grub_defaults_result.changed | default(false) }}"
 
 ...

@@ -1,22 +1,33 @@
 # AIDE configuration
 # Managed by Ansible role linux_aide_ubuntu
 # Generated: {{ ansible_date_time.iso8601 }}
+# Compatible with AIDE 0.17+ (Ubuntu 22.04+)
 
 database_in=file:/var/lib/aide/aide.db
 database_out=file:/var/lib/aide/aide.db.new
 database_new=file:/var/lib/aide/aide.db.new
 gzip_dbout=yes
-verbose=5
+
+# log_level and report_level replace the removed 'verbose' option (AIDE 0.17+)
+# Valid values: error, warning, notice, info, debug (log_level)
+# Valid values: none, summary, database_attributes, list_entries, added_removed, changed_attributes (report_level)
+log_level=warning
+report_level=changed_attributes
+
 report_url=file:/var/log/aide/aide-report.log
 report_url=stdout
 
+# ── Attribute definition ──────────────────────────────────────────────────────
 CYBERAAR = {{ linux_aide_check_attributes }}
 
+# ── Monitored paths ───────────────────────────────────────────────────────────
 {% for path in linux_aide_monitored_paths %}
 {{ path }} CYBERAAR
 {% endfor %}
 
-!/var/log/.*
+# ── Exclusions (must come after inclusions) ───────────────────────────────────
+!/var/log/aide
+!/var/log/journal
 !/var/spool/.*
 !/var/run/.*
 !/proc
@@ -24,3 +35,4 @@ CYBERAAR = {{ linux_aide_check_attributes }}
 !/dev
 !/tmp
 !/var/tmp
+!/run

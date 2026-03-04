@@ -1,0 +1,41 @@
+# CyberAar — OpenSSL 3 TLS hardening (Ubuntu 22.04+ / Debian 12+)
+# Managed by Ansible role linux_crypto_policies_ubuntu
+# Generated: {{ ansible_date_time.iso8601 }}
+#
+# OpenSSL 3 introduced a provider-based architecture. This file tightens
+# algorithm and protocol defaults beyond /etc/ssl/openssl.cnf by using
+# the openssl_conf activation mechanism available in OpenSSL 3+.
+#
+# Applied to: /etc/ssl/certs/cyberaar-tls-hardening.cnf
+# Activated via: OPENSSL_CONF env var or include in openssl.cnf
+
+openssl_conf = openssl_init
+
+[openssl_init]
+ssl_conf  = ssl_section
+alg_section = evp_properties
+
+# ── TLS protocol and cipher defaults ─────────────────────────────────────────
+[ssl_section]
+system_default = tls_system_default
+
+[tls_system_default]
+MinProtocol     = {{ linux_crypto_min_tls_version }}
+MaxProtocol     = TLSv1.3
+CipherString    = {{ linux_crypto_tls12_ciphers }}
+CipherSuites    = {{ linux_crypto_tls13_ciphers }}
+SignatureAlgorithms = ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA+SHA256:RSA+SHA384:RSA+SHA512
+# Enforce server cipher preference and prefer ChaCha20 when client supports it
+Options         = ServerPreference,PrioritizeChaCha
+
+# ── Algorithm / provider controls (OpenSSL 3 specific) ───────────────────────
+[evp_properties]
+# Disable legacy algorithms: MD4, RC4, DES, 3DES, IDEA, Blowfish, RC2
+# The legacy provider is intentionally NOT activated here.
+# Applications requiring legacy algorithms must opt in explicitly.
+default_properties = fips=no
+
+# ── DH parameter minimum size ─────────────────────────────────────────────────
+[req]
+default_bits = {{ linux_crypto_dh_min_bits }}
+default_md   = sha256

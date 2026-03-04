@@ -1,5 +1,25 @@
 ---
 
+# ── WSL / systemd detection ───────────────────────────────────────────────────
+# WSL without systemd cannot manage services via the service module.
+# SSH config deployment and validation still run — only service start/enable is guarded.
+- name: "Detect WSL environment"
+  ansible.builtin.stat:
+    path: "/proc/sys/fs/binfmt_misc/WSLInterop"
+  register: "_wsl_interop"
+
+- name: "Check if systemd is the init process (PID 1)"
+  ansible.builtin.command: "ps -p 1 -o comm="
+  changed_when: false
+  register: "_pid1"
+  failed_when: false
+
+- name: "Set WSL / no-systemd fact"
+  ansible.builtin.set_fact:
+    _skip_service_mgmt: >-
+      {{ _wsl_interop.stat.exists and (_pid1.stdout | trim) != 'systemd' }}
+
+# ── Package + config ──────────────────────────────────────────────────────────
 - name: "Ensure openssh-server is installed"
   ansible.builtin.package:
     name: "openssh-server"
@@ -28,12 +48,23 @@
     backup: true
   register: "banner_result"
 
+# ── Service management (skipped on WSL without systemd) ───────────────────────
 - name: "Enable and start ssh service"
+  when: "not _skip_service_mgmt"
   ansible.builtin.service:
     name: "ssh"
     state: "started"
     enabled: true
 
+- name: "Note: ssh service management skipped (WSL without systemd)"
+  when: "_skip_service_mgmt"
+  ansible.builtin.debug:
+    msg: >
+      WSL without systemd detected — skipping service enable/start.
+      SSH config has been deployed and validated. Start sshd manually if needed:
+        sudo service ssh start
+
+# ── Validation ────────────────────────────────────────────────────────────────
 - name: "Verify SSH configuration is valid"
   ansible.builtin.command: "{{ linux_ssh_sshd_binary }} -t"
   changed_when: false
@@ -44,8 +75,9 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg:
+      - "WSL/no-systemd: {{ _skip_service_mgmt }}"
       - "sshd_config updated: {{ sshd_config_result.changed | default(false) }}"
       - "Banner updated: {{ banner_result.changed | default(false) }}"
-      - "SSHD test rc: {{ sshd_test.rc | default('unknown') }}"
+      - "SSHD config test rc: {{ sshd_test.rc | default('unknown') }}"
 
 ...
