@@ -1,0 +1,50 @@
+---
+
+# CIS 1.3.1 — Ensure sudo is installed
+- name: "Ensure sudo is installed (CIS 1.3.1)"
+  ansible.builtin.package:
+    name: "sudo"
+    state: "present"
+  when: "linux_sudo_install | bool"
+
+# CIS 1.3.2 — Ensure sudo commands use pty
+- name: "Ensure sudo uses pty to prevent background process escalation (CIS 1.3.2)"
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers"
+    regexp: '^Defaults\s+use_pty'
+    line: "Defaults    use_pty"
+    validate: "/usr/sbin/visudo -cf %s"
+    insertafter: "^## Defaults"
+  when: "linux_sudo_use_pty | bool"
+  register: "sudo_pty_result"
+
+# CIS 1.3.3 — Ensure sudo log file exists
+- name: "Ensure sudo logfile is configured (CIS 1.3.3)"
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers"
+    regexp: '^Defaults\s+logfile='
+    line: 'Defaults    logfile="{{ linux_sudo_logfile }}"'
+    validate: "/usr/sbin/visudo -cf %s"
+    insertafter: "^## Defaults"
+  when: "linux_sudo_logfile_enabled | bool"
+  register: "sudo_log_result"
+
+- name: "Ensure sudo log file exists with correct permissions (CIS 1.3.3)"
+  ansible.builtin.file:
+    path: "{{ linux_sudo_logfile }}"
+    state: "touch"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  when: "linux_sudo_logfile_enabled | bool"
+  changed_when: false
+
+- name: "Debug sudo hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "sudo use_pty applied: {{ sudo_pty_result.changed | default(false) }}"
+      - "sudo logfile: {{ linux_sudo_logfile if linux_sudo_logfile_enabled else 'disabled' }}"
+      - "sudo logfile applied: {{ sudo_log_result.changed | default(false) }}"
+
+...

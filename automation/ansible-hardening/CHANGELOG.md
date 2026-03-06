@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-03-06
+
+### Added
+
+- **3 new RHEL9 hardening roles** — closes CIS gaps identified in benchmark gap analysis:
+  - `linux_sudo_hardening_rhel9` — sudo use_pty + logfile enforcement (CIS 1.3.1–1.3.3)
+  - `linux_cron_hardening_rhel9` — crond service + strict cron dir/file perms + cron.allow/at.allow (CIS 5.1.1–5.1.9)
+  - `linux_wireless_rhel9` — nmcli radio disable + kernel module blacklisting (CIS 3.1.2)
+
+### Changed
+
+- **`linux_bootloader_password_rhel9`** — added CIS 1.5.3: rescue.service and emergency.service now require root authentication via systemd-sulogin-shell; new `Reload systemd daemon` handler
+- **`linux_tmp_mounts_rhel9`** — added CIS 1.1.14: /home nodev mount option (union with existing options, no-op if /home is not a separate partition); added CIS 1.1.21: sticky bit enforcement on all world-writable directories
+- **`linux_disable_unnecessary_services_rhel9`** — expanded services to mask (autofs, xinetd, rsyncd, snmpd, squid, smb, dovecot, httpd, vsftpd, named, slapd, dhcpd, ypserv) and packages to remove (xinetd, rsync, net-snmp, squid, samba, dovecot, httpd, vsftpd, bind, openldap-servers, dhcp-server, ypserv, ypbind, rsh, talk, telnet, openldap-clients) per CIS 2.x
+- **`linux_user_management_rhel9`** — added CIS 6.2.x audit section: home directory existence/permissions, dot-file writability, .forward/.netrc/.rhosts detection, duplicate UID/GID/username/groupname checks, shadow group membership — all as warnings, no destructive remediation
+- **`2_configure_hardening.yml`** — registered the 3 new RHEL9 roles (wireless, sudo, cron) in the main hardening playbook execution order
+
+### Coverage
+
+- New CIS controls covered: 1.3.1, 1.3.2, 1.3.3, 1.5.3, 3.1.2, 5.1.1–5.1.9, 1.1.14, 1.1.21, 2.x (expanded), 6.2.5–6.2.18
+
+---
+
 ## [1.2.0] — 2026-03-03
 
 ### Added

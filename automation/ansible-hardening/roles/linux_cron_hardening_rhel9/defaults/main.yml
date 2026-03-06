@@ -1,0 +1,36 @@
+---
+
+# CIS 5.1.1 — Ensure cron daemon is enabled and running
+linux_cron_enabled: true
+
+# CIS 5.1.2–5.1.7 — Permissions on cron files and directories
+linux_cron_paths:
+  - path: "/etc/crontab"
+    mode: "0600"
+    is_dir: false
+  - path: "/etc/cron.hourly"
+    mode: "0700"
+    is_dir: true
+  - path: "/etc/cron.daily"
+    mode: "0700"
+    is_dir: true
+  - path: "/etc/cron.weekly"
+    mode: "0700"
+    is_dir: true
+  - path: "/etc/cron.monthly"
+    mode: "0700"
+    is_dir: true
+  - path: "/etc/cron.d"
+    mode: "0700"
+    is_dir: true
+
+# CIS 5.1.8 — Restrict cron to authorized users via cron.allow
+linux_cron_allow_enabled: true
+
+# CIS 5.1.9 — Restrict at to authorized users via at.allow
+linux_at_allow_enabled: true
+
+# Role disable var
+linux_cron_hardening_disabled: false
+
+...

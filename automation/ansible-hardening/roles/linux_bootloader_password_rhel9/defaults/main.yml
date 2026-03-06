@@ -13,6 +13,9 @@ linux_bootloader_password: "{{ lookup('env', 'LINUX_BOOTLOADER_PASSWORD') | defa
 # Set to true only in very controlled/test environments where you accept password in logs
 linux_bootloader_disable_nolog: false
 
+# CIS 1.5.3 — Ensure authentication required for single user mode
+linux_single_user_auth: true
+
 # Role disable var
 linux_bootloader_password_disabled: false
 

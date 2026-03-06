@@ -1,0 +1,56 @@
+---
+
+# CIS 3.1.2 — Ensure wireless interfaces are disabled
+
+- name: "Check if NetworkManager CLI (nmcli) is available"
+  ansible.builtin.command: "which nmcli"
+  changed_when: false
+  register: "nmcli_available"
+  failed_when: false
+
+- name: "Disable all wireless interfaces via nmcli (CIS 3.1.2)"
+  ansible.builtin.command: "nmcli radio all off"
+  when:
+    - "linux_wireless_disable | bool"
+    - "nmcli_available.rc == 0"
+  register: "wireless_nmcli_result"
+  changed_when: "'already disabled' not in (wireless_nmcli_result.stdout | lower)"
+  failed_when: false
+
+- name: "Blacklist wireless kernel modules as fallback / defense-in-depth (CIS 3.1.2)"
+  ansible.builtin.copy:
+    content: |
+      # CIS 3.1.2 — Disable wireless kernel modules
+      # Managed by Ansible role: linux_wireless_rhel9
+      install iwlwifi /bin/false
+      blacklist iwlwifi
+      install cfg80211 /bin/false
+      blacklist cfg80211
+      install mac80211 /bin/false
+      blacklist mac80211
+      install rtl8xxxu /bin/false
+      blacklist rtl8xxxu
+      install ath9k /bin/false
+      blacklist ath9k
+    dest: "/etc/modprobe.d/99-cis-wireless.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    backup: true
+  when: "linux_wireless_blacklist_modules | bool"
+  register: "wireless_modprobe_result"
+
+- name: "Notify about module blacklist (reboot needed for full effect)"
+  when: "wireless_modprobe_result.changed"
+  ansible.builtin.debug:
+    msg: "Wireless module blacklist applied. Reboot required for full effect."
+
+- name: "Debug wireless hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "nmcli available: {{ nmcli_available.rc == 0 }}"
+      - "nmcli wireless disabled: {{ wireless_nmcli_result.changed | default(false) }}"
+      - "kernel module blacklist applied: {{ wireless_modprobe_result.changed | default(false) }}"
+
+...

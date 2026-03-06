@@ -8,8 +8,8 @@ Provide a practical, maintainable, and mostly idempotent set of Ansible roles to
 **Current focus**  
 RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & selected Level 2)
 
-**Current version**: v1.1.0 (March 2026)  
-**Total roles**: 21  
+**Current version**: v1.3.0 (March 2026)
+**Total roles**: 24
 **License**: [GPL-3.0](../../LICENSE)
 
 ## Included Roles
@@ -42,6 +42,15 @@ Added in v1.1.0:
 | New in v1.1.0        | linux_login_banner_rhel9               | SSH & console banners (CyberAar branding)    |
 | New in v1.1.0        | linux_ctrl_alt_del_rhel9               | Disable Ctrl+Alt+Del reboot                  |
 | New in v1.1.0        | linux_secure_boot_rhel9                | Enforce Secure Boot verification             |
+
+Added in v1.3.0:
+
+| Category             | Role                                   | Purpose                                                      |
+|----------------------|----------------------------------------|--------------------------------------------------------------|
+| New in v1.3.0        | linux_sudo_hardening_rhel9             | sudo use_pty + logfile (CIS 1.3.1–1.3.3)                    |
+| New in v1.3.0        | linux_cron_hardening_rhel9             | Cron perms + cron.allow/at.allow (CIS 5.1.1–5.1.9)          |
+| New in v1.3.0        | linux_wireless_rhel9                   | nmcli radio disable + module blacklist (CIS 3.1.2)           |
+
 ## Quick Start
 
 ```bash

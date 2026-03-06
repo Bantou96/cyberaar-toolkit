@@ -89,4 +89,32 @@
       - "GRUB password protection applied: {{ 'yes' if grub_users_result.changed else 'already present' }}"
       - "Superuser defined: {{ linux_bootloader_superuser }}"
 
+# CIS 1.5.3 — Ensure authentication required for single user mode
+- name: "Ensure rescue.service requires root authentication (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.lineinfile:
+    path: "/usr/lib/systemd/system/rescue.service"
+    regexp: '^ExecStart='
+    line: "ExecStart=-/usr/lib/systemd/systemd-sulogin-shell rescue"
+    backup: true
+  register: "rescue_service_result"
+  notify: "Reload systemd daemon"
+
+- name: "Ensure emergency.service requires root authentication (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.lineinfile:
+    path: "/usr/lib/systemd/system/emergency.service"
+    regexp: '^ExecStart='
+    line: "ExecStart=-/usr/lib/systemd/systemd-sulogin-shell emergency"
+    backup: true
+  register: "emergency_service_result"
+  notify: "Reload systemd daemon"
+
+- name: "Debug single user mode auth status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "rescue.service auth applied: {{ rescue_service_result.changed | default(false) }}"
+      - "emergency.service auth applied: {{ emergency_service_result.changed | default(false) }}"
+
 ...

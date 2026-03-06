@@ -34,6 +34,15 @@ linux_remove_empty_password_users: true
 # Shell for system accounts (should be /sbin/nologin or /bin/false)
 linux_system_shell: "/sbin/nologin"
 
+# CIS 6.2.x — User account security audits
+linux_audit_home_dirs: true          # 6.2.5 home dirs exist, 6.2.6 permissions <= 750
+linux_audit_dot_files: true          # 6.2.8 dot files not group/world writable
+linux_audit_forward_files: true      # 6.2.10 no .forward files
+linux_audit_netrc_files: true        # 6.2.11 no .netrc files
+linux_audit_rhosts_files: true       # 6.2.13 no .rhosts files
+linux_audit_duplicate_ids: true      # 6.2.14-6.2.17 no dup UIDs/GIDs/usernames/groups
+linux_audit_shadow_group: true       # 6.2.18 shadow group is empty
+
 # Role disable var
 linux_user_management_disabled: false
 

@@ -139,6 +139,18 @@
       tags: [hardening, network, sysctl]
       when: ansible_os_family == "RedHat"
 
+    - role: "linux_wireless_rhel9"
+      tags: [hardening, network, wireless]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_sudo_hardening_rhel9"
+      tags: [hardening, auth, sudo]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_cron_hardening_rhel9"
+      tags: [hardening, cron]
+      when: ansible_os_family == "RedHat"
+
     - role: "linux_crypto_policies_rhel9"
       tags: [hardening, crypto, tls]
       when: ansible_os_family == "RedHat"

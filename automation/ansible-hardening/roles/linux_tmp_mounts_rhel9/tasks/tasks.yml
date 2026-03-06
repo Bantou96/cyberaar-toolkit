@@ -34,4 +34,57 @@
   ansible.builtin.debug:
     msg: "{{ mount_check.results | map(attribute='stdout') | list }}"
 
+# CIS 1.1.14 — Ensure nodev option set on /home partition
+# /home only gets nodev (NOT noexec/nosuid — users need to run scripts from home)
+- name: "Ensure /home partition has nodev option (CIS 1.1.14)"
+  when: "linux_home_nodev_enabled | bool"
+  ansible.posix.mount:
+    path: "/home"
+    src: "{{ item.device }}"
+    fstype: "{{ item.fstype }}"
+    opts: "{{ (item.options.split(',') | union(['nodev'])) | join(',') }}"
+    state: "present"
+  loop: "{{ ansible_mounts | selectattr('mount', 'equalto', '/home') | list }}"
+  loop_control:
+    label: "/home"
+  register: "home_mount_result"
+  failed_when: false  # /home may not be a separate partition — skip gracefully
+
+- name: "Remount /home if options were updated"
+  when:
+    - "linux_home_nodev_enabled | bool"
+    - "home_mount_result.changed | default(false)"
+  ansible.builtin.command: "mount -o remount /home"
+  changed_when: true
+  failed_when: false
+
+# CIS 1.1.21 — Ensure sticky bit is set on all world-writable directories
+- name: "Find world-writable directories without sticky bit (CIS 1.1.21)"
+  when: "linux_sticky_bit_enabled | bool"
+  ansible.builtin.command: >
+    df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type d
+    \( -perm -0002 -a ! -perm -1000 \) 2>/dev/null
+  changed_when: false
+  register: "world_writable_dirs"
+  failed_when: false
+
+- name: "Set sticky bit on world-writable directories (CIS 1.1.21)"
+  when:
+    - "linux_sticky_bit_enabled | bool"
+    - "world_writable_dirs.stdout_lines | default([]) | length > 0"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: "a+t"
+  loop: "{{ world_writable_dirs.stdout_lines | default([]) }}"
+  loop_control:
+    label: "{{ item }}"
+  failed_when: false
+
+- name: "Report sticky bit result (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "World-writable dirs found: {{ world_writable_dirs.stdout_lines | default([]) | length }}"
+      - "Sticky bit applied to: {{ world_writable_dirs.stdout_lines | default([]) }}"
+
 ...
