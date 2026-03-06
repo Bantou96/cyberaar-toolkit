@@ -40,19 +40,19 @@
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
     regexp: '^GRUB_CMDLINE_LINUX='
-    line: 'GRUB_CMDLINE_LINUX="{{ ansible_default_ipv4.gateway | default('') }} audit=1"'
+    line: "GRUB_CMDLINE_LINUX=\"audit=1\""
     backrefs: true
   register: "grub_audit_result"
 
 - name: "Rebuild GRUB config if boot auditing enabled"
-  when: "grub_audit_result.changed"
+  when: "grub_audit_result.changed | default(false)"
   ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
   changed_when: true
   notify: "Reboot required notice"   # optional separate handler
 
 # Optional debug / notice
 - name: "Notify about potential reboot for boot auditing"
-  when: "grub_audit_result.changed"
+  when: "grub_audit_result.changed | default(false)"
   ansible.builtin.debug:
     msg: "Boot-time auditing changes applied. Reboot required for full effect if GRUB was modified."
 

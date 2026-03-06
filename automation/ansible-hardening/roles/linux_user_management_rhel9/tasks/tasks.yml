@@ -44,14 +44,6 @@
     - { regexp: '^PASS_MIN_DAYS', line: "PASS_MIN_DAYS {{ linux_password_min_days }}" }
     - { regexp: '^PASS_WARN_AGE', line: "PASS_WARN_AGE {{ linux_password_warn_days }}" }
 
-- name: "Set password history in PAM (remember previous passwords)"
-  ansible.builtin.lineinfile:
-    path: "/etc/security/pwquality.conf"
-    regexp: '^remember ='
-    line: "remember = {{ linux_password_history }}"
-    create: true
-  notify: "PAM changes applied"
-
 - name: "Restrict sudo to wheel group only"
   when: "linux_restrict_sudo_to_wheel | bool"
   ansible.builtin.lineinfile:
@@ -63,7 +55,7 @@
 - name: "Remove any users with empty/null passwords"
   when:
     - "linux_remove_empty_password_users | bool"
-    - "item.value[0] == '' or item.value[0] == '!' or item.value[0] is none"
+    - "item.value[0] == '' or item.value[0] == '!!' or item.value[0] is none"
   ansible.builtin.user:
     name: "{{ item.key }}"
     password: "!"   # Lock with invalid hash
@@ -71,7 +63,7 @@
   loop: "{{ shadow_db.ansible_facts.getent_shadow | dict2items }}"
 
 - name: "Ensure no users have empty password field (final check)"
-  ansible.builtin.command: "awk -F: '($2 == \"\" || $2 == \"!\") {print $1}' /etc/shadow"
+  ansible.builtin.command: "awk -F: '($2 == \"\") {print $1}' /etc/shadow"
   changed_when: false
   register: "empty_passwd_check"
   failed_when: "empty_passwd_check.stdout_lines | length > 0"
