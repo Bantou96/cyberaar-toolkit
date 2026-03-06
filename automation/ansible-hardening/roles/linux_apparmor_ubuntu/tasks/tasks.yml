@@ -66,9 +66,12 @@
   register: "aa_complaining"
 
 - name: "Set all complain-mode profiles to enforce mode"
-  when: "linux_apparmor_enforce_all | bool"
+  when:
+    - "linux_apparmor_enforce_all | bool"
+    - "not ansible_check_mode"
+    - "(aa_complaining.stdout | default('0') | int) > 0"
   ansible.builtin.command: "aa-enforce /etc/apparmor.d/*"
-  changed_when: true
+  changed_when: "(aa_complaining.stdout | default('0') | int) > 0"
   failed_when: false
   register: "aa_enforce_result"
 
@@ -76,6 +79,7 @@
   when:
     - "not linux_apparmor_enforce_all | bool"
     - "linux_apparmor_enforce_profiles | length > 0"
+    - "not ansible_check_mode"
   ansible.builtin.command: "aa-enforce {{ item }}"
   loop: "{{ linux_apparmor_enforce_profiles }}"
   changed_when: true

@@ -18,7 +18,12 @@ Ensures SELinux is in **enforcing** mode, uses targeted policy, sets hardening b
 | linux_selinux_mode                 | enforcing     | enforcing / permissive / disabled                |
 | linux_selinux_policy               | targeted      | targeted (default) or mls                        |
 | linux_selinux_booleans             | see defaults  | List of booleans (deny_ptrace=on, etc.)          |
+| linux_selinux_relabel_paths        | see defaults  | Paths passed to `restorecon -R` when enabled     |
+| linux_selinux_relabel_enabled      | **false**     | Run `restorecon -R` on relabel paths (slow — opt-in) |
 | linux_selinux_force_autorelabel    | false         | Touch /.autorelabel for full relabel on reboot   |
+| linux_selinux_disabled             | false         | Set `true` to skip this role entirely            |
+
+> **Performance note:** `restorecon -R` on paths like `/etc`, `/home`, `/var/log` scans every inode and can take several minutes on a loaded system. It is disabled by default (`linux_selinux_relabel_enabled: false`). Enable it only when file contexts are known to be corrupted — for example after a manual file migration or OS upgrade.
 
 ## Usage
 

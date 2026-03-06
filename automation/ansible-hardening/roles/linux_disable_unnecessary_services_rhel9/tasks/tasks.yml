@@ -43,9 +43,8 @@
   ansible.builtin.debug:
     msg: >-
       {% for svc in (linux_services_to_mask + linux_services_to_disable) | unique %}
-      {{ svc }}: masked={{ ansible_facts.services[svc].status.Masked | default('no') }},
-      enabled={{ ansible_facts.services[svc].status.Enabled | default('unknown') }},
-      state={{ ansible_facts.services[svc].status.Active | default('unknown') }}
+      {{ svc }}: state={{ (ansible_facts.services[svc] | default({})).state | default('not found') }},
+      status={{ (ansible_facts.services[svc] | default({})).status | default('unknown') }}
       {% endfor %}
 
 - name: "Notify about services changes"

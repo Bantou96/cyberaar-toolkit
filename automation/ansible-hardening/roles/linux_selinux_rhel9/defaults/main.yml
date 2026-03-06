@@ -30,6 +30,12 @@ linux_selinux_relabel_paths:
 # Whether to force relabel on next boot (touch /.autorelabel)
 linux_selinux_force_autorelabel: false
 
+# Run restorecon -R on linux_selinux_relabel_paths to fix SELinux contexts.
+# DISABLED by default — this scans large directory trees (/etc, /home, /var/log,
+# /boot, /root) and can take minutes on busy systems. Enable only when you know
+# file contexts are corrupted (e.g. after manual file edits or a migration).
+linux_selinux_relabel_enabled: false
+
 # Role disable var (e.g. if using AppArmor elsewhere – rare on RHEL)
 linux_selinux_disabled: false
 
