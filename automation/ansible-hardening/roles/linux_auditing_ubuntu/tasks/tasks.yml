@@ -8,9 +8,6 @@
       - "audispd-plugins"
     state: "present"
 
-- name: "Refresh package facts after auditd install"
-  ansible.builtin.meta: flush_handlers
-
 # ── Config deployment ─────────────────────────────────────────────────────────
 - name: "Deploy auditd.conf template"
   ansible.builtin.template:

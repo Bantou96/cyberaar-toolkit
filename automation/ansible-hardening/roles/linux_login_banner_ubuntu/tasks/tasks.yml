@@ -47,9 +47,17 @@
 
 - name: "Remove executable bit from dynamic MOTD scripts"
   when: "linux_login_banner_disable_dynamic_motd | bool"
-  ansible.builtin.command: >
-    find /etc/update-motd.d/ -type f -exec chmod a-x {} \;
-  changed_when: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: "a-x"
+    owner: "root"
+    group: "root"
+  loop:
+    - "/etc/update-motd.d/10-help-text"
+    - "/etc/update-motd.d/50-motd-news"
+    - "/etc/update-motd.d/80-esm"
+    - "/etc/update-motd.d/80-livepatch"
+    - "/etc/update-motd.d/91-contract-ua-esm-status"
   failed_when: false
 
 - name: "Debug banner deployment (verbosity >=1)"

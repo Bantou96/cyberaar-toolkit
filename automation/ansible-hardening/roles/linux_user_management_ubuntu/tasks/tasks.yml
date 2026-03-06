@@ -56,8 +56,11 @@
     mode: "0644"
 
 - name: "Ensure inactive accounts are locked after grace period"
-  ansible.builtin.command: "useradd -D -f {{ linux_user_management_inactive_days }}"
-  changed_when: true
+  ansible.builtin.lineinfile:
+    path: "/etc/default/useradd"
+    regexp: '^INACTIVE='
+    line: "INACTIVE={{ linux_user_management_inactive_days }}"
+    create: false
 
 - name: "Collect users with empty passwords"
   ansible.builtin.shell: >
