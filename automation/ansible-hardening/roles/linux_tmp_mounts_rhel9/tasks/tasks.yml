@@ -20,7 +20,7 @@
   when: "tmp_mount_result.results | selectattr('changed', 'equalto', true) | list | length > 0"
   ansible.builtin.command: "mount -o remount {{ item }}"
   loop: "{{ linux_tmp_mount_paths }}"
-  changed_when: true
+  changed_when: false   # mount options already persisted by ansible.posix.mount above
 
 - name: "Verify mount options (debug verbosity >=1)"
   when: "ansible_verbosity >= 1"

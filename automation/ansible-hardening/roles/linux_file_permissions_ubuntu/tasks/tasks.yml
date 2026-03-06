@@ -40,7 +40,7 @@
   when:
     - "linux_file_permissions_find_world_writable | bool"
     - "linux_file_permissions_fail_on_world_writable | bool"
-    - "world_writable_files.stdout | length > 0"
+    - "world_writable_files.stdout_lines | length > 0"
   ansible.builtin.fail:
     msg: >
       World-writable files found in critical directories:
