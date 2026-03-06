@@ -2,13 +2,17 @@
 
 namespace: cyberaar
 name: hardening
-version: 1.1.0
+version: 1.5.0
 readme: README.md
 
 authors:
   - CyberAar team
 
-description: Ansible roles and playbooks for CIS-aligned hardening of RHEL 9 family servers (RHEL 9, AlmaLinux 9, Rocky Linux 9)
+description: >
+  CIS-aligned hardening roles for RHEL 9 family (AlmaLinux 9, Rocky Linux 9)
+  and Ubuntu/Debian servers. Implements 42 roles covering SSH, kernel hardening,
+  auditing, MAC enforcement (SELinux/AppArmor), firewall, AIDE, and more —
+  with a three-step baseline → harden → baseline pipeline.
 
 license:
   - GPL-3.0-or-later
@@ -20,13 +24,17 @@ tags:
   - rhel9
   - almalinux
   - rocky
+  - ubuntu
+  - debian
   - selinux
+  - apparmor
   - firewalld
+  - ufw
   - auditd
   - fail2ban
 
 repository: https://github.com/Bantou96/Aar-Act
-documentation: https://github.com/Bantou96/Aar-Act/tree/main/automation/ansible
+documentation: https://github.com/Bantou96/Aar-Act/tree/main/automation/ansible-hardening/docs
 homepage: https://www.linkedin.com/company/cyberaar/
 issues: https://github.com/Bantou96/Aar-Act/issues
 
