@@ -21,6 +21,14 @@
   register: "sysctl_result"
   notify: "Reload sysctl configuration"
 
+- name: "Ensure coredump.conf.d directory exists"
+  ansible.builtin.file:
+    path: "/etc/systemd/coredump.conf.d"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
 - name: "Deploy systemd coredump configuration"
   ansible.builtin.template:
     src: "coredump.conf.j2"
@@ -29,14 +37,6 @@
     owner: "root"
     group: "root"
   register: "systemd_coredump_result"
-
-- name: "Ensure coredump.conf.d directory exists"
-  ansible.builtin.file:
-    path: "/etc/systemd/coredump.conf.d"
-    state: "directory"
-    mode: "0755"
-    owner: "root"
-    group: "root"
 
 - name: "Reload systemd daemon after coredump config"
   when: "systemd_coredump_result.changed"

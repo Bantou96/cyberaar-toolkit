@@ -22,18 +22,6 @@
     state: "directory"
     mode: "0755"
 
-# FIX: subpolicies list must be dicts with 'name' and optional 'content'.
-# String entries (e.g. "no-sha1") are normalized to {name: "no-sha1", content: "hash = -SHA1"}
-# before the loop so combine() is never called on a bare string.
-- name: "Normalize subpolicies to dict list"
-  ansible.builtin.set_fact:
-    linux_crypto_policies_subpolicies_normalized: >-
-      {{
-        linux_crypto_policies_subpolicies | default([]) | map('community.general.dict_kv', 'raw') | list
-        | map('combine', {'content': 'hash = -SHA1'} if item is string else {})
-      }}
-  # Simpler, safer approach: handle normalization inline per item below
-
 - name: "Apply custom subpolicy files"
   ansible.builtin.copy:
     content: "{{ item.content if item is mapping else 'hash = -SHA1' }}"

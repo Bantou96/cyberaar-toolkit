@@ -1,8 +1,10 @@
 # CyberAar Hardening Documentation
 
-Ansible-based hardening suite for **RHEL 9 family servers** (RHEL 9, AlmaLinux 9, Rocky Linux 9), aligned with **CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0**.
+Ansible-based hardening suite for **RHEL 9 family** (RHEL 9, AlmaLinux 9, Rocky Linux 9) **and Ubuntu/Debian** (Ubuntu 20.04/22.04/24.04, Debian 11/12), aligned with:
+- **CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0** (RHEL9 roles)
+- **CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0** (Ubuntu roles)
 
-**Goal**  
+**Goal**
 Help secure critical infrastructure in Senegal (government servers, DAF, ministries, etc.) against common threats — with focus on practicality, idempotence, and auditability.
 
 ## Quick Links
@@ -14,20 +16,33 @@ Help secure critical infrastructure in Senegal (government servers, DAF, ministr
 - [Contributing / Adding New Roles](contributing.md)
 - [Changelog](../CHANGELOG.md)
 
-## Current Roles (as of February 2026)
+## Current Roles (as of March 2026)
 
 See [roles-overview.md](roles-overview.md) for full list and status.
 
+Each control area has **two parallel roles** — one for RHEL9 family and one for Ubuntu/Debian.
+Individual role pages are named `role-linux_<name>_rhel9.md` and `role-linux_<name>_ubuntu.md`.
+
+## Supported Platforms
+
+| Family | Distributions |
+|---|---|
+| RHEL 9 | RHEL 9, AlmaLinux 9, Rocky Linux 9 |
+| Ubuntu/Debian | Ubuntu 20.04, 22.04, 24.04 — Debian 11, 12 |
+
+OS detection is automatic — the correct role set is applied per host based on `ansible_os_family`.
+
 ## Philosophy
 
-- **Idempotent** — safe to re-run many times
-- **Granular control** — enable/disable each role via variables
-- **Secure defaults** — no hardcoded secrets (use vault/env)
-- **CIS-focused** — Level 1 + selected Level 2 controls
-- **Critical infra ready** — drop zone, root lock, SELinux enforcing, audit forwarding, etc.
+- **Idempotent** — safe to re-run many times; always-changed commands replaced with proper modules
+- **Granular control** — enable/disable each role via `<role_name>_disabled=true`
+- **Secure defaults** — no hardcoded secrets; sensitive variables read from environment
+- **CIS-focused** — Level 1 + selected Level 2 controls for both OS families
+- **Check-mode aware** — all roles work correctly with `--check --diff` (no false failures)
+- **Critical infra ready** — SELinux/AppArmor enforcing, audit forwarding, bootloader password, etc.
 
 ## License
 
-MIT / GPL-3.0 — open for reuse and contribution.
+GPL-3.0 — open for reuse and contribution.
 
 **CyberAar Team** — Pour un Sénégal numérique plus sécurisé

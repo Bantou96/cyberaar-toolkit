@@ -1,14 +1,17 @@
 ---
 
 - name: "Mask ctrl-alt-del.target to prevent accidental reboot (CIS 1.6.1)"
-  ansible.builtin.command: "systemctl mask ctrl-alt-del.target"
-  changed_when: true
-  register: "mask_result"
+  ansible.builtin.systemd:
+    name: "ctrl-alt-del.target"
+    masked: true
+    state: "stopped"
   failed_when: false
+  register: "mask_result"
 
 - name: "Reload systemd daemon to apply mask"
-  ansible.builtin.command: "systemctl daemon-reload"
-  changed_when: false
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: "mask_result.changed"
 
 - name: "Verify ctrl-alt-del.target is masked"
   ansible.builtin.command: "systemctl status ctrl-alt-del.target"

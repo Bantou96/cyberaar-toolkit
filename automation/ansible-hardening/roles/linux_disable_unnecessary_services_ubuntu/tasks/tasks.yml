@@ -23,11 +23,12 @@
 - name: "Mask high-risk services via systemd (prevent re-enable)"
   when:
     - "linux_disable_services_mask | bool"
-    - "not ansible_check_mode"
-  ansible.builtin.command: "systemctl mask {{ item }}"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: true
+    state: "stopped"
   loop: "{{ linux_disable_services_masked }}"
   failed_when: false
-  changed_when: true
   register: "services_masked"
 
 - name: "Debug disabled services (verbosity >=1)"
