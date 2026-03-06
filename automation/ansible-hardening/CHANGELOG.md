@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-03-06
+
+### Added
+
+- **Comprehensive RHEL9 role documentation** — all 21 RHEL9 role docs completely rewritten to match the Ubuntu doc format: Supported Platforms section, granular CIS benchmark references with section IDs, full variable tables with backtick-formatted names and accurate defaults, `group_vars`-style usage examples, and a "Differences from Ubuntu Counterpart" table for every role
+
+### Changed
+
+- `galaxy.yml`: version bumped to 1.5.0; description extended to cover Ubuntu/Debian alongside RHEL9; added tags `ubuntu`, `debian`, `apparmor`, `ufw`; fixed `documentation` URL to point to `docs/` directory
+- `docs/role-linux_selinux_rhel9.md`: updated with `linux_selinux_relabel_enabled` variable, performance note, and default boolean table
+
+---
+
+## [1.4.0] — 2026-03-06
+
+### Added
+
+- **README rewrite** — full pipeline documentation: three-step baseline → harden → baseline diagram, all 42 roles in dual-OS table with CIS refs, full tag reference, inventory structure, variable precedence, sensitive variable lifecycle, report output structure
+- **Ubuntu/Debian role documentation** — 21 new docs in `docs/` covering every Ubuntu role with Purpose, Supported Platforms, CIS Coverage, Variables, Usage Example, and Differences sections
+- `docs/index.md` and `docs/roles-overview.md` updated for dual-OS scope
+
+### Fixed
+
+- **HIGH** `linux_auditing_rhel9`: YAML syntax error in `line:` value (single quotes inside single-quoted string); removed `ansible_default_ipv4.gateway` injected into `GRUB_CMDLINE_LINUX` (copy-paste artifact)
+- **HIGH** `linux_auditing_rhel9`: `grub_audit_result.changed` referenced without `| default(false)` — UndefinedError when `linux_auditd_enable_boot_auditing` is false
+- **HIGH** `linux_ctrl_alt_del_ubuntu`: replaced `ansible.builtin.command: "systemctl mask ..."` with `ansible.builtin.systemd: masked: true` — now idempotent and check-mode aware
+- **HIGH** `linux_disable_unnecessary_services_ubuntu`: replaced `systemctl mask {{ item }}` command with `ansible.builtin.systemd: masked: true` loop
+- **MEDIUM** `linux_login_banner_ubuntu`: replaced `find ... chmod a-x` command task with `ansible.builtin.file: mode: "a-x"` loop — idempotent, no more always-changed
+- **MEDIUM** `linux_user_management_ubuntu`: replaced `useradd -D -f` command with `ansible.builtin.lineinfile` on `/etc/default/useradd` — idempotent
+- **MEDIUM** `linux_core_dumps_ubuntu`: moved `Ensure coredump.conf.d directory exists` task before the template task — fixed ordering error that caused first-run failures
+- **MEDIUM** `linux_user_management_rhel9`: narrowed empty-password lock condition from `'!'` to `'!!'`; fixed awk check; removed `remember =` from `pwquality.conf` (wrong file)
+- **MEDIUM** `linux_aide_ubuntu`: fixed operator precedence `not aide_init.changed | default(false)` → `not (aide_init.changed | default(false))`
+- **LOW** `linux_chrony_rhel9`: added `when: not ansible_check_mode` to `chronyc tracking` task
+- **LOW** `linux_auditing_ubuntu`: removed spurious `ansible.builtin.meta: flush_handlers` task
+- **LOW** `linux_crypto_policies_rhel9`: removed dead `Normalize subpolicies to dict list` task with broken Jinja2
+
+### Changed
+
+- `run-hardening.sh` moved to `automation/scripts/` directory
+- WSL detection improved across multiple roles
+- Inventory structure refactored for clearer group separation
+
+---
+
+## [1.3.0] — 2026-03-05
+
+### Added
+
+- **Unified three-step pipeline** (`site.yml`) — single entry point that orchestrates baseline audit → hardening → post-hardening audit with automatic OS detection (`ansible_os_family`)
+- **`cyberaar-baseline.sh` v3.0.0** — standalone bash audit script producing HTML and JSON security reports; integrated as steps 1 and 3 of the pipeline
+- **Before/after baseline playbooks** — `1_execute_baseline_before.yml` and `3_execute_baseline_after.yml` copy the script to remote hosts, run it, and fetch HTML/JSON reports to `reports/before/<hostname>/` and `reports/after/<hostname>/`
+
+### Fixed
+
+- **HIGH** Multiple Ansible bugs resolved across existing RHEL9 roles (9 issues: undefined variable guards, check-mode guards, handler ordering, idempotency)
+- **HIGH** WSL compatibility fixes — GRUB tasks guarded with WSL detection across `linux_auditing_ubuntu`, `linux_apparmor_ubuntu`, `linux_secure_boot_ubuntu`
+- **MEDIUM** Inventory refactored — `ansible_host` derivation moved to `group_vars`; `index` variable aligned across all groups
+
+---
+
 ## [1.2.0] — 2026-03-03
 
 ### Added
@@ -44,59 +104,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MEDIUM** `linux_auditing_rhel9`: removed `audispd-plugins` package (merged
   into `audit` on RHEL9, caused dnf failure)
 
-## [1.1.0] - 2026-03-01
+---
+
+## [1.1.0] — 2026-03-01
 
 ### Added
 
-- 10 new hardening roles for RHEL 9 family servers:  
-  - linux_aide_rhel9: File integrity monitoring (AIDE)  
-  - linux_chrony_rhel9: Secure NTP with Chrony  
-  - linux_ssh_hardening_rhel9: Deep SSH server hardening  
-  - linux_tmp_mounts_rhel9: noexec/nodev/nosuid on temp dirs  
-  - linux_dnf_automatic_rhel9: Automatic security updates  
-  - linux_core_dumps_rhel9: Restrict core dumps  
-  - linux_ip_forwarding_rhel9: Disable IP forwarding & redirects  
-  - linux_login_banner_rhel9: SSH & console banners (CyberAar branding)  
-  - linux_ctrl_alt_del_rhel9: Disable Ctrl+Alt+Del reboot    
-  - linux_secure_boot_rhel9: Enforce Secure Boot verification  
+- 10 new hardening roles for RHEL 9 family servers:
+  - `linux_aide_rhel9` — File integrity monitoring (AIDE)
+  - `linux_chrony_rhel9` — Secure NTP with Chrony
+  - `linux_ssh_hardening_rhel9` — Deep SSH server hardening
+  - `linux_tmp_mounts_rhel9` — noexec/nodev/nosuid on temp dirs
+  - `linux_dnf_automatic_rhel9` — Automatic security updates
+  - `linux_core_dumps_rhel9` — Restrict core dumps
+  - `linux_ip_forwarding_rhel9` — Disable IP forwarding & redirects
+  - `linux_login_banner_rhel9` — SSH & console banners (CyberAar branding)
+  - `linux_ctrl_alt_del_rhel9` — Disable Ctrl+Alt+Del reboot
+  - `linux_secure_boot_rhel9` — Enforce Secure Boot verification
 
-- Per-role detailed documentation in docs/ (purpose, CIS refs, vars, usage, testing, notes)  
-- Consistent formatting across all roles (double quotes, when after name, ---/...)  
-- Updated root README with new structure, roles table, and quick-start  
+- Per-role detailed documentation in `docs/` (purpose, CIS refs, vars, usage, testing, notes)
+- Consistent formatting across all roles (double quotes, `when:` after `name:`, `---`/`...`)
+- Updated root README with new structure, roles table, and quick-start
 - LICENSE aligned to GPL-3.0 everywhere
 
 ### Changed
 
-- Minor refinements in existing roles (e.g. banner templates with CyberAar branding in English)
+- Minor refinements in existing roles (banner templates with CyberAar branding in English)
 
 ### Security
 
-- Enhanced protections like Secure Boot enforcement, core dump restrictions, IP forwarding disable
+- Enhanced protections: Secure Boot enforcement, core dump restrictions, IP forwarding disable
 
-## [1.0.0] - 2026-02-26
+---
+
+## [1.0.0] — 2026-02-26
 
 ### Added
 
 - Initial release of CyberAar hardening collection for RHEL 9 family
 - Main playbook: `configure_hardening_rhel9.yml`
-- Roles:
-  - linux_crypto_policies_rhel9
-  - linux_authselect_rhel9
-  - linux_kernel_hardening_rhel9 (sysctl + module blacklist)
-  - linux_auditing_rhel9 (with rsyslog forwarding)
-  - linux_firewalld_rhel9 (using ansible.posix.firewalld)
-  - linux_fail2ban_rhel9
-  - linux_disable_unnecessary_services_rhel9
-  - linux_file_permissions_rhel9
-  - linux_selinux_rhel9 (using ansible.posix.selinux)
-  - linux_bootloader_password_rhel9 (secure password via env/vault)
-  - linux_user_management_rhel9
+- 11 RHEL9 hardening roles:
+  - `linux_crypto_policies_rhel9`
+  - `linux_authselect_rhel9`
+  - `linux_kernel_hardening_rhel9` (sysctl + module blacklist)
+  - `linux_auditing_rhel9` (with rsyslog forwarding)
+  - `linux_firewalld_rhel9` (using `ansible.posix.firewalld`)
+  - `linux_fail2ban_rhel9`
+  - `linux_disable_unnecessary_services_rhel9`
+  - `linux_file_permissions_rhel9`
+  - `linux_selinux_rhel9` (using `ansible.posix.selinux`)
+  - `linux_bootloader_password_rhel9` (secure password via env/vault)
+  - `linux_user_management_rhel9`
 
 ### Security
 
 - GRUB password uses PBKDF2 hash + environment variable / vault
 - No hardcoded secrets in defaults
-- no_log protection on sensitive tasks
+- `no_log` protection on sensitive tasks
 
 ### Notes
 
