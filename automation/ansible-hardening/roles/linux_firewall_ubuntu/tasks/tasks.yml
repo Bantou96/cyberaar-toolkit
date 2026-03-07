@@ -23,10 +23,6 @@
     name: "ufw"
     state: "present"
 
-# Force package cache to flush so the ufw binary is available immediately
-- name: "Refresh package facts after ufw install"
-  ansible.builtin.meta: flush_handlers
-
 - name: "Verify ufw binary is available"
   ansible.builtin.command: "which ufw"
   changed_when: false

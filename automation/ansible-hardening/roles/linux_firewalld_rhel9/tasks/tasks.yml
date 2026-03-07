@@ -11,13 +11,10 @@
     state: "started"
     enabled: true
 
-- name: "Set default zone"
+- name: "Set firewalld default zone"
   when: "linux_firewalld_enabled | bool"
-  ansible.posix.firewalld:
-    zone: "{{ linux_firewalld_default_zone }}"
-    permanent: true
-    state: present
-    immediate: true
+  ansible.posix.firewalld_config:
+    default_zone: "{{ linux_firewalld_default_zone }}"
 
 - name: "Allow required services in default zone"
   when: "linux_firewalld_enabled | bool"
