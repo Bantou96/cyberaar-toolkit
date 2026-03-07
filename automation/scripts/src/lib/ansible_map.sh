@@ -1,0 +1,98 @@
+# =============================================================================
+#  ANSIBLE REMEDIATION MAP
+#  Maps each check ID → ansible tags + role names for RHEL9 and Ubuntu/Debian
+#  Used to generate targeted remediation commands after the scan.
+# =============================================================================
+declare -A ANSIBLE_MAP=(
+  # SYS-01: OS detection — informational, no Ansible remediation
+  # SYS-02: kernel version — remediation is applying updates, not sysctl tuning
+  ["SYS-02"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Apply pending kernel updates"
+  ["SYS-03"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Automatic security updates"
+  ["SYS-04"]="mac|linux_selinux_rhel9|linux_apparmor_ubuntu|SELinux/AppArmor enforcement"
+  ["SYS-05"]="kernel,coredump|linux_core_dumps_rhel9|linux_core_dumps_ubuntu|Core dump restriction"
+  ["SYS-06"]="time,ntp|linux_chrony_rhel9|linux_chrony_ubuntu|Time synchronization (chrony)"
+  ["SYS-07"]="boot,grub|linux_bootloader_password_rhel9|linux_bootloader_password_ubuntu|GRUB config permissions"
+  ["SYS-08"]="secureboot|linux_secure_boot_rhel9|linux_secure_boot_ubuntu|Secure Boot verification"
+  ["SYS-09"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/dev/shm mount hardening"
+  ["SYS-10"]="system|linux_ctrl_alt_del_rhel9|linux_ctrl_alt_del_ubuntu|Ctrl-Alt-Delete disabled"
+  ["AUTH-01"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
+  ["AUTH-02"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
+  # AUTH-03: PASS_MAX_DAYS in /etc/login.defs is set by user_management, not authselect
+  ["AUTH-03"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password expiry policy (login.defs)"
+  ["AUTH-04"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|PAM / password complexity"
+  ["AUTH-05"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Sudo / user access controls"
+  ["AUTH-06"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Inactive account cleanup"
+  ["AUTH-07"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password minimum age (login.defs)"
+  ["AUTH-08"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password warning age (login.defs)"
+  ["AUTH-09"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Account lockout (faillock)"
+  ["AUTH-10"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Shell timeout (TMOUT)"
+  ["AUTH-11"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|UID 0 account audit"
+  ["AUTH-12"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/group permissions"
+  ["AUTH-13"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/gshadow permissions"
+  ["AUTH-14"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Password complexity (pwquality)"
+  ["SSH-01"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-02"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-03"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-04"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-05"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-06"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-07"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-08"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-09"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-10"]="ssh,banner|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH legal banner"
+  ["SSH-11"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH session timeout"
+  ["SSH-12"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-13"]="ssh,crypto|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH cipher hardening"
+  ["SSH-14"]="ssh,filesystem|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|sshd_config permissions"
+  ["SSH-15"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["FS-01"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
+  ["FS-02"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
+  ["FS-03"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
+  ["FS-04"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
+  ["FS-05"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|SUID binary audit"
+  ["FS-06"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp mount hardening"
+  ["FS-07"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Sticky bit on world-writable dirs"
+  ["FS-08"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/crontab permissions"
+  ["FS-09"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/var/tmp mount hardening"
+  ["FS-10"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Unowned files audit"
+  ["FS-11"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/var/log permissions"
+  ["FS-12"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH host key permissions"
+  ["NET-01"]="firewall|linux_firewalld_rhel9|linux_firewall_ubuntu|Firewall configuration"
+  ["NET-02"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|IP forwarding restriction"
+  # NET-03: accept_redirects is set by ip_forwarding role, not kernel_hardening
+  ["NET-03"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|ICMP redirect hardening"
+  ["NET-04"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|TCP SYN cookie hardening"
+  ["NET-05"]="services|linux_disable_unnecessary_services_rhel9|linux_disable_unnecessary_services_ubuntu|Disable dangerous services"
+  ["NET-06"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Source routing disabled"
+  ["NET-07"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Send redirects disabled"
+  ["NET-08"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Martian packet logging"
+  ["NET-09"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Reverse path filtering"
+  ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
+  ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
+  ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
+  ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
+  # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
+  ["LOG-04"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit rules configuration"
+  ["LOG-05"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit log size configuration"
+  ["LOG-06"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Kernel audit boot parameter"
+  ["LOG-07"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|journald persistent storage"
+  # LOG-08: remote syslog not managed by any hardening role — no Ansible remediation
+  ["INT-01"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE file integrity monitor"
+  # INT-02: rkhunter/chkrootkit not managed by any role — no Ansible remediation
+  # INT-03: suspicious cron requires manual investigation — no Ansible remediation
+  # INT-04: open port count is informational / always WARN — no Ansible remediation
+  ["INT-05"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Package GPG signature check"
+  ["INT-06"]="fail2ban|linux_fail2ban_rhel9|linux_fail2ban_ubuntu|Brute-force protection (fail2ban)"
+  ["INT-07"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE database initialization"
+  ["INT-08"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Cron directory permissions"
+  ["COMP-01"]="banner|linux_login_banner_rhel9|linux_login_banner_ubuntu|Legal login banner"
+  ["COMP-02"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp dedicated partition"
+  # COMP-03: /home partition layout — cannot be changed by Ansible post-install
+  # COMP-04: /var partition layout — cannot be changed by Ansible post-install
+  ["COMP-05"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|System umask hardening"
+  ["COMP-06"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ASLR kernel hardening"
+  ["COMP-07"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Kernel pointer restriction"
+  ["COMP-08"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|dmesg restriction"
+  ["COMP-09"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ptrace scope restriction"
+  ["COMP-10"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|USB storage module blacklist"
+)
