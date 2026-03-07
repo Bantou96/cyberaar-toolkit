@@ -8,13 +8,23 @@
   register: "nmcli_available"
   failed_when: false
 
+- name: "Check current wireless radio state"
+  ansible.builtin.command: "nmcli radio all"
+  changed_when: false
+  register: "wireless_current_state"
+  when:
+    - "linux_wireless_disable | bool"
+    - "nmcli_available.rc == 0"
+  failed_when: false
+
 - name: "Disable all wireless interfaces via nmcli (CIS 3.1.2)"
   ansible.builtin.command: "nmcli radio all off"
   when:
     - "linux_wireless_disable | bool"
     - "nmcli_available.rc == 0"
+    - "'enabled' in (wireless_current_state.stdout | lower)"
   register: "wireless_nmcli_result"
-  changed_when: "'already disabled' not in (wireless_nmcli_result.stdout | lower)"
+  changed_when: true
   failed_when: false
 
 - name: "Blacklist wireless kernel modules as fallback / defense-in-depth (CIS 3.1.2)"

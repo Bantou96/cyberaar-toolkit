@@ -55,7 +55,7 @@
     - "linux_home_nodev_enabled | bool"
     - "home_mount_result.changed | default(false)"
   ansible.builtin.command: "mount -o remount /home"
-  changed_when: true
+  changed_when: false
   failed_when: false
 
 # CIS 1.1.21 — Ensure sticky bit is set on all world-writable directories

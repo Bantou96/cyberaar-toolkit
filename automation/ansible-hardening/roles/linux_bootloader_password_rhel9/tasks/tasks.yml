@@ -90,23 +90,53 @@
       - "Superuser defined: {{ linux_bootloader_superuser }}"
 
 # CIS 1.5.3 — Ensure authentication required for single user mode
-- name: "Ensure rescue.service requires root authentication (CIS 1.5.3)"
+# Use systemd drop-in overrides under /etc/systemd/system/ rather than editing
+# vendor unit files under /usr/lib/systemd/system/, which are overwritten on
+# every systemd package update and would silently revert the change.
+
+- name: "Create rescue.service.d drop-in directory (CIS 1.5.3)"
   when: "linux_single_user_auth | bool"
-  ansible.builtin.lineinfile:
-    path: "/usr/lib/systemd/system/rescue.service"
-    regexp: '^ExecStart='
-    line: "ExecStart=-/usr/lib/systemd/systemd-sulogin-shell rescue"
-    backup: true
+  ansible.builtin.file:
+    path: "/etc/systemd/system/rescue.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Create emergency.service.d drop-in directory (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/emergency.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Deploy rescue.service override — require root authentication (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/rescue.service.d/override.conf"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/usr/lib/systemd/systemd-sulogin-shell rescue
+    owner: root
+    group: root
+    mode: "0644"
   register: "rescue_service_result"
   notify: "Reload systemd daemon"
 
-- name: "Ensure emergency.service requires root authentication (CIS 1.5.3)"
+- name: "Deploy emergency.service override — require root authentication (CIS 1.5.3)"
   when: "linux_single_user_auth | bool"
-  ansible.builtin.lineinfile:
-    path: "/usr/lib/systemd/system/emergency.service"
-    regexp: '^ExecStart='
-    line: "ExecStart=-/usr/lib/systemd/systemd-sulogin-shell emergency"
-    backup: true
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/emergency.service.d/override.conf"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/usr/lib/systemd/systemd-sulogin-shell emergency
+    owner: root
+    group: root
+    mode: "0644"
   register: "emergency_service_result"
   notify: "Reload systemd daemon"
 

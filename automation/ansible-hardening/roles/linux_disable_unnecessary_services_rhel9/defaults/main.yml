@@ -17,15 +17,21 @@ linux_services_to_mask:
   - "xinetd"                 # CIS 2.1.1  — legacy super-daemon – replaced by systemd sockets
   - "rsyncd"                 # CIS 2.2.3  — unencrypted file sync – use sftp/scp instead
   - "snmpd"                  # CIS 2.2.5  — SNMP v1/v2 transmit data in clear
-  - "squid"                  # CIS 2.2.6  — HTTP proxy – remove if not required
-  - "smb"                    # CIS 2.2.7  — Samba – Windows file sharing, disable on pure Linux
-  - "dovecot"                # CIS 2.2.8  — IMAP/POP3 – remove unless mail server
-  - "httpd"                  # CIS 2.2.9  — Apache web server – remove unless required
-  - "vsftpd"                 # CIS 2.2.10 — FTP – insecure, use SFTP instead
-  - "named"                  # CIS 2.2.11 — DNS server – remove unless designated DNS
-  - "slapd"                  # CIS 2.2.14 — LDAP server – remove unless directory server
-  - "dhcpd"                  # CIS 2.2.15 — DHCP server – remove unless designated DHCP
   - "ypserv"                 # CIS 2.2.17 — NIS server – insecure legacy protocol
+
+# The services below are intentionally NOT in the default mask list because they
+# are legitimate production services on many hosts (web, DNS, mail, DHCP, LDAP).
+# CIS 2.2.x says "remove if not in use" — add them here only if you are certain
+# they are not needed, or add them to linux_services_exceptions to protect them.
+#
+#  - "httpd"                 # CIS 2.2.9  — Apache web server
+#  - "vsftpd"                # CIS 2.2.10 — FTP server
+#  - "named"                 # CIS 2.2.11 — DNS server
+#  - "dhcpd"                 # CIS 2.2.15 — DHCP server
+#  - "dovecot"               # CIS 2.2.8  — IMAP/POP3 mail server
+#  - "slapd"                 # CIS 2.2.14 — LDAP server
+#  - "squid"                 # CIS 2.2.6  — HTTP proxy
+#  - "smb"                   # CIS 2.2.7  — Samba / Windows file sharing
 
 # Services to stop/disable but NOT mask (if they might be needed occasionally)
 linux_services_to_disable:
