@@ -3,7 +3,7 @@
 #  CyberAar Security Baseline Checker
 #  Vérificateur de Sécurité de Base CyberAar
 #
-#  Version   : 3.0.0
+#  Version   : 4.0.0
 #  Author    : CyberAar (https://github.com/Bantou96/Aar-Act)
 #  License   : GPL v3
 #  Target    : RHEL/CentOS/Ubuntu/Debian (Linux Government Servers)
@@ -17,12 +17,12 @@
 # =============================================================================
 
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
-SCRIPT_VERSION="3.0.0"
+SCRIPT_VERSION="4.0.0"
 SCRIPT_NAME="cyberaar-baseline"
 
 _show_help() {
   cat <<'HELPEOF'
-CyberAar Security Baseline Checker v3.0.0
+CyberAar Security Baseline Checker v4.0.0
 
 Usage: cyberaar-baseline [OPTIONS]
 
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
     --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
     --install)    DO_INSTALL=true; shift ;;
     --uninstall)  DO_UNINSTALL=true; shift ;;
-    --version)    echo "cyberaar-baseline v3.0.0"; exit 0 ;;
+    --version)    echo "cyberaar-baseline v4.0.0"; exit 0 ;;
     --help|-h)    _show_help; exit 0 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
@@ -132,11 +132,17 @@ fi
 #  Used to generate targeted remediation commands after the scan.
 # =============================================================================
 declare -A ANSIBLE_MAP=(
-  # SYS-02: kernel version check — remediation is applying updates, not sysctl tuning
+  # SYS-01: OS detection — informational, no Ansible remediation
+  # SYS-02: kernel version — remediation is applying updates, not sysctl tuning
   ["SYS-02"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Apply pending kernel updates"
   ["SYS-03"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Automatic security updates"
   ["SYS-04"]="mac|linux_selinux_rhel9|linux_apparmor_ubuntu|SELinux/AppArmor enforcement"
   ["SYS-05"]="kernel,coredump|linux_core_dumps_rhel9|linux_core_dumps_ubuntu|Core dump restriction"
+  ["SYS-06"]="time,ntp|linux_chrony_rhel9|linux_chrony_ubuntu|Time synchronization (chrony)"
+  ["SYS-07"]="boot,grub|linux_bootloader_password_rhel9|linux_bootloader_password_ubuntu|GRUB config permissions"
+  ["SYS-08"]="secureboot|linux_secure_boot_rhel9|linux_secure_boot_ubuntu|Secure Boot verification"
+  ["SYS-09"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/dev/shm mount hardening"
+  ["SYS-10"]="system|linux_ctrl_alt_del_rhel9|linux_ctrl_alt_del_ubuntu|Ctrl-Alt-Delete disabled"
   ["AUTH-01"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
   ["AUTH-02"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
   # AUTH-03: PASS_MAX_DAYS in /etc/login.defs is set by user_management, not authselect
@@ -144,32 +150,79 @@ declare -A ANSIBLE_MAP=(
   ["AUTH-04"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|PAM / password complexity"
   ["AUTH-05"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Sudo / user access controls"
   ["AUTH-06"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Inactive account cleanup"
+  ["AUTH-07"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password minimum age (login.defs)"
+  ["AUTH-08"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password warning age (login.defs)"
+  ["AUTH-09"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Account lockout (faillock)"
+  ["AUTH-10"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Shell timeout (TMOUT)"
+  ["AUTH-11"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|UID 0 account audit"
+  ["AUTH-12"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/group permissions"
+  ["AUTH-13"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/gshadow permissions"
+  ["AUTH-14"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Password complexity (pwquality)"
   ["SSH-01"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-02"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-03"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-04"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-05"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-06"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-07"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-08"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-09"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-10"]="ssh,banner|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH legal banner"
+  ["SSH-11"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH session timeout"
+  ["SSH-12"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
+  ["SSH-13"]="ssh,crypto|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH cipher hardening"
+  ["SSH-14"]="ssh,filesystem|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|sshd_config permissions"
+  ["SSH-15"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["FS-01"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
   ["FS-02"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
   ["FS-03"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
   ["FS-04"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|File permissions hardening"
   ["FS-05"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|SUID binary audit"
-  ["FS-06"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp & /dev/shm mount hardening"
+  ["FS-06"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp mount hardening"
+  ["FS-07"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Sticky bit on world-writable dirs"
+  ["FS-08"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/crontab permissions"
+  ["FS-09"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/var/tmp mount hardening"
+  ["FS-10"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Unowned files audit"
+  ["FS-11"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/var/log permissions"
+  ["FS-12"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH host key permissions"
   ["NET-01"]="firewall|linux_firewalld_rhel9|linux_firewall_ubuntu|Firewall configuration"
   ["NET-02"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|IP forwarding restriction"
   # NET-03: accept_redirects is set by ip_forwarding role, not kernel_hardening
   ["NET-03"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|ICMP redirect hardening"
   ["NET-04"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|TCP SYN cookie hardening"
   ["NET-05"]="services|linux_disable_unnecessary_services_rhel9|linux_disable_unnecessary_services_ubuntu|Disable dangerous services"
+  ["NET-06"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Source routing disabled"
+  ["NET-07"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Send redirects disabled"
+  ["NET-08"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Martian packet logging"
+  ["NET-09"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Reverse path filtering"
+  ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
+  ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
   # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
   ["LOG-04"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit rules configuration"
+  ["LOG-05"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit log size configuration"
+  ["LOG-06"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Kernel audit boot parameter"
+  ["LOG-07"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|journald persistent storage"
+  # LOG-08: remote syslog not managed by any hardening role — no Ansible remediation
   ["INT-01"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE file integrity monitor"
   # INT-02: rkhunter/chkrootkit not managed by any role — no Ansible remediation
   # INT-03: suspicious cron requires manual investigation — no Ansible remediation
   # INT-04: open port count is informational / always WARN — no Ansible remediation
+  ["INT-05"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Package GPG signature check"
+  ["INT-06"]="fail2ban|linux_fail2ban_rhel9|linux_fail2ban_ubuntu|Brute-force protection (fail2ban)"
+  ["INT-07"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE database initialization"
+  ["INT-08"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|Cron directory permissions"
+  ["COMP-01"]="banner|linux_login_banner_rhel9|linux_login_banner_ubuntu|Legal login banner"
+  ["COMP-02"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp dedicated partition"
+  # COMP-03: /home partition layout — cannot be changed by Ansible post-install
+  # COMP-04: /var partition layout — cannot be changed by Ansible post-install
+  ["COMP-05"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|System umask hardening"
+  ["COMP-06"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ASLR kernel hardening"
+  ["COMP-07"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Kernel pointer restriction"
+  ["COMP-08"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|dmesg restriction"
+  ["COMP-09"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ptrace scope restriction"
+  ["COMP-10"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|USB storage module blacklist"
 )
 
 # =============================================================================
@@ -421,7 +474,7 @@ else
     "Utilisez RHEL, Ubuntu ou Debian pour un support sécurité officiel."
 fi
 
-# SYS-02 Kernel (informational)
+# SYS-02 Kernel (informational — always WARN to prompt version review)
 add_result "System" "WARN" "SYS-02" "Kernel version" "Version noyau" "$(uname -r)" \
   "Vérifiez les mises à jour noyau: 'dnf check-update kernel' ou 'apt list --upgradable | grep linux-image'."
 
@@ -475,6 +528,72 @@ else
     "Ajoutez '* hard core 0' dans /etc/security/limits.conf"
 fi
 
+# SYS-06 Time synchronization
+_TSVC=""
+svc_active chronyd         && _TSVC="chronyd"
+svc_active chrony          && _TSVC="chrony"
+svc_active ntpd            && _TSVC="ntpd"
+svc_active systemd-timesyncd && _TSVC="systemd-timesyncd"
+if [[ -n "$_TSVC" ]]; then
+  add_result "System" "PASS" "SYS-06" "Time synchronization active" "Synchronisation temps active" "$_TSVC: running" ""
+else
+  add_result "System" "FAIL" "SYS-06" "No time sync daemon running" "Pas de synchronisation temps" "chronyd/ntpd/timesyncd inactive" \
+    "Installez et activez: 'dnf install chrony && systemctl enable --now chronyd'"
+fi
+
+# SYS-07 GRUB config permissions
+GRUB_CFG=""
+[[ -f /boot/grub2/grub.cfg ]] && GRUB_CFG="/boot/grub2/grub.cfg"
+[[ -f /boot/grub/grub.cfg  ]] && GRUB_CFG="/boot/grub/grub.cfg"
+if [[ -n "$GRUB_CFG" ]]; then
+  GRUB_PERMS=$(stat -c "%a" "$GRUB_CFG" 2>/dev/null || echo "")
+  if [[ "$GRUB_PERMS" =~ ^(600|400|000)$ ]]; then
+    add_result "System" "PASS" "SYS-07" "GRUB config permissions OK" "Perms GRUB correctes" "Mode: $GRUB_PERMS ($GRUB_CFG)" ""
+  else
+    add_result "System" "FAIL" "SYS-07" "GRUB config perms too open" "Perms GRUB trop permissives" "Mode: ${GRUB_PERMS:-?} ($GRUB_CFG)" \
+      "Corrigez: 'chmod 600 $GRUB_CFG && chown root:root $GRUB_CFG'"
+  fi
+else
+  add_result "System" "WARN" "SYS-07" "GRUB config not found" "GRUB config introuvable" "No grub.cfg at standard paths" \
+    "Vérifiez l'emplacement de votre configuration GRUB."
+fi
+
+# SYS-08 Secure Boot
+if cmd_exists mokutil; then
+  SB_STATE=$(mokutil --sb-state 2>/dev/null | tr -d '\n' || echo "unknown")
+  if echo "$SB_STATE" | grep -qi "enabled"; then
+    add_result "System" "PASS" "SYS-08" "Secure Boot enabled" "Secure Boot activé" "$SB_STATE" ""
+  else
+    add_result "System" "WARN" "SYS-08" "Secure Boot not enabled" "Secure Boot désactivé" "${SB_STATE:-not determined}" \
+      "Activez Secure Boot dans le UEFI/BIOS. Ne peut pas être configuré par Ansible."
+  fi
+else
+  add_result "System" "WARN" "SYS-08" "Cannot check Secure Boot" "Vérif Secure Boot impossible" "mokutil absent" \
+    "Installez mokutil ('dnf install mokutil') ou vérifiez dans le UEFI/BIOS."
+fi
+
+# SYS-09 /dev/shm mount hardening
+SHM_OPTS=$(grep -E '\s/dev/shm\s' /proc/mounts 2>/dev/null | awk '{print $4}' | head -1 || echo "")
+SHM_OK=true
+[[ -z "$SHM_OPTS" ]] && SHM_OK=false
+echo "$SHM_OPTS" | grep -q "noexec" || SHM_OK=false
+echo "$SHM_OPTS" | grep -q "nosuid" || SHM_OK=false
+echo "$SHM_OPTS" | grep -q "nodev"  || SHM_OK=false
+if $SHM_OK; then
+  add_result "System" "PASS" "SYS-09" "/dev/shm hardened" "/dev/shm sécurisé" "noexec,nosuid,nodev" ""
+else
+  add_result "System" "WARN" "SYS-09" "/dev/shm missing hardening" "/dev/shm non sécurisé" "${SHM_OPTS:-not mounted or options missing}" \
+    "Ajoutez dans /etc/fstab: 'tmpfs /dev/shm tmpfs defaults,noexec,nosuid,nodev 0 0'"
+fi
+
+# SYS-10 Ctrl-Alt-Delete disabled
+if systemctl is-masked ctrl-alt-del.target &>/dev/null; then
+  add_result "System" "PASS" "SYS-10" "Ctrl-Alt-Del masked" "Ctrl-Alt-Suppr désactivé" "ctrl-alt-del.target: masked" ""
+else
+  add_result "System" "FAIL" "SYS-10" "Ctrl-Alt-Del not masked" "Ctrl-Alt-Suppr actif" "ctrl-alt-del.target: not masked" \
+    "Masquez: 'systemctl mask ctrl-alt-del.target && systemctl daemon-reload'"
+fi
+
 # =============================================================================
 #  2. AUTHENTICATION & ACCESS
 # =============================================================================
@@ -507,13 +626,19 @@ else
     "Définissez PASS_MAX_DAYS=90 dans /etc/login.defs"
 fi
 
-# AUTH-04 Password min length
-PASSMINLEN=$(grep -E "^PASS_MIN_LEN" /etc/login.defs 2>/dev/null | awk '{print $2}' || echo "")
+# AUTH-04 Password min length (pwquality preferred, fallback to login.defs)
+PASSMINLEN=""
+if [[ -f /etc/security/pwquality.conf ]]; then
+  PASSMINLEN=$(grep -E "^\s*minlen\s*=" /etc/security/pwquality.conf 2>/dev/null | \
+    awk -F= '{print $2}' | tr -d ' ' | head -1 || echo "")
+fi
+[[ -z "$PASSMINLEN" ]] && \
+  PASSMINLEN=$(grep -E "^PASS_MIN_LEN" /etc/login.defs 2>/dev/null | awk '{print $2}' || echo "")
 if [[ -n "$PASSMINLEN" && "$PASSMINLEN" -ge 12 ]]; then
-  add_result "Auth" "PASS" "AUTH-04" "Password min length >= 12" "Longueur mdp ≥ 12" "PASS_MIN_LEN=$PASSMINLEN" ""
+  add_result "Auth" "PASS" "AUTH-04" "Password min length >= 12" "Longueur mdp ≥ 12" "minlen=$PASSMINLEN" ""
 else
-  add_result "Auth" "WARN" "AUTH-04" "Password min length too short" "Longueur mdp insuffisante" "PASS_MIN_LEN=${PASSMINLEN:-not set}" \
-    "Définissez PASS_MIN_LEN=12 dans /etc/login.defs"
+  add_result "Auth" "WARN" "AUTH-04" "Password min length too short" "Longueur mdp insuffisante" "minlen=${PASSMINLEN:-not set}" \
+    "Définissez 'minlen = 14' dans /etc/security/pwquality.conf"
 fi
 
 # AUTH-05 No NOPASSWD ALL in sudo
@@ -533,6 +658,91 @@ if [[ -z "$INACTIVE" ]]; then
 else
   add_result "Auth" "WARN" "AUTH-06" "Never-logged-in accounts found" "Comptes jamais utilisés" "${INACTIVE:0:80}" \
     "Vérifiez et supprimez: 'userdel <user>'"
+fi
+
+# AUTH-07 Password minimum age (PASS_MIN_DAYS)
+PASSMIN_DAYS=$(grep -E "^PASS_MIN_DAYS" /etc/login.defs 2>/dev/null | awk '{print $2}' || echo "")
+if [[ -n "$PASSMIN_DAYS" && "$PASSMIN_DAYS" -ge 1 ]]; then
+  add_result "Auth" "PASS" "AUTH-07" "Password min age >= 1 day" "Âge min mdp ≥ 1j" "PASS_MIN_DAYS=$PASSMIN_DAYS" ""
+else
+  add_result "Auth" "WARN" "AUTH-07" "Password min age not set" "Âge min mdp non défini" "PASS_MIN_DAYS=${PASSMIN_DAYS:-0}" \
+    "Définissez PASS_MIN_DAYS=7 dans /etc/login.defs"
+fi
+
+# AUTH-08 Password warning age (PASS_WARN_AGE)
+PASS_WARN=$(grep -E "^PASS_WARN_AGE" /etc/login.defs 2>/dev/null | awk '{print $2}' || echo "")
+if [[ -n "$PASS_WARN" && "$PASS_WARN" -ge 7 ]]; then
+  add_result "Auth" "PASS" "AUTH-08" "Password warning age >= 7 days" "Alerte expiration mdp ≥ 7j" "PASS_WARN_AGE=$PASS_WARN" ""
+else
+  add_result "Auth" "WARN" "AUTH-08" "Password warning age too low" "Alerte expiration mdp insuffisante" "PASS_WARN_AGE=${PASS_WARN:-not set}" \
+    "Définissez PASS_WARN_AGE=14 dans /etc/login.defs"
+fi
+
+# AUTH-09 Account lockout policy (faillock / pam_tally2)
+LOCKOUT_OK=false
+if [[ -f /etc/security/faillock.conf ]]; then
+  DENY_VAL=$(grep -E "^\s*deny\s*=" /etc/security/faillock.conf 2>/dev/null | \
+    awk -F= '{print $2}' | tr -d ' ' | head -1 || echo "")
+  [[ -n "$DENY_VAL" && "$DENY_VAL" -le 5 && "$DENY_VAL" -gt 0 ]] && LOCKOUT_OK=true
+fi
+grep -rqE 'pam_tally2|pam_faillock' /etc/pam.d/ 2>/dev/null && LOCKOUT_OK=true
+if $LOCKOUT_OK; then
+  add_result "Auth" "PASS" "AUTH-09" "Account lockout configured" "Verrouillage compte configuré" "faillock/pam_tally2 active" ""
+else
+  add_result "Auth" "FAIL" "AUTH-09" "No account lockout policy" "Aucune politique de verrouillage" "faillock unconfigured" \
+    "Configurez faillock: 'deny=5, unlock_time=900' dans /etc/security/faillock.conf"
+fi
+
+# AUTH-10 Shell timeout (TMOUT)
+TMOUT_VAL=$(grep -rE "^\s*TMOUT\s*=" /etc/profile /etc/profile.d/*.sh /etc/bashrc /etc/bash.bashrc 2>/dev/null | \
+  grep -oE '[0-9]+' | sort -n | head -1 || echo "")
+if [[ -n "$TMOUT_VAL" && "$TMOUT_VAL" -le 900 && "$TMOUT_VAL" -gt 0 ]]; then
+  add_result "Auth" "PASS" "AUTH-10" "Shell timeout configured" "Délai session shell configuré" "TMOUT=${TMOUT_VAL}s" ""
+else
+  add_result "Auth" "WARN" "AUTH-10" "Shell timeout not configured" "Délai session shell absent" "TMOUT=${TMOUT_VAL:-not set}" \
+    "Ajoutez dans /etc/profile.d/timeout.sh: 'readonly TMOUT=600; export TMOUT'"
+fi
+
+# AUTH-11 No extra UID 0 accounts (besides root)
+UID0_ACCOUNTS=$(awk -F: '($3==0 && $1!="root"){print $1}' /etc/passwd 2>/dev/null | \
+  tr '\n' ',' | sed 's/,$//' || echo "")
+if [[ -z "$UID0_ACCOUNTS" ]]; then
+  add_result "Auth" "PASS" "AUTH-11" "No extra UID 0 accounts" "Aucun compte UID 0 illégitime" "root only" ""
+else
+  add_result "Auth" "FAIL" "AUTH-11" "Extra UID 0 accounts found" "Comptes UID 0 supplémentaires" "$UID0_ACCOUNTS" \
+    "Supprimez ou modifiez ces comptes — seul root doit avoir UID 0."
+fi
+
+# AUTH-12 /etc/group permissions
+GRP_PERMS=$(stat -c "%a" /etc/group 2>/dev/null || echo "")
+if [[ "$GRP_PERMS" == "644" ]]; then
+  add_result "Auth" "PASS" "AUTH-12" "/etc/group perms 644" "Perms /etc/group correctes" "Mode: 644" ""
+else
+  add_result "Auth" "FAIL" "AUTH-12" "/etc/group perms wrong" "Perms /etc/group incorrectes" "Mode: ${GRP_PERMS:-?}" \
+    "Corrigez: 'chmod 644 /etc/group'"
+fi
+
+# AUTH-13 /etc/gshadow permissions
+GSHADOW_PERMS=$(stat -c "%a" /etc/gshadow 2>/dev/null || echo "")
+if [[ "$GSHADOW_PERMS" =~ ^(640|600|000|400)$ ]]; then
+  add_result "Auth" "PASS" "AUTH-13" "/etc/gshadow perms correct" "Perms /etc/gshadow correctes" "Mode: $GSHADOW_PERMS" ""
+else
+  add_result "Auth" "FAIL" "AUTH-13" "/etc/gshadow perms wrong" "Perms /etc/gshadow incorrectes" "Mode: ${GSHADOW_PERMS:-?}" \
+    "Corrigez: 'chmod 640 /etc/gshadow && chown root:shadow /etc/gshadow'"
+fi
+
+# AUTH-14 Password complexity (pwquality)
+PWQUAL_OK=false
+if [[ -f /etc/security/pwquality.conf ]]; then
+  PWQUAL_MINLEN=$(grep -E "^\s*minlen\s*=" /etc/security/pwquality.conf 2>/dev/null | \
+    awk -F= '{print $2}' | tr -d ' ' | head -1 || echo "")
+  [[ -n "$PWQUAL_MINLEN" && "$PWQUAL_MINLEN" -ge 12 ]] && PWQUAL_OK=true
+fi
+if $PWQUAL_OK; then
+  add_result "Auth" "PASS" "AUTH-14" "Password complexity configured" "Complexité mdp configurée" "pwquality: minlen=${PWQUAL_MINLEN}" ""
+else
+  add_result "Auth" "WARN" "AUTH-14" "Password complexity not enforced" "Complexité mdp non configurée" "pwquality.conf absent or weak" \
+    "Configurez /etc/security/pwquality.conf: minlen=14, dcredit=-1, ucredit=-1, ocredit=-1"
 fi
 
 # =============================================================================
@@ -595,6 +805,92 @@ else
     "Définissez 'LoginGraceTime 60' dans sshd_config"
 fi
 
+# SSH-07 PermitEmptyPasswords
+PE=$(get_ssh "PermitEmptyPasswords")
+if [[ "$PE" == "no" || -z "$PE" ]]; then
+  add_result "SSH" "PASS" "SSH-07" "PermitEmptyPasswords disabled" "Mdp vide SSH interdit" "PermitEmptyPasswords=${PE:-no(default)}" ""
+else
+  add_result "SSH" "FAIL" "SSH-07" "PermitEmptyPasswords enabled" "Mdp vide SSH autorisé" "PermitEmptyPasswords=$PE" \
+    "Ajoutez 'PermitEmptyPasswords no' dans sshd_config"
+fi
+
+# SSH-08 IgnoreRhosts
+IR=$(get_ssh "IgnoreRhosts")
+if [[ "$IR" == "yes" || -z "$IR" ]]; then
+  add_result "SSH" "PASS" "SSH-08" "IgnoreRhosts enabled" "Rhosts ignorés" "IgnoreRhosts=${IR:-yes(default)}" ""
+else
+  add_result "SSH" "FAIL" "SSH-08" "IgnoreRhosts disabled" "Rhosts autorisés" "IgnoreRhosts=$IR" \
+    "Ajoutez 'IgnoreRhosts yes' dans sshd_config"
+fi
+
+# SSH-09 HostbasedAuthentication
+HBA=$(get_ssh "HostbasedAuthentication")
+if [[ "$HBA" == "no" || -z "$HBA" ]]; then
+  add_result "SSH" "PASS" "SSH-09" "HostbasedAuthentication disabled" "Auth par hôte désactivée" "HostbasedAuthentication=${HBA:-no(default)}" ""
+else
+  add_result "SSH" "FAIL" "SSH-09" "HostbasedAuthentication enabled" "Auth par hôte activée" "HostbasedAuthentication=$HBA" \
+    "Ajoutez 'HostbasedAuthentication no' dans sshd_config"
+fi
+
+# SSH-10 Legal banner
+BANNER_FILE=$(get_ssh "Banner")
+BANNER_OK=false
+if [[ -n "$BANNER_FILE" && -f "$BANNER_FILE" ]]; then
+  BANNER_LEN=$(wc -c < "$BANNER_FILE" 2>/dev/null || echo 0)
+  [[ "${BANNER_LEN:-0}" -gt 10 ]] && BANNER_OK=true
+fi
+if $BANNER_OK; then
+  add_result "SSH" "PASS" "SSH-10" "SSH legal banner configured" "Bannière légale SSH présente" "Banner=$BANNER_FILE" ""
+else
+  add_result "SSH" "WARN" "SSH-10" "SSH legal banner missing" "Bannière légale SSH absente" "Banner=${BANNER_FILE:-not set}" \
+    "Créez /etc/issue.net et ajoutez 'Banner /etc/issue.net' dans sshd_config"
+fi
+
+# SSH-11 ClientAliveInterval
+CAI=$(get_ssh "ClientAliveInterval")
+if [[ -n "$CAI" && "$CAI" -le 300 && "$CAI" -gt 0 ]]; then
+  add_result "SSH" "PASS" "SSH-11" "ClientAliveInterval <= 300s" "Délai inactivité SSH configuré" "ClientAliveInterval=$CAI" ""
+else
+  add_result "SSH" "WARN" "SSH-11" "ClientAliveInterval not configured" "Délai inactivité SSH absent" "ClientAliveInterval=${CAI:-not set}" \
+    "Définissez 'ClientAliveInterval 300' et 'ClientAliveCountMax 3' dans sshd_config"
+fi
+
+# SSH-12 UsePAM
+UPAM=$(get_ssh "UsePAM")
+if [[ "$UPAM" == "yes" || -z "$UPAM" ]]; then
+  add_result "SSH" "PASS" "SSH-12" "UsePAM enabled" "PAM SSH activé" "UsePAM=${UPAM:-yes(default)}" ""
+else
+  add_result "SSH" "WARN" "SSH-12" "UsePAM disabled" "PAM SSH désactivé" "UsePAM=$UPAM" \
+    "Ajoutez 'UsePAM yes' dans sshd_config"
+fi
+
+# SSH-13 Weak ciphers absent
+CIPHERS=$(get_ssh "Ciphers")
+if [[ -n "$CIPHERS" ]] && echo "$CIPHERS" | grep -qiE '(arcfour|3des|des|blowfish|cast128)'; then
+  add_result "SSH" "FAIL" "SSH-13" "Weak SSH ciphers configured" "Chiffrements SSH faibles détectés" "$CIPHERS" \
+    "Définissez uniquement des chiffrements forts dans sshd_config (chacha20, aes256-gcm, aes128-ctr)"
+else
+  add_result "SSH" "PASS" "SSH-13" "No weak SSH ciphers" "Pas de chiffrements SSH faibles" "${CIPHERS:-default (verify)}" ""
+fi
+
+# SSH-14 sshd_config permissions
+SSHD_CFG_PERMS=$(stat -c "%a" /etc/ssh/sshd_config 2>/dev/null || echo "")
+if [[ "$SSHD_CFG_PERMS" =~ ^(600|640|644)$ ]]; then
+  add_result "SSH" "PASS" "SSH-14" "sshd_config permissions OK" "Perms sshd_config correctes" "Mode: $SSHD_CFG_PERMS" ""
+else
+  add_result "SSH" "WARN" "SSH-14" "sshd_config permissions loose" "Perms sshd_config trop permissives" "Mode: ${SSHD_CFG_PERMS:-?}" \
+    "Corrigez: 'chmod 600 /etc/ssh/sshd_config && chown root:root /etc/ssh/sshd_config'"
+fi
+
+# SSH-15 MaxSessions
+MS=$(get_ssh "MaxSessions")
+if [[ -n "$MS" && "$MS" -le 4 ]]; then
+  add_result "SSH" "PASS" "SSH-15" "MaxSessions <= 4" "Sessions SSH max ≤ 4" "MaxSessions=$MS" ""
+else
+  add_result "SSH" "WARN" "SSH-15" "MaxSessions not restricted" "Sessions SSH non limitées" "MaxSessions=${MS:-10(default)}" \
+    "Définissez 'MaxSessions 4' dans sshd_config"
+fi
+
 # =============================================================================
 #  4. FILESYSTEM & PERMISSIONS
 # =============================================================================
@@ -639,8 +935,8 @@ SUID=$(find / -xdev -perm -4000 -type f 2>/dev/null | wc -l)
 if [[ "$SUID" -le 20 ]]; then
   add_result "Files" "PASS" "FS-05" "SUID binary count OK" "Binaires SUID: count OK" "Count: $SUID" ""
 else
-  add_result "Files" "WARN" "FS-05" "High SUID binary count" "Nombre élevé de binaires SUID" "Count: $SUID" \
-    "Auditez: 'find / -xdev -perm -4000 -ls'"
+  add_result "Files" "WARN" "FS-05" "High SUID binary count" "Nombre élevé de binaires SUID" "Count: $SUID (manual review required)" \
+    "Auditez: 'find / -xdev -perm -4000 -ls' — supprimez le bit SUID sur les binaires non nécessaires."
 fi
 
 # FS-06 /tmp noexec
@@ -649,7 +945,64 @@ if echo "$TMP_OPTS" | grep -q "noexec"; then
   add_result "Files" "PASS" "FS-06" "/tmp mounted noexec" "/tmp monté noexec" "noexec on /tmp" ""
 else
   add_result "Files" "WARN" "FS-06" "/tmp not noexec" "/tmp sans noexec" "Executables can run from /tmp" \
-    "Montez /tmp avec noexec dans /etc/fstab"
+    "Montez /tmp avec noexec,nosuid,nodev dans /etc/fstab"
+fi
+
+# FS-07 Sticky bit on world-writable directories
+NOSTICKY=$(find / -xdev -type d -perm -0002 ! -perm -1000 2>/dev/null | wc -l)
+if [[ "$NOSTICKY" -eq 0 ]]; then
+  add_result "Files" "PASS" "FS-07" "Sticky bit on all world-writable dirs" "Sticky bit sur répertoires partagés" "All world-writable dirs have sticky bit" ""
+else
+  add_result "Files" "FAIL" "FS-07" "World-writable dirs without sticky bit" "Répertoires sans sticky bit" "$NOSTICKY dir(s)" \
+    "Corrigez: 'find / -xdev -type d -perm -0002 ! -perm -1000 -exec chmod +t {} \;'"
+fi
+
+# FS-08 /etc/crontab permissions
+CRONTAB_PERMS=$(stat -c "%a" /etc/crontab 2>/dev/null || echo "")
+if [[ "$CRONTAB_PERMS" =~ ^(600|400)$ ]]; then
+  add_result "Files" "PASS" "FS-08" "/etc/crontab perms OK" "Perms /etc/crontab correctes" "Mode: $CRONTAB_PERMS" ""
+elif [[ -z "$CRONTAB_PERMS" ]]; then
+  add_result "Files" "WARN" "FS-08" "/etc/crontab not found" "/etc/crontab introuvable" "File absent" ""
+else
+  add_result "Files" "WARN" "FS-08" "/etc/crontab perms too open" "Perms /etc/crontab trop permissives" "Mode: $CRONTAB_PERMS" \
+    "Corrigez: 'chmod 600 /etc/crontab && chown root:root /etc/crontab'"
+fi
+
+# FS-09 /var/tmp noexec
+VARTMP_OPTS=$(grep -E '\s/var/tmp\s' /proc/mounts 2>/dev/null | awk '{print $4}' | head -1 || echo "")
+if echo "$VARTMP_OPTS" | grep -q "noexec"; then
+  add_result "Files" "PASS" "FS-09" "/var/tmp mounted noexec" "/var/tmp monté noexec" "noexec on /var/tmp" ""
+else
+  add_result "Files" "WARN" "FS-09" "/var/tmp not noexec" "/var/tmp sans noexec" "${VARTMP_OPTS:-not separately mounted}" \
+    "Montez /var/tmp avec noexec,nosuid,nodev dans /etc/fstab"
+fi
+
+# FS-10 Unowned files and directories
+UNOWNED=$(find / -xdev \( -nouser -o -nogroup \) -type f 2>/dev/null | wc -l)
+if [[ "$UNOWNED" -eq 0 ]]; then
+  add_result "Files" "PASS" "FS-10" "No unowned files" "Aucun fichier sans propriétaire" "0 files" ""
+else
+  add_result "Files" "WARN" "FS-10" "Unowned files found" "Fichiers sans propriétaire" "$UNOWNED file(s) (manual review required)" \
+    "Auditez: 'find / -xdev \( -nouser -o -nogroup \) -type f -ls' et assignez un propriétaire."
+fi
+
+# FS-11 /var/log not world-readable
+VARLOG_PERMS=$(stat -c "%a" /var/log 2>/dev/null || echo "")
+_VL_LAST="${VARLOG_PERMS: -1}"
+if [[ "$_VL_LAST" == "0" || "$_VL_LAST" == "1" ]]; then
+  add_result "Files" "PASS" "FS-11" "/var/log not world-readable" "/var/log non lisible par tous" "Mode: $VARLOG_PERMS" ""
+else
+  add_result "Files" "WARN" "FS-11" "/var/log world-readable" "/var/log lisible par tous" "Mode: ${VARLOG_PERMS:-?}" \
+    "Corrigez: 'chmod 750 /var/log'"
+fi
+
+# FS-12 SSH host private key permissions
+SSH_KEY_ISSUES=$(find /etc/ssh -name "ssh_host_*_key" ! -name "*.pub" ! -perm 600 2>/dev/null | wc -l)
+if [[ "$SSH_KEY_ISSUES" -eq 0 ]]; then
+  add_result "Files" "PASS" "FS-12" "SSH host private keys 600" "Clés privées SSH protégées" "All at mode 600" ""
+else
+  add_result "Files" "FAIL" "FS-12" "SSH host private key perms wrong" "Clés privées SSH mal protégées" "$SSH_KEY_ISSUES key(s) wrong perms" \
+    "Corrigez: 'chmod 600 /etc/ssh/ssh_host_*_key'"
 fi
 
 # =============================================================================
@@ -679,13 +1032,13 @@ else
     "Désactivez si inutile: 'sysctl -w net.ipv4.ip_forward=0'"
 fi
 
-# NET-03 ICMP Redirects
+# NET-03 ICMP Redirects (accept)
 ICR=$(sysctl -n net.ipv4.conf.all.accept_redirects 2>/dev/null || echo "?")
 if [[ "$ICR" == "0" ]]; then
   add_result "Network" "PASS" "NET-03" "ICMP redirects disabled" "Redirections ICMP désactivées" "accept_redirects=0" ""
 else
   add_result "Network" "FAIL" "NET-03" "ICMP redirects accepted" "Redirections ICMP acceptées" "accept_redirects=$ICR" \
-    "Ajoutez dans /etc/sysctl.conf: 'net.ipv4.conf.all.accept_redirects=0'"
+    "Ajoutez dans /etc/sysctl.d/: 'net.ipv4.conf.all.accept_redirects=0'"
 fi
 
 # NET-04 SYN Cookies
@@ -708,6 +1061,60 @@ if [[ ${#FOUND_SVCS[@]} -eq 0 ]]; then
 else
   add_result "Network" "FAIL" "NET-05" "Dangerous services active" "Services dangereux actifs" "${FOUND_SVCS[*]}" \
     "Désactivez: 'systemctl disable --now <service>'"
+fi
+
+# NET-06 Source routing disabled
+SRC_ROUTE=$(sysctl -n net.ipv4.conf.all.accept_source_route 2>/dev/null || echo "?")
+if [[ "$SRC_ROUTE" == "0" ]]; then
+  add_result "Network" "PASS" "NET-06" "Source routing disabled" "Routage source désactivé" "accept_source_route=0" ""
+else
+  add_result "Network" "FAIL" "NET-06" "Source routing enabled" "Routage source activé" "accept_source_route=$SRC_ROUTE" \
+    "Ajoutez: 'net.ipv4.conf.all.accept_source_route=0' dans /etc/sysctl.d/"
+fi
+
+# NET-07 Send redirects disabled
+SEND_REDIR=$(sysctl -n net.ipv4.conf.all.send_redirects 2>/dev/null || echo "?")
+if [[ "$SEND_REDIR" == "0" ]]; then
+  add_result "Network" "PASS" "NET-07" "Send redirects disabled" "Envoi redirections ICMP désactivé" "send_redirects=0" ""
+else
+  add_result "Network" "FAIL" "NET-07" "Send redirects enabled" "Envoi redirections ICMP activé" "send_redirects=$SEND_REDIR" \
+    "Ajoutez: 'net.ipv4.conf.all.send_redirects=0' dans /etc/sysctl.d/"
+fi
+
+# NET-08 Martian packet logging
+MARTIAN=$(sysctl -n net.ipv4.conf.all.log_martians 2>/dev/null || echo "?")
+if [[ "$MARTIAN" == "1" ]]; then
+  add_result "Network" "PASS" "NET-08" "Martian packet logging enabled" "Journalisation paquets Martien active" "log_martians=1" ""
+else
+  add_result "Network" "WARN" "NET-08" "Martian packet logging disabled" "Paquets Martien non journalisés" "log_martians=$MARTIAN" \
+    "Activez: 'net.ipv4.conf.all.log_martians=1' dans /etc/sysctl.d/"
+fi
+
+# NET-09 Reverse path filtering
+RP_FILTER=$(sysctl -n net.ipv4.conf.all.rp_filter 2>/dev/null || echo "?")
+if [[ "$RP_FILTER" == "1" || "$RP_FILTER" == "2" ]]; then
+  add_result "Network" "PASS" "NET-09" "Reverse path filtering enabled" "Filtrage chemin inverse actif" "rp_filter=$RP_FILTER" ""
+else
+  add_result "Network" "FAIL" "NET-09" "Reverse path filtering disabled" "Filtrage chemin inverse inactif" "rp_filter=$RP_FILTER" \
+    "Activez: 'net.ipv4.conf.all.rp_filter=1' dans /etc/sysctl.d/"
+fi
+
+# NET-10 IPv6 router advertisements disabled
+IPV6_RA=$(sysctl -n net.ipv6.conf.all.accept_ra 2>/dev/null || echo "0")
+if [[ "$IPV6_RA" == "0" ]]; then
+  add_result "Network" "PASS" "NET-10" "IPv6 RA disabled" "Annonces routeur IPv6 désactivées" "accept_ra=0" ""
+else
+  add_result "Network" "WARN" "NET-10" "IPv6 RA accepted" "Annonces routeur IPv6 acceptées" "accept_ra=$IPV6_RA" \
+    "Si IPv6 non requis: 'net.ipv6.conf.all.accept_ra=0' dans /etc/sysctl.d/"
+fi
+
+# NET-11 ICMP broadcast ignored
+BCAST_ICMP=$(sysctl -n net.ipv4.icmp_echo_ignore_broadcasts 2>/dev/null || echo "?")
+if [[ "$BCAST_ICMP" == "1" ]]; then
+  add_result "Network" "PASS" "NET-11" "ICMP broadcast ignored" "Broadcast ICMP ignoré" "icmp_echo_ignore_broadcasts=1" ""
+else
+  add_result "Network" "WARN" "NET-11" "ICMP broadcast not ignored" "Broadcast ICMP non ignoré" "icmp_echo_ignore_broadcasts=$BCAST_ICMP" \
+    "Activez: 'net.ipv4.icmp_echo_ignore_broadcasts=1' dans /etc/sysctl.d/"
 fi
 
 # =============================================================================
@@ -753,12 +1160,56 @@ else
     "Installez: 'dnf install audit'"
 fi
 
+# LOG-05 Audit log max size configured
+AUDITD_CONF="/etc/audit/auditd.conf"
+if [[ -f "$AUDITD_CONF" ]]; then
+  MAX_LOG=$(grep -E "^\s*max_log_file\s*=" "$AUDITD_CONF" 2>/dev/null | \
+    awk -F= '{print $2}' | tr -d ' ' | head -1 || echo "")
+  if [[ -n "$MAX_LOG" && "$MAX_LOG" -ge 8 ]]; then
+    add_result "Logging" "PASS" "LOG-05" "Audit log max size >= 8 MB" "Taille max log audit ≥ 8 Mo" "max_log_file=${MAX_LOG}MB" ""
+  else
+    add_result "Logging" "WARN" "LOG-05" "Audit log max size too small" "Taille max log audit insuffisante" "max_log_file=${MAX_LOG:-not set}" \
+      "Définissez 'max_log_file = 8' dans /etc/audit/auditd.conf"
+  fi
+else
+  add_result "Logging" "WARN" "LOG-05" "auditd.conf not found" "auditd.conf introuvable" "Not at /etc/audit/auditd.conf" \
+    "Installez auditd: 'dnf install audit'"
+fi
+
+# LOG-06 Kernel audit=1 at boot
+if grep -qE '\baudit=1\b' /proc/cmdline 2>/dev/null; then
+  add_result "Logging" "PASS" "LOG-06" "Kernel audit enabled at boot" "Audit noyau activé au boot" "audit=1 in kernel cmdline" ""
+else
+  add_result "Logging" "WARN" "LOG-06" "Kernel audit not enabled at boot" "Audit noyau absent au boot" "audit=1 missing from /proc/cmdline" \
+    "Ajoutez 'audit=1' dans GRUB_CMDLINE_LINUX dans /etc/default/grub puis régénérez grub.cfg"
+fi
+
+# LOG-07 journald persistent storage
+if [[ -d /var/log/journal ]]; then
+  add_result "Logging" "PASS" "LOG-07" "journald persistent storage" "Journald persistant" "/var/log/journal exists" ""
+else
+  add_result "Logging" "WARN" "LOG-07" "journald not persistent" "Journald non persistant" "/var/log/journal absent (volatile)" \
+    "Activez: 'mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal'"
+fi
+
+# LOG-08 Remote syslog configured (informational — no Ansible remediation)
+REMOTE_LOG=false
+if [[ -f /etc/rsyslog.conf ]] || [[ -d /etc/rsyslog.d ]]; then
+  grep -rqE '@@?[0-9a-zA-Z]|action\(type="omfwd"' /etc/rsyslog.conf /etc/rsyslog.d/*.conf 2>/dev/null && REMOTE_LOG=true
+fi
+if $REMOTE_LOG; then
+  add_result "Logging" "PASS" "LOG-08" "Remote syslog configured" "Syslog distant configuré" "Remote forwarding found in rsyslog" ""
+else
+  add_result "Logging" "WARN" "LOG-08" "No remote syslog" "Pas de syslog distant" "Logs stored locally only" \
+    "Configurez un serveur syslog distant dans /etc/rsyslog.d/ pour la centralisation des logs."
+fi
+
 # =============================================================================
 #  7. INTEGRITY & MALWARE
 # =============================================================================
 section "7. INTEGRITY & MALWARE / Intégrité et Logiciels Malveillants"
 
-# INT-01 AIDE
+# INT-01 AIDE installed
 if cmd_exists aide || cmd_exists aide2; then
   add_result "Integrity" "PASS" "INT-01" "AIDE installed" "AIDE installé" "File integrity monitor present" ""
 else
@@ -766,27 +1217,202 @@ else
     "Installez: 'dnf install aide && aide --init'"
 fi
 
-# INT-02 Rootkit scanner
+# INT-02 Rootkit scanner (manual verification required)
 if cmd_exists rkhunter || cmd_exists chkrootkit; then
-  add_result "Integrity" "PASS" "INT-02" "Rootkit scanner present" "Scanner rootkit présent" "rkhunter/chkrootkit found" ""
+  add_result "Integrity" "PASS" "INT-02" "Rootkit scanner present" "Scanner rootkit présent" "rkhunter/chkrootkit found (run manually)" ""
 else
   add_result "Integrity" "WARN" "INT-02" "No rootkit scanner" "Aucun scanner rootkit" "rkhunter/chkrootkit absent" \
-    "Installez: 'dnf install rkhunter'"
+    "Installez: 'dnf install rkhunter' — exécutez ensuite 'rkhunter --check' manuellement."
 fi
 
-# INT-03 Suspicious cron
-SUSP_CRON=$(grep -rE '(wget|curl|bash|nc |ncat|python|perl).*(http|/tmp)' /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' | head -1 || echo 0)
+# INT-03 Suspicious cron entries
+SUSP_CRON=$(grep -rE '(wget|curl|bash|nc |ncat|python|perl).*(http|/tmp)' \
+  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || echo 0)
 if [[ "$SUSP_CRON" -eq 0 ]]; then
   add_result "Integrity" "PASS" "INT-03" "No suspicious cron entries" "Crons propres" "Crontabs look clean" ""
 else
-  add_result "Integrity" "FAIL" "INT-03" "Suspicious cron entries" "Crons suspects détectés" "$SUSP_CRON entry/entries" \
+  add_result "Integrity" "FAIL" "INT-03" "Suspicious cron entries" "Crons suspects détectés" "$SUSP_CRON entry/entries (manual review required)" \
     "Auditez: 'crontab -l' et /etc/cron* — cherchez wget/curl/bash vers /tmp."
 fi
 
-# INT-04 /tmp noexec (already in FS, quick recheck here as different angle)
-LISTEN_PORTS=$(ss -tlnp 2>/dev/null | grep -c "LISTEN" | head -1 || echo "?")
-add_result "Integrity" "WARN" "INT-04" "Open listening ports" "Ports en écoute" "$LISTEN_PORTS port(s) listening" \
-  "Auditez: 'ss -tlnp' — fermez tout port non nécessaire."
+# INT-04 Open listening ports (always informational — manual review required)
+LISTEN_PORTS=$(ss -tlnp 2>/dev/null | grep -c "LISTEN" || echo "?")
+add_result "Integrity" "WARN" "INT-04" "Open listening ports" "Ports en écoute (revue manuelle)" "$LISTEN_PORTS port(s) listening" \
+  "Revue manuelle requise: 'ss -tlnp' — fermez tout port non justifié."
+
+# INT-05 Package manager GPG/signature check
+PKG_GPG_OK=false
+if [[ -f /etc/dnf/dnf.conf ]] || [[ -d /etc/yum.repos.d ]]; then
+  GPGCHECK_OFF=$(grep -rE "^\s*gpgcheck\s*=\s*0" \
+    /etc/dnf/dnf.conf /etc/yum.conf /etc/yum.repos.d/*.repo 2>/dev/null | wc -l)
+  [[ "$GPGCHECK_OFF" -eq 0 ]] && PKG_GPG_OK=true
+elif cmd_exists apt-get; then
+  UNAUTH=$(grep -rE "AllowUnauthenticated\s+true" \
+    /etc/apt/apt.conf /etc/apt/apt.conf.d/ 2>/dev/null | wc -l)
+  [[ "$UNAUTH" -eq 0 ]] && PKG_GPG_OK=true
+else
+  PKG_GPG_OK=true  # Cannot determine — assume OK
+fi
+if $PKG_GPG_OK; then
+  add_result "Integrity" "PASS" "INT-05" "Package signature check enabled" "Vérif signature paquets active" "gpgcheck enforced" ""
+else
+  add_result "Integrity" "FAIL" "INT-05" "Package signature check disabled" "Vérif signature paquets désactivée" "gpgcheck=0 found" \
+    "Activez: 'gpgcheck=1' dans /etc/dnf/dnf.conf et tous les fichiers .repo"
+fi
+
+# INT-06 fail2ban running
+if svc_active fail2ban; then
+  add_result "Integrity" "PASS" "INT-06" "fail2ban running" "fail2ban actif" "fail2ban: active" ""
+else
+  add_result "Integrity" "WARN" "INT-06" "fail2ban not running" "fail2ban inactif" "fail2ban: inactive or not installed" \
+    "Installez et activez: 'dnf install fail2ban && systemctl enable --now fail2ban'"
+fi
+
+# INT-07 AIDE database initialized
+AIDE_DB_OK=false
+for _aide_db in /var/lib/aide/aide.db.gz /var/lib/aide/aide.db /var/lib/aide/aide.db.new.gz; do
+  [[ -f "$_aide_db" ]] && AIDE_DB_OK=true && break
+done
+if $AIDE_DB_OK; then
+  add_result "Integrity" "PASS" "INT-07" "AIDE database initialized" "Base AIDE initialisée" "aide.db found" ""
+elif cmd_exists aide || cmd_exists aide2; then
+  add_result "Integrity" "FAIL" "INT-07" "AIDE installed but DB missing" "AIDE installé sans base de données" "aide.db not found" \
+    "Initialisez: 'aide --init && cp /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'"
+else
+  add_result "Integrity" "WARN" "INT-07" "AIDE not installed" "AIDE non installé" "No integrity DB" \
+    "Installez AIDE: 'dnf install aide && aide --init'"
+fi
+
+# INT-08 Cron directory permissions (not world-writable)
+CRON_DIR_ISSUES=""
+for _cdir in /etc/cron.d /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.hourly; do
+  [[ -d "$_cdir" ]] || continue
+  _CDIR_P=$(stat -c "%a" "$_cdir" 2>/dev/null || echo "")
+  # World-writable = last octet is 2,3,6,7
+  echo "$_CDIR_P" | grep -qE "^[0-9][0-9][2367]" && \
+    CRON_DIR_ISSUES="${CRON_DIR_ISSUES:+$CRON_DIR_ISSUES, }$_cdir ($_CDIR_P)"
+done
+if [[ -z "$CRON_DIR_ISSUES" ]]; then
+  add_result "Integrity" "PASS" "INT-08" "Cron directories not world-writable" "Répertoires cron sécurisés" "cron.d and cron.* OK" ""
+else
+  add_result "Integrity" "FAIL" "INT-08" "Cron directory world-writable" "Répertoires cron inscriptibles par tous" "$CRON_DIR_ISSUES" \
+    "Corrigez: 'chmod 700 /etc/cron.d /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.hourly'"
+fi
+
+# =============================================================================
+#  8. COMPLIANCE & POLICY
+# =============================================================================
+section "8. COMPLIANCE & POLICY / Conformité et Politique"
+
+# COMP-01 Legal banner /etc/issue.net
+if [[ -f /etc/issue.net ]]; then
+  BANNER_LINES=$(wc -l < /etc/issue.net 2>/dev/null || echo 0)
+  if [[ "$BANNER_LINES" -ge 2 ]]; then
+    add_result "Compliance" "PASS" "COMP-01" "Legal banner configured (/etc/issue.net)" "Bannière légale configurée" "${BANNER_LINES} line(s)" ""
+  else
+    add_result "Compliance" "WARN" "COMP-01" "Legal banner too short" "Bannière légale trop courte" "${BANNER_LINES} line(s) in /etc/issue.net" \
+      "Ajoutez un avertissement d'accès autorisé dans /etc/issue.net (min 2 lignes)"
+  fi
+else
+  add_result "Compliance" "WARN" "COMP-01" "No legal banner (/etc/issue.net)" "Bannière légale absente" "/etc/issue.net missing" \
+    "Créez /etc/issue.net avec un message d'avertissement légal."
+fi
+
+# COMP-02 /tmp on dedicated partition or tmpfs
+TMP_DEDICATED=false
+grep -qE '\s/tmp\s' /etc/fstab 2>/dev/null && TMP_DEDICATED=true
+grep -qE 'tmpfs\s+/tmp' /proc/mounts 2>/dev/null && TMP_DEDICATED=true
+if $TMP_DEDICATED; then
+  add_result "Compliance" "PASS" "COMP-02" "/tmp on dedicated partition/tmpfs" "/tmp partition dédiée" "Separate /tmp mount found" ""
+else
+  add_result "Compliance" "WARN" "COMP-02" "/tmp not on dedicated partition" "/tmp non isolé" "/tmp not separately mounted" \
+    "Isolez /tmp: ajoutez 'tmpfs /tmp tmpfs defaults,noexec,nosuid,nodev 0 0' dans /etc/fstab"
+fi
+
+# COMP-03 /home on separate partition (informational — cannot change post-install)
+HOME_PART=$(grep -cE '\s/home\s' /proc/mounts 2>/dev/null || echo 0)
+if [[ "$HOME_PART" -ge 1 ]]; then
+  add_result "Compliance" "PASS" "COMP-03" "/home on separate partition" "/home partition dédiée" "Separate /home mount" ""
+else
+  add_result "Compliance" "WARN" "COMP-03" "/home not on separate partition" "/home non isolé" "Shared with / partition (manual review)" \
+    "Revue manuelle: isoler /home sur une partition dédiée est recommandé (CIS 1.1.18)"
+fi
+
+# COMP-04 /var on separate partition (informational — cannot change post-install)
+VAR_PART=$(grep -cE '\s/var\s' /proc/mounts 2>/dev/null || echo 0)
+if [[ "$VAR_PART" -ge 1 ]]; then
+  add_result "Compliance" "PASS" "COMP-04" "/var on separate partition" "/var partition dédiée" "Separate /var mount" ""
+else
+  add_result "Compliance" "WARN" "COMP-04" "/var not on separate partition" "/var non isolé" "Shared with / partition (manual review)" \
+    "Revue manuelle: isoler /var évite que les logs saturent / (CIS 1.1.12)"
+fi
+
+# COMP-05 Default umask hardened (027 or stricter)
+UMASK_VAL=""
+while IFS= read -r _um; do
+  [[ "$_um" =~ ^0?(027|077)$ ]] && UMASK_VAL="$_um" && break
+done < <(grep -rE "^\s*(umask|UMASK)\s+" \
+  /etc/profile /etc/profile.d/*.sh /etc/bashrc /etc/bash.bashrc /etc/login.defs 2>/dev/null | \
+  grep -v "^#" | grep -oE '[0-7]{3,4}')
+if [[ -n "$UMASK_VAL" ]]; then
+  add_result "Compliance" "PASS" "COMP-05" "Umask 027 or stricter" "Umask 027 ou plus restrictif" "umask=$UMASK_VAL" ""
+else
+  _RAW_UMASK=$(grep -rE "^\s*(umask|UMASK)\s+" \
+    /etc/profile /etc/profile.d/*.sh /etc/bashrc /etc/bash.bashrc /etc/login.defs 2>/dev/null | \
+    grep -v "^#" | grep -oE '[0-7]{3,4}' | head -1 || echo "022 (default)")
+  add_result "Compliance" "WARN" "COMP-05" "Umask too permissive" "Umask trop permissif" "umask=${_RAW_UMASK}" \
+    "Définissez 'umask 027' dans /etc/profile.d/umask.sh — protège les nouveaux fichiers."
+fi
+
+# COMP-06 ASLR fully enabled
+ASLR=$(sysctl -n kernel.randomize_va_space 2>/dev/null || echo "?")
+if [[ "$ASLR" == "2" ]]; then
+  add_result "Compliance" "PASS" "COMP-06" "ASLR fully enabled" "ASLR activé (niveau 2)" "randomize_va_space=2" ""
+elif [[ "$ASLR" == "1" ]]; then
+  add_result "Compliance" "WARN" "COMP-06" "ASLR partial (level 1)" "ASLR partiel" "randomize_va_space=1 (prefer 2)" \
+    "Activez le niveau 2: 'sysctl -w kernel.randomize_va_space=2'"
+else
+  add_result "Compliance" "FAIL" "COMP-06" "ASLR disabled" "ASLR désactivé" "randomize_va_space=$ASLR" \
+    "Activez ASLR: 'sysctl -w kernel.randomize_va_space=2'"
+fi
+
+# COMP-07 Kernel pointer restriction
+KPTR=$(sysctl -n kernel.kptr_restrict 2>/dev/null || echo "?")
+if [[ "$KPTR" == "2" ]]; then
+  add_result "Compliance" "PASS" "COMP-07" "Kernel pointers hidden (kptr_restrict=2)" "Pointeurs noyau cachés" "kptr_restrict=2" ""
+elif [[ "$KPTR" == "1" ]]; then
+  add_result "Compliance" "WARN" "COMP-07" "Kernel pointers partially restricted" "Pointeurs noyau partiellement restreints" "kptr_restrict=1 (prefer 2)" \
+    "Renforcez: 'sysctl -w kernel.kptr_restrict=2'"
+else
+  add_result "Compliance" "FAIL" "COMP-07" "Kernel pointers exposed" "Pointeurs noyau exposés" "kptr_restrict=$KPTR" \
+    "Activez: 'sysctl -w kernel.kptr_restrict=2' dans /etc/sysctl.d/"
+fi
+
+# COMP-08 dmesg restriction
+DMESG=$(sysctl -n kernel.dmesg_restrict 2>/dev/null || echo "?")
+if [[ "$DMESG" == "1" ]]; then
+  add_result "Compliance" "PASS" "COMP-08" "dmesg restricted to root" "dmesg restreint à root" "dmesg_restrict=1" ""
+else
+  add_result "Compliance" "WARN" "COMP-08" "dmesg not restricted" "dmesg accessible à tous" "dmesg_restrict=$DMESG" \
+    "Activez: 'sysctl -w kernel.dmesg_restrict=1'"
+fi
+
+# COMP-09 ptrace scope restricted
+PTRACE=$(sysctl -n kernel.yama.ptrace_scope 2>/dev/null || echo "?")
+if [[ "$PTRACE" =~ ^[1-3]$ ]]; then
+  add_result "Compliance" "PASS" "COMP-09" "ptrace scope restricted" "ptrace restreint" "ptrace_scope=$PTRACE" ""
+else
+  add_result "Compliance" "WARN" "COMP-09" "ptrace unrestricted" "ptrace non restreint" "ptrace_scope=${PTRACE:-0}" \
+    "Activez: 'sysctl -w kernel.yama.ptrace_scope=1'"
+fi
+
+# COMP-10 USB storage module blacklisted
+if grep -rqsE "blacklist\s+usb.storage|blacklist\s+usb_storage" /etc/modprobe.d/ 2>/dev/null; then
+  add_result "Compliance" "PASS" "COMP-10" "USB storage blacklisted" "Stockage USB désactivé" "usb_storage in modprobe blacklist" ""
+else
+  add_result "Compliance" "WARN" "COMP-10" "USB storage not blacklisted" "Stockage USB non désactivé" "usb_storage module loadable" \
+    "Ajoutez 'blacklist usb-storage' dans /etc/modprobe.d/blacklist.conf (si non poste de travail)"
+fi
 
 # =============================================================================
 #  SUMMARY
