@@ -12,6 +12,7 @@ Help secure critical infrastructure in Senegal (government servers, DAF, ministr
 - [Installation & Setup](installation.md)
 - [How to Use / Run the Playbook](usage.md)
 - [All Roles Overview](roles-overview.md)
+- [Security Baseline Checker](baseline-checker.md)
 - [Security Considerations & Testing Advice](security-considerations.md)
 - [Contributing / Adding New Roles](contributing.md)
 - [Changelog](../CHANGELOG.md)
