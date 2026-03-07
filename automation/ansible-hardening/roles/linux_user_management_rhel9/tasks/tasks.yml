@@ -80,11 +80,6 @@
 # CIS 6.2.x — User account security audits
 # =============================================================================
 
-- name: "Gather group facts for audit (CIS 6.2.x)"
-  ansible.builtin.getent:
-    database: group
-  register: "group_db"
-
 # CIS 6.2.5 — Ensure all users' home directories exist
 - name: "Check that all users' home directories exist (CIS 6.2.5)"
   when: "linux_audit_home_dirs | bool"

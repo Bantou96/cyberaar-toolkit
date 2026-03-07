@@ -115,7 +115,7 @@
 - name: "Deploy rescue.service override — require root authentication (CIS 1.5.3)"
   when: "linux_single_user_auth | bool"
   ansible.builtin.copy:
-    dest: "/etc/systemd/system/rescue.service.d/override.conf"
+    dest: "/etc/systemd/system/rescue.service.d/99-cis-auth.conf"
     content: |
       [Service]
       ExecStart=
@@ -129,7 +129,7 @@
 - name: "Deploy emergency.service override — require root authentication (CIS 1.5.3)"
   when: "linux_single_user_auth | bool"
   ansible.builtin.copy:
-    dest: "/etc/systemd/system/emergency.service.d/override.conf"
+    dest: "/etc/systemd/system/emergency.service.d/99-cis-auth.conf"
     content: |
       [Service]
       ExecStart=

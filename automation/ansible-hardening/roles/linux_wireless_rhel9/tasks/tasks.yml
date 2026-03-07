@@ -11,7 +11,7 @@
 - name: "Check current wireless radio state"
   ansible.builtin.command: "nmcli radio all"
   changed_when: false
-  register: "wireless_current_state"
+  register: "nmcli_radio_state"
   when:
     - "linux_wireless_disable | bool"
     - "nmcli_available.rc == 0"
@@ -22,7 +22,7 @@
   when:
     - "linux_wireless_disable | bool"
     - "nmcli_available.rc == 0"
-    - "'enabled' in (wireless_current_state.stdout | lower)"
+    - "'enabled' in (nmcli_radio_state.stdout | lower)"
   register: "wireless_nmcli_result"
   changed_when: true
   failed_when: false
