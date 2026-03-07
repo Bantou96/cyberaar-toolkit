@@ -46,7 +46,7 @@ available in French & English.
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
 | `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 88 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.0.0 |
-| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 21 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.1.0 |
+| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 21 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.5.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
 
@@ -58,11 +58,18 @@ Both tools are independent: you can run the baseline script standalone without A
 Aar-Act/
 ├── automation/
 │   ├── scripts/
-│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.0.0)
+│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.0.0) — generated bundle
+│   │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
 │   │   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
-│   │   └── README.md                     # Baseline checker full reference
+│   │   ├── README.md                     # Baseline checker full reference
+│   │   └── src/                          # Source layout (edit here, not in the bundle)
+│   │       ├── main.sh                   # Shebang, CLI args, install/uninstall
+│   │       ├── run.sh                    # Execution entry point
+│   │       ├── lib/                      # core.sh, ansible_map.sh, remote.sh
+│   │       ├── checks/                   # 8 files — one per check section
+│   │       └── renderers/               # terminal.sh, json.sh, html.sh
 │   └── ansible-hardening/
-│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.1.0)
+│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.5.0)
 │       ├── requirements.yml              # ansible.posix + community.general
 │       ├── inventory/
 │       │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
@@ -548,6 +555,13 @@ No long commitments required — add one improvement when you have 10 minutes.
 5. Get **credit** in the Contributors list
 
 New hardening roles should follow the `linux_<category>_<rhel9|ubuntu>` naming convention and include parallel RHEL9 and Ubuntu implementations.
+
+**Contributing to the baseline script:** `cyberaar-baseline.sh` is a generated bundle — do not edit it directly. Edit the source files under `automation/scripts/src/`, then rebuild:
+
+```bash
+bash automation/scripts/build.sh
+bash -n automation/scripts/cyberaar-baseline.sh   # verify syntax
+```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 

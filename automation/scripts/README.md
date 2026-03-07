@@ -473,6 +473,69 @@ Checks without a mapping have no automated fix in this collection.
 
 ---
 
+## Contributing to the Script
+
+`cyberaar-baseline.sh` is a **generated bundle** — do not edit it directly. The source lives in `src/` and is assembled by `build.sh`.
+
+### Source layout
+
+```
+automation/scripts/
+├── cyberaar-baseline.sh        ← generated bundle (deploy/install this)
+├── build.sh                    ← assembles src/ in order, runs bash -n
+└── src/
+    ├── main.sh                 ← shebang, _show_help, CLI args, install/uninstall
+    ├── run.sh                  ← root check, check calls, score, renderer dispatch
+    ├── lib/
+    │   ├── core.sh             ← colors, parallel result arrays, add_result(), helpers
+    │   ├── ansible_map.sh      ← declare -A ANSIBLE_MAP=()
+    │   └── remote.sh           ← _remote_scan, fleet dispatcher
+    ├── checks/
+    │   ├── sys.sh              ← _checks_system()     SYS-01..10
+    │   ├── auth.sh             ← _checks_auth()       AUTH-01..14
+    │   ├── ssh.sh              ← _checks_ssh()        SSH-01..15
+    │   ├── fs.sh               ← _checks_filesystem() FS-01..12
+    │   ├── net.sh              ← _checks_network()    NET-01..11
+    │   ├── log.sh              ← _checks_logging()    LOG-01..08
+    │   ├── integrity.sh        ← _checks_integrity()  INT-01..08
+    │   └── compliance.sh       ← _checks_compliance() COMP-01..10
+    └── renderers/
+        ├── terminal.sh         ← _render_summary(), _ansible_terminal_plan()
+        ├── json.sh             ← _render_json() — iterates RESULT_*[] arrays
+        └── html.sh             ← _render_html() — builds HTML_ROWS from RESULT_*[]
+```
+
+### How add_result() works
+
+`add_result()` (in `src/lib/core.sh`) does two things:
+1. **Prints live to terminal** — check result streams as checks run
+2. **Appends to parallel arrays** — `RESULT_CATEGORY[]`, `RESULT_STATUS[]`, `RESULT_ID[]`, `RESULT_NAME_EN[]`, `RESULT_NAME_FR[]`, `RESULT_DETAIL[]`, `RESULT_REMEDIATION[]`
+
+The renderers (`_render_json`, `_render_html`) iterate those arrays at the end of the run. To change JSON or HTML output, edit only the relevant renderer — no need to touch `add_result()`.
+
+### Edit → rebuild workflow
+
+```bash
+# 1. Edit a source file
+vim automation/scripts/src/checks/ssh.sh
+
+# 2. Rebuild the bundle
+bash automation/scripts/build.sh
+
+# 3. Test locally
+sudo bash automation/scripts/cyberaar-baseline.sh \
+  --html-out /tmp/test.html \
+  --json-out /tmp/test.json
+
+# 4. Verify output counts
+grep -c "<tr>" /tmp/test.html        # should match total check count
+python3 -c "import json; d=json.load(open('/tmp/test.json')); print(len(d['cyberaar_baseline']['results']), 'checks')"
+```
+
+Commit both the edited `src/` file(s) **and** the regenerated `cyberaar-baseline.sh`.
+
+---
+
 ## Frequently Asked Questions
 
 **The script takes several minutes. Why?**
