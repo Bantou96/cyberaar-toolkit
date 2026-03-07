@@ -132,14 +132,16 @@ fi
 #  Used to generate targeted remediation commands after the scan.
 # =============================================================================
 declare -A ANSIBLE_MAP=(
-  ["SYS-02"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Kernel hardening & sysctl"
+  # SYS-02: kernel version check — remediation is applying updates, not sysctl tuning
+  ["SYS-02"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Apply pending kernel updates"
   ["SYS-03"]="updates,patching|linux_dnf_automatic_rhel9|linux_unattended_upgrades_ubuntu|Automatic security updates"
   ["SYS-04"]="mac|linux_selinux_rhel9|linux_apparmor_ubuntu|SELinux/AppArmor enforcement"
   ["SYS-05"]="kernel,coredump|linux_core_dumps_rhel9|linux_core_dumps_ubuntu|Core dump restriction"
   ["AUTH-01"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
   ["AUTH-02"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|User management hardening"
-  ["AUTH-03"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|PAM / password policy"
-  ["AUTH-04"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|PAM / password policy"
+  # AUTH-03: PASS_MAX_DAYS in /etc/login.defs is set by user_management, not authselect
+  ["AUTH-03"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Password expiry policy (login.defs)"
+  ["AUTH-04"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|PAM / password complexity"
   ["AUTH-05"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Sudo / user access controls"
   ["AUTH-06"]="auth,users|linux_user_management_rhel9|linux_user_management_ubuntu|Inactive account cleanup"
   ["SSH-01"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
@@ -156,17 +158,18 @@ declare -A ANSIBLE_MAP=(
   ["FS-06"]="filesystem,mounts|linux_tmp_mounts_rhel9|linux_tmp_mounts_ubuntu|/tmp & /dev/shm mount hardening"
   ["NET-01"]="firewall|linux_firewalld_rhel9|linux_firewall_ubuntu|Firewall configuration"
   ["NET-02"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|IP forwarding restriction"
-  ["NET-03"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Network sysctl hardening"
-  ["NET-04"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Network sysctl hardening"
+  # NET-03: accept_redirects is set by ip_forwarding role, not kernel_hardening
+  ["NET-03"]="network,sysctl|linux_ip_forwarding_rhel9|linux_ip_forwarding_ubuntu|ICMP redirect hardening"
+  ["NET-04"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|TCP SYN cookie hardening"
   ["NET-05"]="services|linux_disable_unnecessary_services_rhel9|linux_disable_unnecessary_services_ubuntu|Disable dangerous services"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
-  ["LOG-03"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Log rotation setup"
+  # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
   ["LOG-04"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit rules configuration"
   ["INT-01"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE file integrity monitor"
-  ["INT-02"]="integrity|linux_aide_rhel9|linux_aide_ubuntu|Integrity monitoring tools"
-  ["INT-03"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Cron job audit"
-  ["INT-04"]="firewall,network|linux_firewalld_rhel9|linux_firewall_ubuntu|Open port review"
+  # INT-02: rkhunter/chkrootkit not managed by any role — no Ansible remediation
+  # INT-03: suspicious cron requires manual investigation — no Ansible remediation
+  # INT-04: open port count is informational / always WARN — no Ansible remediation
 )
 
 # =============================================================================
