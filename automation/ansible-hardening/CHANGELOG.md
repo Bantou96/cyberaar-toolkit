@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] — 2026-03-07
+
+### Added
+
+- **French translation of Linux hardening guide** — `translations/02-durcissement-serveur-linux.md`, full French version of the basic server hardening practice guide, adapted for Francophone West African public-sector context (Senegal DAF attack reference, UFW/firewalld/nftables, AppArmor/SELinux, LUKS)
+- **`translations/README.md`** — guide index table and contribution instructions for French translations
+
+### Changed
+
+- **`cyberaar-baseline.sh` v4.0.0 — `src/` multi-file architecture**: script split into `automation/scripts/src/` (14 source files across `lib/`, `checks/`, `renderers/`) assembled by `build.sh`; `add_result()` decoupled from JSON/HTML renderers via parallel result arrays (`RESULT_CATEGORY[]`, `RESULT_STATUS[]`, `RESULT_ID[]`, etc.)
+- **JSON report version fixed**: baseline JSON output now correctly reports `"version": "4.0.0"` (was carrying forward `"3.0.0"`)
+- **`automation/scripts/README.md`**: added "Contributing to the Script" section with `src/` layout diagram, `add_result()` architecture explanation, and edit → rebuild → test workflow
+- **Root `README.md`**: collection version updated to v1.5.0, repo tree updated to show `build.sh` and `src/` subtree
+- **`.gitignore`**: `CLAUDE.md` excluded from version control (local Claude Code instructions)
+
+---
+
 ## [1.5.0] — 2026-03-06
 
 ### Added
