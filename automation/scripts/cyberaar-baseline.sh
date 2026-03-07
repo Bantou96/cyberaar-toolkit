@@ -218,7 +218,7 @@ _remote_scan() {
   local html_out="$2"
   local json_out="$3"
 
-  local ssh_opts=(-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes)
+  local ssh_opts=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes)
   [[ -n "$REMOTE_KEY" ]] && ssh_opts+=(-i "$REMOTE_KEY")
   local target="${REMOTE_USER}@${host}"
   local remote_script="/tmp/.cyberaar-baseline-$$.sh"
@@ -341,6 +341,17 @@ section() {
   printf "\n${BOLD}${CYAN}━━━  %s  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n" "$1"
 }
 
+# Encode special HTML characters to prevent XSS in report output
+html_escape() {
+  local s="$1"
+  s="${s//&/&amp;}"
+  s="${s//</&lt;}"
+  s="${s//>/&gt;}"
+  s="${s//\"/&quot;}"
+  s="${s//\'/&#39;}"
+  printf '%s' "$s"
+}
+
 # add_result CATEGORY STATUS ID NAME_EN NAME_FR DETAIL REMEDIATION_FR
 add_result() {
   local category="$1" status="$2" id="$3" name_en="$4" name_fr="$5"
@@ -360,14 +371,19 @@ add_result() {
     printf "         ${CYAN}↳ %s${NC}\n" "$remediation"
   fi
 
-  # JSON (simple escaping)
+  # JSON escaping: backslash first, then double-quote, then strip newlines
   local de re ne
-  de="${detail//\"/\\\"}"; de="${de//$'\n'/ }"
-  re="${remediation//\"/\\\"}"; re="${re//$'\n'/ }"
-  ne="${name_en//\"/\\\"}"
+  de="${detail//\\/\\\\}";       de="${de//\"/\\\"}"; de="${de//$'\n'/ }"
+  re="${remediation//\\/\\\\}";  re="${re//\"/\\\"}"; re="${re//$'\n'/ }"
+  ne="${name_en//\\/\\\\}";      ne="${ne//\"/\\\"}"
   JSON_ENTRIES+=("{\"id\":\"${id}\",\"category\":\"${category}\",\"status\":\"${status}\",\"check\":\"${ne}\",\"detail\":\"${de}\",\"remediation\":\"${re}\"}")
 
-  # HTML (v2 format)
+  # HTML — escape all values that originate from system command output
+  local h_detail h_rem h_name_en h_name_fr
+  h_detail=$(html_escape "$detail")
+  h_rem=$(html_escape "$remediation")
+  h_name_en=$(html_escape "$name_en")
+  h_name_fr=$(html_escape "$name_fr")
   case "$status" in
     PASS) badge="<span class='badge pass'>✅ PASS</span>" ;;
     WARN) badge="<span class='badge warn'>⚠️ WARN</span>" ;;
@@ -375,12 +391,13 @@ add_result() {
   esac
   local rem_html=""
   [[ "$status" != "PASS" && -n "$remediation" ]] && \
-    rem_html="<div class='remediation'>${remediation}</div>"
+    rem_html="<div class='remediation'>${h_rem}</div>"
   HTML_ROWS+="<tr>"
   HTML_ROWS+="<td class='col-id'><span class='cat-label'>${id}</span></td>"
   HTML_ROWS+="<td class='col-status'>${badge}</td>"
-  HTML_ROWS+="<td class='col-check'><div class='check-name'>${name_en}</div><div class='check-fr'>${name_fr}</div></td>"
-  HTML_ROWS+="<td class='col-detail'><span class='detail-val'>${detail}</span>${rem_html}</td>"
+  HTML_ROWS+="<td class='col-check'><div class='check-name'>${h_name_en}</div><div class='check-fr'>${h_name_fr}</div>"
+  HTML_ROWS+="</td>"
+  HTML_ROWS+="<td class='col-detail'><span class='detail-val'>${h_detail}</span>${rem_html}</td>"
   HTML_ROWS+="</tr>"
 }
 
@@ -470,7 +487,7 @@ else
 fi
 
 # AUTH-02 Empty passwords
-EMPTY_PASS=$(awk -F: '($2=="" || $2=="!!"){print $1}' /etc/shadow 2>/dev/null | tr '\n' ',' | sed 's/,$//' || echo "")
+EMPTY_PASS=$(awk -F: '($2==""){print $1}' /etc/shadow 2>/dev/null | tr '\n' ',' | sed 's/,$//' || echo "")
 if [[ -z "$EMPTY_PASS" ]]; then
   add_result "Auth" "PASS" "AUTH-02" "No empty password accounts" "Aucun compte sans mdp" "All accounts secured" ""
 else
@@ -812,8 +829,8 @@ _ansible_terminal_plan() {
 
   local _inv="-i inventory/hosts.yml"
   [[ -n "$ANSIBLE_INVENTORY" ]] && _inv="-i ${ANSIBLE_INVENTORY}"
-  local _pb="playbooks/2_hardening.yml"
-  [[ -n "$ANSIBLE_DIR" ]] && _pb="${ANSIBLE_DIR}/playbooks/2_hardening.yml"
+  local _pb="playbooks/2_configure_hardening.yml"
+  [[ -n "$ANSIBLE_DIR" ]] && _pb="${ANSIBLE_DIR}/playbooks/2_configure_hardening.yml"
 
   # Detect OS family for role name hint
   local _os_hint="(RHEL9 / Ubuntu — auto-detected per host)"
@@ -886,7 +903,7 @@ if [[ -n "$JSON_OUT" ]]; then
     "ansible_remediation": {
       "fail_ids": [$(printf '"%s",' "${FAIL_IDS[@]}" | sed 's/,$//')],
       "warn_ids": [$(printf '"%s",' "${WARN_IDS[@]}" | sed 's/,$//')],
-      "playbook": "playbooks/2_hardening.yml",
+      "playbook": "playbooks/2_configure_hardening.yml",
       "inventory": "${ANSIBLE_INVENTORY:-inventory/hosts.yml}"
     }
   }
@@ -941,8 +958,8 @@ if [[ -n "$HTML_OUT" ]]; then
 
   _inv_flag="inventory/hosts.yml"
   [[ -n "$ANSIBLE_INVENTORY" ]] && _inv_flag="$ANSIBLE_INVENTORY"
-  _pb="playbooks/2_hardening.yml"
-  [[ -n "$ANSIBLE_DIR" ]] && _pb="${ANSIBLE_DIR}/playbooks/2_hardening.yml"
+  _pb="playbooks/2_configure_hardening.yml"
+  [[ -n "$ANSIBLE_DIR" ]] && _pb="${ANSIBLE_DIR}/playbooks/2_configure_hardening.yml"
 
   _all_tags_html=""
   for _tkey in $(echo "${!html_plan_entries[@]}" | tr ' ' '\n' | sort); do
