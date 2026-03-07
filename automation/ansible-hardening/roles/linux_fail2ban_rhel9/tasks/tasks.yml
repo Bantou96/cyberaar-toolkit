@@ -41,6 +41,7 @@
     enabled: true
 
 - name: "Ensure fail2ban is running and jail status"
+  when: "not ansible_check_mode"
   ansible.builtin.command: "fail2ban-client status"
   changed_when: false
   register: "fail2ban_status"
