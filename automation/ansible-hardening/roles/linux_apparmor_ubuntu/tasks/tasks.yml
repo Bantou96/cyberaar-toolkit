@@ -82,7 +82,8 @@
     - "not ansible_check_mode"
   ansible.builtin.command: "aa-enforce {{ item }}"
   loop: "{{ linux_apparmor_enforce_profiles }}"
-  changed_when: true
+  register: "aa_enforce_profiles_result"
+  changed_when: "'Setting' in (aa_enforce_profiles_result.stdout | default(''))"
   failed_when: false
 
 - name: "Deploy AppArmor local overrides if defined"
