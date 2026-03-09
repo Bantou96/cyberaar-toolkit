@@ -46,6 +46,9 @@ Hardens local authentication on RHEL 9 family systems using `authselect`:
 | `ocredit` | `-1` | Require at least one special character |
 | `lcredit` | `-1` | Require at least one lowercase letter |
 | `minclass` | `3` | Minimum number of character classes |
+| `maxrepeat` | `3` | Maximum consecutive identical characters |
+| `maxclassrepeat` | `4` | Maximum consecutive characters from same class |
+| `dictcheck` | `1` | Check password against dictionary (1 = enabled) |
 
 ### Default `linux_authselect_faillock` settings
 
@@ -54,6 +57,8 @@ Hardens local authentication on RHEL 9 family systems using `authselect`:
 | `deny` | `5` | Lock after this many consecutive failures |
 | `fail_interval` | `900` | Counting window in seconds (15 minutes) |
 | `unlock_time` | `600` | Lock duration in seconds (10 minutes) |
+| `even_deny_root` | `true` | Apply lockout policy to root as well |
+| `root_unlock_time` | `never` | Root account never auto-unlocks after lockout |
 
 ## Usage Example
 

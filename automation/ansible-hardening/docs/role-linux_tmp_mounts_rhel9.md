@@ -31,8 +31,11 @@ Hardens temporary filesystem mount points on RHEL 9 family systems to prevent pr
 
 | Variable | Default | Description |
 |---|---|---|
+| `linux_tmp_mounts_enabled` | `true` | Enable tmp mount hardening (set `false` to skip mount tasks only) |
 | `linux_tmp_mount_options` | `[defaults, noexec, nosuid, nodev]` | Mount flags applied to all tmp paths |
 | `linux_tmp_mount_paths` | `[/tmp, /var/tmp, /dev/shm]` | Filesystems to harden |
+| `linux_home_nodev_enabled` | `true` | Set `nodev` on `/home` partition (CIS 1.1.14) |
+| `linux_sticky_bit_enabled` | `true` | Ensure sticky bit on all world-writable directories (CIS 1.1.21) |
 | `linux_tmp_mounts_disabled` | `false` | Set `true` to skip this role entirely |
 
 ## Usage Example

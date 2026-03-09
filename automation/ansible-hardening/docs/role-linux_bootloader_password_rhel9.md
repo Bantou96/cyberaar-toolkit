@@ -29,6 +29,7 @@ Protects the GRUB2 bootloader with a PBKDF2-hashed password on RHEL 9 family sys
 | `linux_bootloader_superuser` | `root` | GRUB superuser name |
 | `linux_bootloader_password` | `env:LINUX_BOOTLOADER_PASSWORD` | Password — must be set via environment variable or vault; role fails if absent |
 | `linux_bootloader_disable_nolog` | `false` | Disable `no_log` on sensitive tasks (debug only — never in production) |
+| `linux_single_user_auth` | `true` | Require authentication for single-user mode (CIS 1.4.3) |
 | `linux_bootloader_password_disabled` | `false` | Set `true` to skip this role entirely |
 
 ## Usage Example
