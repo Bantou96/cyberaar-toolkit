@@ -30,6 +30,8 @@ declare -A ANSIBLE_MAP=(
   ["AUTH-12"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/group permissions"
   ["AUTH-13"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/gshadow permissions"
   ["AUTH-14"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Password complexity (pwquality)"
+  ["AUTH-15"]="sudo|linux_sudo_hardening_rhel9|linux_sudo_hardening_ubuntu|sudo use_pty enforcement"
+  ["AUTH-16"]="sudo|linux_sudo_hardening_rhel9|linux_sudo_hardening_ubuntu|sudo logfile configuration"
   ["SSH-01"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-02"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-03"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
@@ -69,6 +71,7 @@ declare -A ANSIBLE_MAP=(
   ["NET-09"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Reverse path filtering"
   ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
   ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
+  ["NET-12"]="network,wireless|linux_wireless_rhel9|linux_wireless_ubuntu|Wireless interfaces disabled"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
   # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
@@ -95,4 +98,6 @@ declare -A ANSIBLE_MAP=(
   ["COMP-08"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|dmesg restriction"
   ["COMP-09"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ptrace scope restriction"
   ["COMP-10"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|USB storage module blacklist"
+  ["COMP-11"]="cron|linux_cron_hardening_rhel9|linux_cron_hardening_ubuntu|Cron service enabled"
+  ["COMP-12"]="cron|linux_cron_hardening_rhel9|linux_cron_hardening_ubuntu|cron/at allow-list enforcement"
 )

@@ -1,0 +1,15 @@
+---
+
+# CIS 3.1.2 — Disable wireless interfaces
+linux_wireless_disable: true
+
+# Block bluetooth via rfkill in addition to wifi
+linux_wireless_block_bluetooth: true
+
+# Blacklist wireless kernel modules as defense-in-depth
+linux_wireless_blacklist_modules: true
+
+# Role disable var
+linux_wireless_disabled: false
+
+...
