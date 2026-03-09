@@ -589,6 +589,8 @@ See the [LICENSE](LICENSE) file for the full text.
 ## Contributors
 
 - [@Bantou96](https://github.com/Bantou96) — Founder
+- [@moustaphisene](https://github.com/moustaphisene) — Contributor (CIS gap coverage: sudo, cron, wireless hardening roles)
+- [Claude](https://claude.ai) (Anthropic) — AI pair programmer
 
 ---
 
