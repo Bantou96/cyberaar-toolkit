@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] — 2026-03-09
+
+### Fixed
+
+- **BUG** `cyberaar-baseline.sh`: `get_ssh()` helper used `tail -1` — SSH uses first-match-wins so the last occurrence of a directive was returned, producing incorrect results across all 15 SSH checks. Fixed to `head -1`
+- **BUG** `cyberaar-baseline.sh`: NET-12 wireless check only recognised `Soft blocked: yes` from rfkill; systems with a hardware kill switch (`Hard blocked: yes`) incorrectly reported WARN. Both states now accepted
+- **BUG** `cyberaar-baseline.sh`: remote script path unquoted in SSH exec and cleanup commands in `lib/remote.sh` — defensive quoting added
+- **BUG** `linux_apparmor_ubuntu`: "Set specific profiles to enforce mode" task used `changed_when: true`, reporting changed on every run even when profiles were already enforced. Now checks `aa-enforce` stdout for `Setting` to report changed only when a profile is actually transitioned
+- **DOCS** `role-linux_authselect_rhel9`: added missing pwquality keys (`maxrepeat`, `maxclassrepeat`, `dictcheck`) and faillock keys (`even_deny_root`, `root_unlock_time`) to Variables tables
+- **DOCS** `role-linux_bootloader_password_rhel9`: added missing `linux_single_user_auth` variable (CIS 1.4.3)
+- **DOCS** `role-linux_tmp_mounts_rhel9`: added missing `linux_tmp_mounts_enabled`, `linux_home_nodev_enabled` (CIS 1.1.14), `linux_sticky_bit_enabled` (CIS 1.1.21)
+- **DOCS** `role-linux_user_management_rhel9`: added 7 missing CIS 6.2.x audit variables and extended CIS Coverage section
+
+---
+
 ## [1.7.0] — 2026-03-09
 
 ### Added
