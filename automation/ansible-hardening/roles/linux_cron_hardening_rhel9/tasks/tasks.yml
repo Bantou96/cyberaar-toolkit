@@ -1,0 +1,66 @@
+---
+
+# CIS 5.1.1 — Ensure cron daemon is enabled and running
+- name: "Ensure crond service is enabled and running (CIS 5.1.1)"
+  ansible.builtin.service:
+    name: "crond"
+    state: "started"
+    enabled: true
+  when: "linux_cron_enabled | bool"
+
+# CIS 5.1.2–5.1.7 — Strict permissions on cron directories and files
+- name: "Set ownership root:root on cron paths (CIS 5.1.2–5.1.7)"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "root"
+    group: "root"
+    mode: "{{ item.mode }}"
+    state: "{{ 'directory' if item.is_dir else 'file' }}"
+  loop: "{{ linux_cron_paths }}"
+  loop_control:
+    label: "{{ item.path }}"
+  failed_when: false  # skip gracefully if path does not exist on this host
+
+# CIS 5.1.8 — Restrict cron to authorized users only
+- name: "Remove /etc/cron.deny to enforce allow-list model (CIS 5.1.8)"
+  ansible.builtin.file:
+    path: "/etc/cron.deny"
+    state: "absent"
+  when: "linux_cron_allow_enabled | bool"
+
+- name: "Create /etc/cron.allow with root-only permissions (CIS 5.1.8)"
+  ansible.builtin.file:
+    path: "/etc/cron.allow"
+    state: "touch"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  when: "linux_cron_allow_enabled | bool"
+  changed_when: false
+
+# CIS 5.1.9 — Restrict at to authorized users only
+- name: "Remove /etc/at.deny to enforce allow-list model (CIS 5.1.9)"
+  ansible.builtin.file:
+    path: "/etc/at.deny"
+    state: "absent"
+  when: "linux_at_allow_enabled | bool"
+
+- name: "Create /etc/at.allow with root-only permissions (CIS 5.1.9)"
+  ansible.builtin.file:
+    path: "/etc/at.allow"
+    state: "touch"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  when: "linux_at_allow_enabled | bool"
+  changed_when: false
+
+- name: "Debug cron hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "crond enabled: {{ linux_cron_enabled }}"
+      - "cron.allow configured: {{ linux_cron_allow_enabled }}"
+      - "at.allow configured: {{ linux_at_allow_enabled }}"
+
+...

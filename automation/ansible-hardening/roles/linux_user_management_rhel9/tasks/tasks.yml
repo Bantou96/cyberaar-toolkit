@@ -76,4 +76,192 @@
       - "Password policy: max {{ linux_password_max_days }} days, remember {{ linux_password_history }}"
       - "Empty password users found: {{ empty_passwd_check.stdout_lines | default([]) }}"
 
+# =============================================================================
+# CIS 6.2.x — User account security audits
+# =============================================================================
+
+# CIS 6.2.5 — Ensure all users' home directories exist
+- name: "Check that all users' home directories exist (CIS 6.2.5)"
+  when: "linux_audit_home_dirs | bool"
+  ansible.builtin.stat:
+    path: "{{ item.value[4] }}"
+  loop: "{{ passwd_db.ansible_facts.getent_passwd | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: "home_dirs_stat"
+  changed_when: false
+  failed_when: false
+
+- name: "Warn about missing home directories (CIS 6.2.5)"
+  when:
+    - "linux_audit_home_dirs | bool"
+    - "not item.stat.exists | default(true)"
+    - "item.item.value[2] | int >= 1000"
+  ansible.builtin.debug:
+    msg: "WARNING: Home directory {{ item.item.value[4] }} for user {{ item.item.key }} does not exist."
+  loop: "{{ home_dirs_stat.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.key | default('unknown') }}"
+
+# CIS 6.2.6 — Ensure users' home directories permissions are 750 or more restrictive
+- name: "Check home directory permissions are 750 or more restrictive (CIS 6.2.6)"
+  when: "linux_audit_home_dirs | bool"
+  ansible.builtin.command: "find /home -maxdepth 1 -mindepth 1 -type d -perm /027"
+  changed_when: false
+  register: "home_perms_check"
+  failed_when: false
+
+- name: "Warn about overly permissive home directories (CIS 6.2.6)"
+  when:
+    - "linux_audit_home_dirs | bool"
+    - "home_perms_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Home directories with permissions more permissive than 750: {{ home_perms_check.stdout_lines }}"
+
+# CIS 6.2.8 — Ensure users' dot files are not group or world writable
+- name: "Check for group/world writable dot files in home directories (CIS 6.2.8)"
+  when: "linux_audit_dot_files | bool"
+  ansible.builtin.command: "find /home -maxdepth 2 -name '.*' -type f \\( -perm -g+w -o -perm -o+w \\)"
+  changed_when: false
+  register: "dot_files_check"
+  failed_when: false
+
+- name: "Warn about insecure dot files (CIS 6.2.8)"
+  when:
+    - "linux_audit_dot_files | bool"
+    - "dot_files_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Group/world-writable dot files found: {{ dot_files_check.stdout_lines }}"
+
+# CIS 6.2.10 — Ensure no users have .forward files
+- name: "Check for .forward files in home directories (CIS 6.2.10)"
+  when: "linux_audit_forward_files | bool"
+  ansible.builtin.command: "find /home -maxdepth 2 -name '.forward' -type f"
+  changed_when: false
+  register: "forward_files_check"
+  failed_when: false
+
+- name: "Warn about .forward files (CIS 6.2.10)"
+  when:
+    - "linux_audit_forward_files | bool"
+    - "forward_files_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: .forward files found (mail forwarding security risk): {{ forward_files_check.stdout_lines }}"
+
+# CIS 6.2.11 — Ensure no users have .netrc files
+- name: "Check for .netrc files in home directories (CIS 6.2.11)"
+  when: "linux_audit_netrc_files | bool"
+  ansible.builtin.command: "find /home -maxdepth 2 -name '.netrc' -type f"
+  changed_when: false
+  register: "netrc_files_check"
+  failed_when: false
+
+- name: "Warn about .netrc files (CIS 6.2.11)"
+  when:
+    - "linux_audit_netrc_files | bool"
+    - "netrc_files_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: .netrc files found (contain unencrypted credentials): {{ netrc_files_check.stdout_lines }}"
+
+# CIS 6.2.13 — Ensure no users have .rhosts files
+- name: "Check for .rhosts files in home directories (CIS 6.2.13)"
+  when: "linux_audit_rhosts_files | bool"
+  ansible.builtin.command: "find /home -maxdepth 2 -name '.rhosts' -type f"
+  changed_when: false
+  register: "rhosts_files_check"
+  failed_when: false
+
+- name: "Warn about .rhosts files (CIS 6.2.13)"
+  when:
+    - "linux_audit_rhosts_files | bool"
+    - "rhosts_files_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: .rhosts files found (bypasses password auth): {{ rhosts_files_check.stdout_lines }}"
+
+# CIS 6.2.14 — Ensure no duplicate UIDs exist
+- name: "Check for duplicate UIDs in /etc/passwd (CIS 6.2.14)"
+  when: "linux_audit_duplicate_ids | bool"
+  ansible.builtin.command: "awk -F: '{print $3}' /etc/passwd | sort | uniq -d"
+  changed_when: false
+  register: "dup_uid_check"
+  failed_when: false
+
+- name: "Warn about duplicate UIDs (CIS 6.2.14)"
+  when:
+    - "linux_audit_duplicate_ids | bool"
+    - "dup_uid_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Duplicate UIDs found: {{ dup_uid_check.stdout_lines }}"
+
+# CIS 6.2.15 — Ensure no duplicate GIDs exist
+- name: "Check for duplicate GIDs in /etc/group (CIS 6.2.15)"
+  when: "linux_audit_duplicate_ids | bool"
+  ansible.builtin.command: "awk -F: '{print $3}' /etc/group | sort | uniq -d"
+  changed_when: false
+  register: "dup_gid_check"
+  failed_when: false
+
+- name: "Warn about duplicate GIDs (CIS 6.2.15)"
+  when:
+    - "linux_audit_duplicate_ids | bool"
+    - "dup_gid_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Duplicate GIDs found: {{ dup_gid_check.stdout_lines }}"
+
+# CIS 6.2.16 — Ensure no duplicate user names exist
+- name: "Check for duplicate user names in /etc/passwd (CIS 6.2.16)"
+  when: "linux_audit_duplicate_ids | bool"
+  ansible.builtin.command: "awk -F: '{print $1}' /etc/passwd | sort | uniq -d"
+  changed_when: false
+  register: "dup_user_check"
+  failed_when: false
+
+- name: "Warn about duplicate user names (CIS 6.2.16)"
+  when:
+    - "linux_audit_duplicate_ids | bool"
+    - "dup_user_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Duplicate user names found: {{ dup_user_check.stdout_lines }}"
+
+# CIS 6.2.17 — Ensure no duplicate group names exist
+- name: "Check for duplicate group names in /etc/group (CIS 6.2.17)"
+  when: "linux_audit_duplicate_ids | bool"
+  ansible.builtin.command: "awk -F: '{print $1}' /etc/group | sort | uniq -d"
+  changed_when: false
+  register: "dup_group_check"
+  failed_when: false
+
+- name: "Warn about duplicate group names (CIS 6.2.17)"
+  when:
+    - "linux_audit_duplicate_ids | bool"
+    - "dup_group_check.stdout_lines | default([]) | length > 0"
+  ansible.builtin.debug:
+    msg: "WARNING: Duplicate group names found: {{ dup_group_check.stdout_lines }}"
+
+# CIS 6.2.18 — Ensure shadow group is empty
+- name: "Check that shadow group has no members (CIS 6.2.18)"
+  when: "linux_audit_shadow_group | bool"
+  ansible.builtin.command: "awk -F: '($1==\"shadow\") {print $4}' /etc/group"
+  changed_when: false
+  register: "shadow_group_check"
+  failed_when: false
+
+- name: "Warn if shadow group has members (CIS 6.2.18)"
+  when:
+    - "linux_audit_shadow_group | bool"
+    - "shadow_group_check.stdout | default('') | trim != ''"
+  ansible.builtin.debug:
+    msg: "WARNING: shadow group has members: {{ shadow_group_check.stdout }}. Remove them immediately."
+
+- name: "Debug user audit summary (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Locked legacy accounts: {{ linux_legacy_accounts_to_lock | length }}"
+      - "Password policy: max {{ linux_password_max_days }} days, remember {{ linux_password_history }}"
+      - "Empty password users: {{ empty_passwd_check.stdout_lines | default([]) }}"
+      - "Duplicate UIDs: {{ dup_uid_check.stdout_lines | default([]) }}"
+      - "Duplicate GIDs: {{ dup_gid_check.stdout_lines | default([]) }}"
+      - "Shadow group members: {{ shadow_group_check.stdout | default('none') | trim }}"
+
 ...

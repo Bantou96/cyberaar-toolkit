@@ -7,8 +7,11 @@ CIS-aligned hardening playbooks and roles for:
 **Goal**
 Provide a practical, maintainable, and idempotent set of Ansible roles to significantly improve the security posture of Linux servers — especially critical infrastructure systems in Senegal (government, DAF, ministries, etc.).
 
-**Collection**: `cyberaar.hardening` v1.1.0 (March 2026)
-**Total roles**: 21 RHEL9 + 21 Ubuntu/Debian = 42 roles
+**Current focus**  
+RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & selected Level 2)
+
+**Current version**: v1.3.0 (March 2026)
+**Total roles**: 24
 **License**: [GPL-3.0](../../LICENSE)
 
 OS detection is **automatic**: one playbook, one run — the correct role set is applied per host based on `ansible_os_family`.

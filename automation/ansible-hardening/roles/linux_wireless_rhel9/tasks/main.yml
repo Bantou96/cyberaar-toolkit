@@ -1,0 +1,8 @@
+---
+
+- name: "Disable wireless interfaces (RHEL 9 family)"
+  when: "not (linux_wireless_disabled | default(false) | bool)"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_wireless_rhel9"
+
+...

@@ -28,4 +28,8 @@
       Changes are effective on next boot.
       Reboot recommended to verify password prompt in GRUB menu.
 
+- name: "Reload systemd daemon"
+  ansible.builtin.systemd:
+    daemon_reload: true
+
 ...

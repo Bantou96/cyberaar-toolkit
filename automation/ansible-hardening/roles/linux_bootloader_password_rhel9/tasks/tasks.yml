@@ -89,4 +89,62 @@
       - "GRUB password protection applied: {{ 'yes' if grub_users_result.changed else 'already present' }}"
       - "Superuser defined: {{ linux_bootloader_superuser }}"
 
+# CIS 1.5.3 — Ensure authentication required for single user mode
+# Use systemd drop-in overrides under /etc/systemd/system/ rather than editing
+# vendor unit files under /usr/lib/systemd/system/, which are overwritten on
+# every systemd package update and would silently revert the change.
+
+- name: "Create rescue.service.d drop-in directory (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/rescue.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Create emergency.service.d drop-in directory (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/emergency.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Deploy rescue.service override — require root authentication (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/rescue.service.d/99-cis-auth.conf"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/usr/lib/systemd/systemd-sulogin-shell rescue
+    owner: root
+    group: root
+    mode: "0644"
+  register: "rescue_service_result"
+  notify: "Reload systemd daemon"
+
+- name: "Deploy emergency.service override — require root authentication (CIS 1.5.3)"
+  when: "linux_single_user_auth | bool"
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/emergency.service.d/99-cis-auth.conf"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/usr/lib/systemd/systemd-sulogin-shell emergency
+    owner: root
+    group: root
+    mode: "0644"
+  register: "emergency_service_result"
+  notify: "Reload systemd daemon"
+
+- name: "Debug single user mode auth status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "rescue.service auth applied: {{ rescue_service_result.changed | default(false) }}"
+      - "emergency.service auth applied: {{ emergency_service_result.changed | default(false) }}"
+
 ...
