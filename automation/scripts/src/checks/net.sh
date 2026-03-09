@@ -110,4 +110,29 @@ else
   add_result "Network" "WARN" "NET-11" "ICMP broadcast not ignored" "Broadcast ICMP non ignoré" "icmp_echo_ignore_broadcasts=$BCAST_ICMP" \
     "Activez: 'net.ipv4.icmp_echo_ignore_broadcasts=1' dans /etc/sysctl.d/"
 fi
+
+# NET-12 Wireless interfaces disabled (CIS 3.1.2)
+_WIRELESS_OK=false
+# Check rfkill (Ubuntu/Debian)
+if command -v rfkill &>/dev/null 2>&1; then
+  _RF_OUT=$(rfkill list wifi 2>/dev/null || echo "")
+  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* ]]; then
+    _WIRELESS_OK=true
+  fi
+fi
+# Check nmcli (RHEL/NetworkManager)
+if command -v nmcli &>/dev/null 2>&1; then
+  _NM_OUT=$(nmcli radio all 2>/dev/null || echo "")
+  [[ "$_NM_OUT" == *"disabled"* ]] && _WIRELESS_OK=true
+fi
+# Check kernel module blacklist (defense-in-depth fallback)
+if grep -rqsE "blacklist\s+(iwlwifi|cfg80211|mac80211)" /etc/modprobe.d/ 2>/dev/null; then
+  _WIRELESS_OK=true
+fi
+if $_WIRELESS_OK; then
+  add_result "Network" "PASS" "NET-12" "Wireless interfaces disabled" "Interfaces sans-fil désactivées" "rfkill/nmcli/modprobe blacklist confirmed" ""
+else
+  add_result "Network" "WARN" "NET-12" "Wireless not disabled" "Interfaces sans-fil actives" "No rfkill block, nmcli disable, or module blacklist found" \
+    "Désactivez: 'rfkill block wifi' (Ubuntu) ou 'nmcli radio all off' (RHEL) + blacklist iwlwifi dans /etc/modprobe.d/"
+fi
 }

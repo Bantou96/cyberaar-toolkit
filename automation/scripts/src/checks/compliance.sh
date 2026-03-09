@@ -115,4 +115,26 @@ else
   add_result "Compliance" "WARN" "COMP-10" "USB storage not blacklisted" "Stockage USB non désactivé" "usb_storage module loadable" \
     "Ajoutez 'blacklist usb-storage' dans /etc/modprobe.d/blacklist.conf (si non poste de travail)"
 fi
+
+# COMP-11 cron service enabled (CIS 5.1.1)
+_CRON_SVC="crond"
+systemctl list-units --type=service 2>/dev/null | grep -q "^.*cron\.service" && _CRON_SVC="cron"
+if systemctl is-enabled "$_CRON_SVC" &>/dev/null && systemctl is-active "$_CRON_SVC" &>/dev/null; then
+  add_result "Compliance" "PASS" "COMP-11" "Cron service enabled and running" "Service cron actif" "$_CRON_SVC: enabled + active" ""
+else
+  add_result "Compliance" "WARN" "COMP-11" "Cron service not active" "Service cron inactif" "$_CRON_SVC not running or not enabled" \
+    "Activez: 'systemctl enable --now cron' (Ubuntu) ou 'systemctl enable --now crond' (RHEL)"
+fi
+
+# COMP-12 cron.allow and at.allow exist (CIS 5.1.8 / 5.1.9)
+_CRON_ALLOW=true
+_CRON_ALLOW_DETAIL=""
+[[ -f /etc/cron.allow ]] || { _CRON_ALLOW=false; _CRON_ALLOW_DETAIL="/etc/cron.allow missing"; }
+[[ -f /etc/at.allow ]]   || { _CRON_ALLOW=false; _CRON_ALLOW_DETAIL="${_CRON_ALLOW_DETAIL:+$_CRON_ALLOW_DETAIL, }/etc/at.allow missing"; }
+if $_CRON_ALLOW; then
+  add_result "Compliance" "PASS" "COMP-12" "cron.allow and at.allow configured" "Accès cron/at restreint" "allow-list model enforced" ""
+else
+  add_result "Compliance" "WARN" "COMP-12" "cron/at allow-list not enforced" "Accès cron/at non restreint" "${_CRON_ALLOW_DETAIL}" \
+    "Créez /etc/cron.allow et /etc/at.allow (vides = root uniquement) et supprimez cron.deny/at.deny (CIS 5.1.8–5.1.9)"
+fi
 }

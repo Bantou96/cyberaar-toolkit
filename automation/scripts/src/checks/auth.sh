@@ -149,4 +149,22 @@ else
   add_result "Auth" "WARN" "AUTH-14" "Password complexity not enforced" "Complexité mdp non configurée" "pwquality.conf absent or weak" \
     "Configurez /etc/security/pwquality.conf: minlen=14, dcredit=-1, ucredit=-1, ocredit=-1"
 fi
+
+# AUTH-15 sudo use_pty enforced (CIS 1.3.2)
+if grep -rqsE "^\s*Defaults\s+.*use_pty" /etc/sudoers /etc/sudoers.d/ 2>/dev/null; then
+  add_result "Auth" "PASS" "AUTH-15" "sudo use_pty enforced" "sudo use_pty activé" "Defaults use_pty found" ""
+else
+  add_result "Auth" "WARN" "AUTH-15" "sudo use_pty not enforced" "sudo use_pty absent" "Defaults use_pty not found in sudoers" \
+    "Ajoutez 'Defaults use_pty' dans /etc/sudoers.d/99-cis-hardening (CIS 1.3.2)"
+fi
+
+# AUTH-16 sudo logfile configured (CIS 1.3.3)
+SUDO_LOGFILE=$(grep -rshE "^\s*Defaults\s+.*logfile=" /etc/sudoers /etc/sudoers.d/ 2>/dev/null | \
+  grep -oE 'logfile=[^ ]+' | head -1 || echo "")
+if [[ -n "$SUDO_LOGFILE" ]]; then
+  add_result "Auth" "PASS" "AUTH-16" "sudo logfile configured" "Journal sudo configuré" "$SUDO_LOGFILE" ""
+else
+  add_result "Auth" "WARN" "AUTH-16" "sudo logfile not configured" "Journal sudo absent" "No logfile= in sudoers" \
+    "Ajoutez 'Defaults logfile=/var/log/sudo.log' dans /etc/sudoers.d/99-cis-hardening (CIS 1.3.3)"
+fi
 }

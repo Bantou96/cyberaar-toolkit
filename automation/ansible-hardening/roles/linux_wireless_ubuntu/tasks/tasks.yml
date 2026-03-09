@@ -1,0 +1,110 @@
+---
+
+# CIS 3.1.2 — Ensure wireless interfaces are disabled
+# Ubuntu approach: rfkill (primary) + nmcli if NetworkManager present + kernel module blacklist
+
+# ── rfkill approach (preferred on Ubuntu — available without NetworkManager) ──
+- name: "Ensure rfkill is installed for wireless blocking (CIS 3.1.2)"
+  ansible.builtin.package:
+    name: "rfkill"
+    state: "present"
+  when: "linux_wireless_disable | bool"
+
+- name: "Check current rfkill wireless state"
+  ansible.builtin.command: "rfkill list wifi"
+  changed_when: false
+  register: "rfkill_wifi_state"
+  when: "linux_wireless_disable | bool"
+  failed_when: false
+
+- name: "Block wireless via rfkill (CIS 3.1.2)"
+  ansible.builtin.command: "rfkill block wifi"
+  when:
+    - "linux_wireless_disable | bool"
+    - "not ansible_check_mode"
+    - "'Soft blocked: yes' not in (rfkill_wifi_state.stdout | default(''))"
+  changed_when: "'Soft blocked: yes' not in (rfkill_wifi_state.stdout | default(''))"
+  failed_when: false
+  register: "rfkill_result"
+
+- name: "Block bluetooth via rfkill (CIS 3.1.2)"
+  ansible.builtin.command: "rfkill block bluetooth"
+  when:
+    - "linux_wireless_disable | bool"
+    - "linux_wireless_block_bluetooth | bool"
+    - "not ansible_check_mode"
+  changed_when: false
+  failed_when: false
+
+# ── nmcli fallback (if NetworkManager is present) ──────────────────────────
+- name: "Check if NetworkManager CLI (nmcli) is available"
+  ansible.builtin.command: "which nmcli"
+  changed_when: false
+  register: "nmcli_available"
+  failed_when: false
+
+- name: "Check current wireless radio state via nmcli"
+  ansible.builtin.command: "nmcli radio all"
+  changed_when: false
+  register: "nmcli_radio_state"
+  when:
+    - "linux_wireless_disable | bool"
+    - "nmcli_available.rc == 0"
+  failed_when: false
+
+- name: "Disable all wireless interfaces via nmcli (CIS 3.1.2)"
+  ansible.builtin.command: "nmcli radio all off"
+  when:
+    - "linux_wireless_disable | bool"
+    - "nmcli_available.rc == 0"
+    - "'enabled' in (nmcli_radio_state.stdout | default('') | lower)"
+  changed_when: true
+  failed_when: false
+
+# ── kernel module blacklist (defense-in-depth) ─────────────────────────────
+- name: "Blacklist wireless kernel modules as defense-in-depth (CIS 3.1.2)"
+  ansible.builtin.copy:
+    content: |
+      # CIS 3.1.2 — Disable wireless kernel modules
+      # Managed by Ansible role: linux_wireless_ubuntu
+      install iwlwifi /bin/false
+      blacklist iwlwifi
+      install cfg80211 /bin/false
+      blacklist cfg80211
+      install mac80211 /bin/false
+      blacklist mac80211
+      install rtl8xxxu /bin/false
+      blacklist rtl8xxxu
+      install ath9k /bin/false
+      blacklist ath9k
+    dest: "/etc/modprobe.d/99-cis-wireless.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    backup: true
+  when: "linux_wireless_blacklist_modules | bool"
+  register: "wireless_modprobe_result"
+
+- name: "Update initramfs after module blacklist change"
+  ansible.builtin.command: "update-initramfs -u -k all"
+  when:
+    - "wireless_modprobe_result.changed"
+    - "not ansible_check_mode"
+  changed_when: true
+  failed_when: false
+
+- name: "Notify about module blacklist (reboot needed for full effect)"
+  when: "wireless_modprobe_result.changed"
+  ansible.builtin.debug:
+    msg: "Wireless module blacklist applied and initramfs updated. Reboot required for full effect."
+
+- name: "Debug wireless hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "rfkill wifi blocked: {{ rfkill_result.changed | default(false) }}"
+      - "nmcli available: {{ nmcli_available.rc == 0 }}"
+      - "nmcli wireless disabled: {{ 'enabled' not in (nmcli_radio_state.stdout | default('') | lower) }}"
+      - "kernel module blacklist applied: {{ wireless_modprobe_result.changed | default(false) }}"
+
+...

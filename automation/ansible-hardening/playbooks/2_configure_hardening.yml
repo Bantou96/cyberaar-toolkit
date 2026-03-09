@@ -72,6 +72,9 @@
 #    filesystem     — filesystem permissions and mounts
 #    permissions    — critical file permissions
 #    fail2ban       — fail2ban brute-force protection (Ubuntu only)
+#    wireless       — disable wireless interfaces (nmcli/rfkill + module blacklist)
+#    sudo           — sudo use_pty + logfile enforcement
+#    cron           — cron/at service + permissions + allow-list
 # =============================================================================
 
 - name: "CyberAar | System Hardening — RHEL9 + Ubuntu/Debian"
@@ -230,6 +233,18 @@
 
     - role: "linux_ip_forwarding_ubuntu"
       tags: [hardening, network, sysctl]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_wireless_ubuntu"
+      tags: [hardening, network, wireless]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_sudo_hardening_ubuntu"
+      tags: [hardening, auth, sudo]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_cron_hardening_ubuntu"
+      tags: [hardening, cron]
       when: ansible_os_family == "Debian"
 
     - role: "linux_crypto_policies_ubuntu"

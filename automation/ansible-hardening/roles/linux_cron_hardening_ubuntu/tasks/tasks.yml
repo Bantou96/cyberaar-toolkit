@@ -1,0 +1,67 @@
+---
+
+# CIS 5.1.1 — Ensure cron daemon is enabled and running
+# Ubuntu service name is "cron", not "crond"
+- name: "Ensure cron service is enabled and running (CIS 5.1.1)"
+  ansible.builtin.service:
+    name: "cron"
+    state: "started"
+    enabled: true
+  when: "linux_cron_enabled | bool"
+
+# CIS 5.1.2–5.1.7 — Strict permissions on cron directories and files
+- name: "Set ownership root:root and strict permissions on cron paths (CIS 5.1.2–5.1.7)"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "root"
+    group: "root"
+    mode: "{{ item.mode }}"
+    state: "{{ 'directory' if item.is_dir else 'file' }}"
+  loop: "{{ linux_cron_paths }}"
+  loop_control:
+    label: "{{ item.path }}"
+  failed_when: false  # skip gracefully if path does not exist on this host
+
+# CIS 5.1.8 — Restrict cron to authorized users only
+- name: "Remove /etc/cron.deny to enforce allow-list model (CIS 5.1.8)"
+  ansible.builtin.file:
+    path: "/etc/cron.deny"
+    state: "absent"
+  when: "linux_cron_allow_enabled | bool"
+
+- name: "Create /etc/cron.allow with correct permissions (CIS 5.1.8)"
+  ansible.builtin.file:
+    path: "/etc/cron.allow"
+    state: "touch"
+    owner: "root"
+    group: "crontab"
+    mode: "0640"
+  when: "linux_cron_allow_enabled | bool"
+  changed_when: false
+
+# CIS 5.1.9 — Restrict at to authorized users only
+- name: "Remove /etc/at.deny to enforce allow-list model (CIS 5.1.9)"
+  ansible.builtin.file:
+    path: "/etc/at.deny"
+    state: "absent"
+  when: "linux_at_allow_enabled | bool"
+
+- name: "Create /etc/at.allow with correct permissions (CIS 5.1.9)"
+  ansible.builtin.file:
+    path: "/etc/at.allow"
+    state: "touch"
+    owner: "root"
+    group: "daemon"
+    mode: "0640"
+  when: "linux_at_allow_enabled | bool"
+  changed_when: false
+
+- name: "Debug cron hardening status (verbosity >=1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "cron service enabled: {{ linux_cron_enabled }}"
+      - "cron.allow configured: {{ linux_cron_allow_enabled }}"
+      - "at.allow configured: {{ linux_at_allow_enabled }}"
+
+...

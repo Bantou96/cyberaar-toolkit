@@ -158,6 +158,8 @@ declare -A ANSIBLE_MAP=(
   ["AUTH-12"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/group permissions"
   ["AUTH-13"]="filesystem,permissions|linux_file_permissions_rhel9|linux_file_permissions_ubuntu|/etc/gshadow permissions"
   ["AUTH-14"]="auth,pam|linux_authselect_rhel9|linux_authselect_ubuntu|Password complexity (pwquality)"
+  ["AUTH-15"]="sudo|linux_sudo_hardening_rhel9|linux_sudo_hardening_ubuntu|sudo use_pty enforcement"
+  ["AUTH-16"]="sudo|linux_sudo_hardening_rhel9|linux_sudo_hardening_ubuntu|sudo logfile configuration"
   ["SSH-01"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-02"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
   ["SSH-03"]="ssh|linux_ssh_hardening_rhel9|linux_ssh_hardening_ubuntu|SSH server hardening"
@@ -197,6 +199,7 @@ declare -A ANSIBLE_MAP=(
   ["NET-09"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|Reverse path filtering"
   ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
   ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
+  ["NET-12"]="network,wireless|linux_wireless_rhel9|linux_wireless_ubuntu|Wireless interfaces disabled"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
   # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
@@ -223,6 +226,8 @@ declare -A ANSIBLE_MAP=(
   ["COMP-08"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|dmesg restriction"
   ["COMP-09"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ptrace scope restriction"
   ["COMP-10"]="kernel,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|USB storage module blacklist"
+  ["COMP-11"]="cron|linux_cron_hardening_rhel9|linux_cron_hardening_ubuntu|Cron service enabled"
+  ["COMP-12"]="cron|linux_cron_hardening_rhel9|linux_cron_hardening_ubuntu|cron/at allow-list enforcement"
 )
 
 # =============================================================================
@@ -725,6 +730,24 @@ else
   add_result "Auth" "WARN" "AUTH-14" "Password complexity not enforced" "Complexité mdp non configurée" "pwquality.conf absent or weak" \
     "Configurez /etc/security/pwquality.conf: minlen=14, dcredit=-1, ucredit=-1, ocredit=-1"
 fi
+
+# AUTH-15 sudo use_pty enforced (CIS 1.3.2)
+if grep -rqsE "^\s*Defaults\s+.*use_pty" /etc/sudoers /etc/sudoers.d/ 2>/dev/null; then
+  add_result "Auth" "PASS" "AUTH-15" "sudo use_pty enforced" "sudo use_pty activé" "Defaults use_pty found" ""
+else
+  add_result "Auth" "WARN" "AUTH-15" "sudo use_pty not enforced" "sudo use_pty absent" "Defaults use_pty not found in sudoers" \
+    "Ajoutez 'Defaults use_pty' dans /etc/sudoers.d/99-cis-hardening (CIS 1.3.2)"
+fi
+
+# AUTH-16 sudo logfile configured (CIS 1.3.3)
+SUDO_LOGFILE=$(grep -rshE "^\s*Defaults\s+.*logfile=" /etc/sudoers /etc/sudoers.d/ 2>/dev/null | \
+  grep -oE 'logfile=[^ ]+' | head -1 || echo "")
+if [[ -n "$SUDO_LOGFILE" ]]; then
+  add_result "Auth" "PASS" "AUTH-16" "sudo logfile configured" "Journal sudo configuré" "$SUDO_LOGFILE" ""
+else
+  add_result "Auth" "WARN" "AUTH-16" "sudo logfile not configured" "Journal sudo absent" "No logfile= in sudoers" \
+    "Ajoutez 'Defaults logfile=/var/log/sudo.log' dans /etc/sudoers.d/99-cis-hardening (CIS 1.3.3)"
+fi
 }
 
 _checks_ssh() {
@@ -1103,6 +1126,31 @@ else
   add_result "Network" "WARN" "NET-11" "ICMP broadcast not ignored" "Broadcast ICMP non ignoré" "icmp_echo_ignore_broadcasts=$BCAST_ICMP" \
     "Activez: 'net.ipv4.icmp_echo_ignore_broadcasts=1' dans /etc/sysctl.d/"
 fi
+
+# NET-12 Wireless interfaces disabled (CIS 3.1.2)
+_WIRELESS_OK=false
+# Check rfkill (Ubuntu/Debian)
+if command -v rfkill &>/dev/null 2>&1; then
+  _RF_OUT=$(rfkill list wifi 2>/dev/null || echo "")
+  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* ]]; then
+    _WIRELESS_OK=true
+  fi
+fi
+# Check nmcli (RHEL/NetworkManager)
+if command -v nmcli &>/dev/null 2>&1; then
+  _NM_OUT=$(nmcli radio all 2>/dev/null || echo "")
+  [[ "$_NM_OUT" == *"disabled"* ]] && _WIRELESS_OK=true
+fi
+# Check kernel module blacklist (defense-in-depth fallback)
+if grep -rqsE "blacklist\s+(iwlwifi|cfg80211|mac80211)" /etc/modprobe.d/ 2>/dev/null; then
+  _WIRELESS_OK=true
+fi
+if $_WIRELESS_OK; then
+  add_result "Network" "PASS" "NET-12" "Wireless interfaces disabled" "Interfaces sans-fil désactivées" "rfkill/nmcli/modprobe blacklist confirmed" ""
+else
+  add_result "Network" "WARN" "NET-12" "Wireless not disabled" "Interfaces sans-fil actives" "No rfkill block, nmcli disable, or module blacklist found" \
+    "Désactivez: 'rfkill block wifi' (Ubuntu) ou 'nmcli radio all off' (RHEL) + blacklist iwlwifi dans /etc/modprobe.d/"
+fi
 }
 
 _checks_logging() {
@@ -1409,6 +1457,28 @@ if grep -rqsE "blacklist\s+usb.storage|blacklist\s+usb_storage" /etc/modprobe.d/
 else
   add_result "Compliance" "WARN" "COMP-10" "USB storage not blacklisted" "Stockage USB non désactivé" "usb_storage module loadable" \
     "Ajoutez 'blacklist usb-storage' dans /etc/modprobe.d/blacklist.conf (si non poste de travail)"
+fi
+
+# COMP-11 cron service enabled (CIS 5.1.1)
+_CRON_SVC="crond"
+systemctl list-units --type=service 2>/dev/null | grep -q "^.*cron\.service" && _CRON_SVC="cron"
+if systemctl is-enabled "$_CRON_SVC" &>/dev/null && systemctl is-active "$_CRON_SVC" &>/dev/null; then
+  add_result "Compliance" "PASS" "COMP-11" "Cron service enabled and running" "Service cron actif" "$_CRON_SVC: enabled + active" ""
+else
+  add_result "Compliance" "WARN" "COMP-11" "Cron service not active" "Service cron inactif" "$_CRON_SVC not running or not enabled" \
+    "Activez: 'systemctl enable --now cron' (Ubuntu) ou 'systemctl enable --now crond' (RHEL)"
+fi
+
+# COMP-12 cron.allow and at.allow exist (CIS 5.1.8 / 5.1.9)
+_CRON_ALLOW=true
+_CRON_ALLOW_DETAIL=""
+[[ -f /etc/cron.allow ]] || { _CRON_ALLOW=false; _CRON_ALLOW_DETAIL="/etc/cron.allow missing"; }
+[[ -f /etc/at.allow ]]   || { _CRON_ALLOW=false; _CRON_ALLOW_DETAIL="${_CRON_ALLOW_DETAIL:+$_CRON_ALLOW_DETAIL, }/etc/at.allow missing"; }
+if $_CRON_ALLOW; then
+  add_result "Compliance" "PASS" "COMP-12" "cron.allow and at.allow configured" "Accès cron/at restreint" "allow-list model enforced" ""
+else
+  add_result "Compliance" "WARN" "COMP-12" "cron/at allow-list not enforced" "Accès cron/at non restreint" "${_CRON_ALLOW_DETAIL}" \
+    "Créez /etc/cron.allow et /etc/at.allow (vides = root uniquement) et supprimez cron.deny/at.deny (CIS 5.1.8–5.1.9)"
 fi
 }
 

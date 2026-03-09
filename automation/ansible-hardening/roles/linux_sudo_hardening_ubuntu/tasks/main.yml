@@ -1,0 +1,8 @@
+---
+
+- name: "Apply sudo hardening (Ubuntu/Debian)"
+  when: "not (linux_sudo_hardening_disabled | default(false) | bool)"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_sudo_hardening_ubuntu"
+
+...
