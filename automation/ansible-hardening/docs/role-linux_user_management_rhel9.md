@@ -28,6 +28,13 @@ Hardens local user accounts and authentication policy on RHEL 9 family systems:
 - 5.6.1.1 Ensure root is the only UID 0 account
 - 5.6.2 Ensure root path integrity
 - 5.7 Ensure access to the su command is restricted
+- 6.2.5–6.2.6 Ensure home directories exist and have correct permissions
+- 6.2.8 Ensure dot files are not group/world-writable
+- 6.2.10 Ensure no `.forward` files exist
+- 6.2.11 Ensure no `.netrc` files exist
+- 6.2.13 Ensure no `.rhosts` files exist
+- 6.2.14–6.2.17 Ensure no duplicate UIDs, GIDs, usernames, or groups
+- 6.2.18 Ensure shadow group is empty
 
 ## Variables
 
@@ -44,6 +51,13 @@ Hardens local user accounts and authentication policy on RHEL 9 family systems:
 | `linux_sudo_wheel_group_members` | `[]` | Users to add to the `wheel` group (empty = do not modify group) |
 | `linux_remove_empty_password_users` | `true` | Lock accounts with empty password fields in `/etc/shadow` |
 | `linux_system_shell` | `/sbin/nologin` | Shell assigned to locked system accounts |
+| `linux_audit_home_dirs` | `true` | Audit home directory existence and permissions (CIS 6.2.5–6.2.6) |
+| `linux_audit_dot_files` | `true` | Audit dot files for group/world-writable permissions (CIS 6.2.8) |
+| `linux_audit_forward_files` | `true` | Report any `.forward` files found (CIS 6.2.10) |
+| `linux_audit_netrc_files` | `true` | Report any `.netrc` files found (CIS 6.2.11) |
+| `linux_audit_rhosts_files` | `true` | Report any `.rhosts` files found (CIS 6.2.13) |
+| `linux_audit_duplicate_ids` | `true` | Audit for duplicate UIDs, GIDs, usernames, group names (CIS 6.2.14–6.2.17) |
+| `linux_audit_shadow_group` | `true` | Ensure shadow group has no members (CIS 6.2.18) |
 | `linux_user_management_disabled` | `false` | Set `true` to skip this role entirely |
 
 ## Usage Example
