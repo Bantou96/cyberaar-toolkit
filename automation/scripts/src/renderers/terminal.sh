@@ -80,7 +80,7 @@ _render_summary() {
   printf "  ✅ PASS: %-4s  ⚠️  WARN: %-4s  ❌ FAIL: %-4s  (Total: %s)\n" "$PASS" "$WARN" "$FAIL" "$TOTAL"
   printf "  🖥  Host: %-28s  📅 %s\n" "$HOSTNAME_VAL" "$DATE_VAL"
   printf "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-  printf "  🇸🇳  CyberAar — https://github.com/Bantou96/Aar-Act\n\n"
+  printf "  CyberAar — https://github.com/Bantou96/Aar-Act\n\n"
 
   _ansible_terminal_plan
 }
