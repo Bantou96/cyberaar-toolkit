@@ -80,7 +80,7 @@ Aar-Act/
 │       │       ├── ubuntu_servers.yml    # Ubuntu-specific vars + IP prefix
 │       │       └── dmz_servers.yml       # Stricter thresholds for DMZ hosts
 │       ├── playbooks/
-│       │   ├── site.yml                  # Pipeline orchestrator (imports all 3 steps)
+│       │   ├── 0_execute_full_pipeline.yml                  # Pipeline orchestrator (imports all 3 steps)
 │       │   ├── 1_execute_baseline_before.yml   # Pre-hardening audit
 │       │   ├── 2_configure_hardening.yml       # Hardening roles (RHEL9 + Ubuntu)
 │       │   └── 3_execute_baseline_after.yml    # Post-hardening audit
@@ -181,7 +181,7 @@ The Ansible collection (`cyberaar.hardening`) contains **47 hardening roles** or
 ### The Three-Step Pipeline
 
 ```
-playbooks/site.yml
+playbooks/0_execute_full_pipeline.yml
 │
 ├── Step 1 — 1_execute_baseline_before.yml    [tags: baseline, before]
 │     ├── Copies cyberaar-baseline.sh to each remote host
@@ -340,12 +340,12 @@ ansible-playbook --diff \
   --tags hardening \
   automation/ansible-hardening/playbooks/2_configure_hardening.yml
 
-# Full 3-step pipeline via site.yml
+# Full 3-step pipeline via 0_execute_full_pipeline.yml
 ansible-playbook --diff \
   -u <admin_user> -b \
   -i automation/ansible-hardening/inventory/hosts \
   --extra-vars "target=linux_servers" \
-  automation/ansible-hardening/playbooks/site.yml
+  automation/ansible-hardening/playbooks/0_execute_full_pipeline.yml
 ```
 
 ---

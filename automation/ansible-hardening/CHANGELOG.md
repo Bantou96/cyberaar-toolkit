@@ -126,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Unified three-step pipeline** (`site.yml`) — single entry point that orchestrates baseline audit → hardening → post-hardening audit with automatic OS detection (`ansible_os_family`)
+- **Unified three-step pipeline** (`0_execute_full_pipeline.yml`) — single entry point that orchestrates baseline audit → hardening → post-hardening audit with automatic OS detection (`ansible_os_family`)
 - **`cyberaar-baseline.sh` v3.0.0** — standalone bash audit script producing HTML and JSON security reports; integrated as steps 1 and 3 of the pipeline
 - **Before/after baseline playbooks** — `1_execute_baseline_before.yml` and `3_execute_baseline_after.yml` copy the script to remote hosts, run it, and fetch HTML/JSON reports to `reports/before/<hostname>/` and `reports/after/<hostname>/`
 

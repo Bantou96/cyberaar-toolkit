@@ -372,7 +372,7 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 The baseline script is used at steps 1 and 3 of the three-step pipeline:
 
 ```
-playbooks/site.yml
+playbooks/0_execute_full_pipeline.yml
   ├── 1_execute_baseline_before.yml  ← runs cyberaar-baseline, saves "before" report
   ├── 2_configure_hardening.yml      ← applies CyberAar hardening roles
   └── 3_execute_baseline_after.yml   ← re-runs cyberaar-baseline, saves "after" report
