@@ -305,9 +305,9 @@ _remote_scan() {
 
   # Execute on remote (always needs root — try sudo if not root user)
   if [[ "$REMOTE_USER" == "root" ]]; then
-    ssh "${ssh_opts[@]}" "$target" "bash ${remote_script}${rflags:+ $rflags}" || true
+    ssh "${ssh_opts[@]}" "$target" "bash '${remote_script}'${rflags:+ $rflags}" || true
   else
-    ssh "${ssh_opts[@]}" "$target" "sudo bash ${remote_script}${rflags:+ $rflags}" || true
+    ssh "${ssh_opts[@]}" "$target" "sudo bash '${remote_script}'${rflags:+ $rflags}" || true
   fi
 
   # Retrieve reports
@@ -323,7 +323,7 @@ _remote_scan() {
   fi
 
   # Cleanup remote temp files
-  ssh "${ssh_opts[@]}" "$target" "rm -f ${remote_script} /tmp/.cyberaar-report-${_rand}.html /tmp/.cyberaar-report-${_rand}.json" &>/dev/null || true
+  ssh "${ssh_opts[@]}" "$target" "rm -f '${remote_script}' '/tmp/.cyberaar-report-${_rand}.html' '/tmp/.cyberaar-report-${_rand}.json'" &>/dev/null || true
 }
 
 # ── Fleet scan dispatcher ─────────────────────────────────────────────────────
@@ -442,7 +442,7 @@ add_result() {
 
 cmd_exists() { command -v "$1" &>/dev/null; }
 svc_active() { systemctl is-active --quiet "$1" 2>/dev/null; }
-get_ssh()    { grep -iE "^\s*${1}\s" /etc/ssh/sshd_config 2>/dev/null | tail -1 | awk '{print $2}'; }
+get_ssh()    { grep -iE "^\s*${1}\s" /etc/ssh/sshd_config 2>/dev/null | head -1 | awk '{print $2}'; }
 
 _checks_system() {
 # =============================================================================
@@ -1132,7 +1132,7 @@ _WIRELESS_OK=false
 # Check rfkill (Ubuntu/Debian)
 if command -v rfkill &>/dev/null 2>&1; then
   _RF_OUT=$(rfkill list wifi 2>/dev/null || echo "")
-  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* ]]; then
+  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* || "$_RF_OUT" == *"Hard blocked: yes"* ]]; then
     _WIRELESS_OK=true
   fi
 fi

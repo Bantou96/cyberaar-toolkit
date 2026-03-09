@@ -73,9 +73,9 @@ _remote_scan() {
 
   # Execute on remote (always needs root — try sudo if not root user)
   if [[ "$REMOTE_USER" == "root" ]]; then
-    ssh "${ssh_opts[@]}" "$target" "bash ${remote_script}${rflags:+ $rflags}" || true
+    ssh "${ssh_opts[@]}" "$target" "bash '${remote_script}'${rflags:+ $rflags}" || true
   else
-    ssh "${ssh_opts[@]}" "$target" "sudo bash ${remote_script}${rflags:+ $rflags}" || true
+    ssh "${ssh_opts[@]}" "$target" "sudo bash '${remote_script}'${rflags:+ $rflags}" || true
   fi
 
   # Retrieve reports
@@ -91,7 +91,7 @@ _remote_scan() {
   fi
 
   # Cleanup remote temp files
-  ssh "${ssh_opts[@]}" "$target" "rm -f ${remote_script} /tmp/.cyberaar-report-${_rand}.html /tmp/.cyberaar-report-${_rand}.json" &>/dev/null || true
+  ssh "${ssh_opts[@]}" "$target" "rm -f '${remote_script}' '/tmp/.cyberaar-report-${_rand}.html' '/tmp/.cyberaar-report-${_rand}.json'" &>/dev/null || true
 }
 
 # ── Fleet scan dispatcher ─────────────────────────────────────────────────────
