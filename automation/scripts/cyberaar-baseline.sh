@@ -1135,7 +1135,8 @@ fi
 
 # LOG-04 Audit rules
 if cmd_exists auditctl; then
-  AUDIT_RULES=$(auditctl -l 2>/dev/null | grep -cE "execve|chmod|chown|delete|login|sudo" || echo 0)
+  AUDIT_RULES=$(auditctl -l 2>/dev/null | grep -cE "execve|chmod|chown|delete|login|sudo" || true)
+  AUDIT_RULES=${AUDIT_RULES:-0}
   if [[ "$AUDIT_RULES" -ge 3 ]]; then
     add_result "Logging" "PASS" "LOG-04" "Audit rules configured" "Règles d'audit présentes" "$AUDIT_RULES rules found" ""
   else
@@ -1216,7 +1217,8 @@ fi
 
 # INT-03 Suspicious cron entries
 SUSP_CRON=$(grep -rE '(wget|curl|bash|nc |ncat|python|perl).*(http|/tmp)' \
-  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || echo 0)
+  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || true)
+SUSP_CRON=${SUSP_CRON:-0}
 if [[ "$SUSP_CRON" -eq 0 ]]; then
   add_result "Integrity" "PASS" "INT-03" "No suspicious cron entries" "Crons propres" "Crontabs look clean" ""
 else
@@ -1321,7 +1323,8 @@ else
 fi
 
 # COMP-03 /home on separate partition (informational — cannot change post-install)
-HOME_PART=$(grep -cE '\s/home\s' /proc/mounts 2>/dev/null || echo 0)
+HOME_PART=$(grep -cE '\s/home\s' /proc/mounts 2>/dev/null || true)
+HOME_PART=${HOME_PART:-0}
 if [[ "$HOME_PART" -ge 1 ]]; then
   add_result "Compliance" "PASS" "COMP-03" "/home on separate partition" "/home partition dédiée" "Separate /home mount" ""
 else
@@ -1330,7 +1333,8 @@ else
 fi
 
 # COMP-04 /var on separate partition (informational — cannot change post-install)
-VAR_PART=$(grep -cE '\s/var\s' /proc/mounts 2>/dev/null || echo 0)
+VAR_PART=$(grep -cE '\s/var\s' /proc/mounts 2>/dev/null || true)
+VAR_PART=${VAR_PART:-0}
 if [[ "$VAR_PART" -ge 1 ]]; then
   add_result "Compliance" "PASS" "COMP-04" "/var on separate partition" "/var partition dédiée" "Separate /var mount" ""
 else

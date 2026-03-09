@@ -30,7 +30,8 @@ fi
 
 # LOG-04 Audit rules
 if cmd_exists auditctl; then
-  AUDIT_RULES=$(auditctl -l 2>/dev/null | grep -cE "execve|chmod|chown|delete|login|sudo" || echo 0)
+  AUDIT_RULES=$(auditctl -l 2>/dev/null | grep -cE "execve|chmod|chown|delete|login|sudo" || true)
+  AUDIT_RULES=${AUDIT_RULES:-0}
   if [[ "$AUDIT_RULES" -ge 3 ]]; then
     add_result "Logging" "PASS" "LOG-04" "Audit rules configured" "Règles d'audit présentes" "$AUDIT_RULES rules found" ""
   else

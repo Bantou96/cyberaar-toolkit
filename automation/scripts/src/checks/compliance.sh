@@ -30,7 +30,8 @@ else
 fi
 
 # COMP-03 /home on separate partition (informational — cannot change post-install)
-HOME_PART=$(grep -cE '\s/home\s' /proc/mounts 2>/dev/null || echo 0)
+HOME_PART=$(grep -cE '\s/home\s' /proc/mounts 2>/dev/null || true)
+HOME_PART=${HOME_PART:-0}
 if [[ "$HOME_PART" -ge 1 ]]; then
   add_result "Compliance" "PASS" "COMP-03" "/home on separate partition" "/home partition dédiée" "Separate /home mount" ""
 else
@@ -39,7 +40,8 @@ else
 fi
 
 # COMP-04 /var on separate partition (informational — cannot change post-install)
-VAR_PART=$(grep -cE '\s/var\s' /proc/mounts 2>/dev/null || echo 0)
+VAR_PART=$(grep -cE '\s/var\s' /proc/mounts 2>/dev/null || true)
+VAR_PART=${VAR_PART:-0}
 if [[ "$VAR_PART" -ge 1 ]]; then
   add_result "Compliance" "PASS" "COMP-04" "/var on separate partition" "/var partition dédiée" "Separate /var mount" ""
 else

@@ -22,7 +22,8 @@ fi
 
 # INT-03 Suspicious cron entries
 SUSP_CRON=$(grep -rE '(wget|curl|bash|nc |ncat|python|perl).*(http|/tmp)' \
-  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || echo 0)
+  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || true)
+SUSP_CRON=${SUSP_CRON:-0}
 if [[ "$SUSP_CRON" -eq 0 ]]; then
   add_result "Integrity" "PASS" "INT-03" "No suspicious cron entries" "Crons propres" "Crontabs look clean" ""
 else
