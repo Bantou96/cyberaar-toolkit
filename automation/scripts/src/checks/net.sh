@@ -116,7 +116,7 @@ _WIRELESS_OK=false
 # Check rfkill (Ubuntu/Debian)
 if command -v rfkill &>/dev/null 2>&1; then
   _RF_OUT=$(rfkill list wifi 2>/dev/null || echo "")
-  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* ]]; then
+  if [[ -z "$_RF_OUT" || "$_RF_OUT" == *"Soft blocked: yes"* || "$_RF_OUT" == *"Hard blocked: yes"* ]]; then
     _WIRELESS_OK=true
   fi
 fi

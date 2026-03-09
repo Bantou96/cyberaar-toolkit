@@ -66,4 +66,4 @@ add_result() {
 
 cmd_exists() { command -v "$1" &>/dev/null; }
 svc_active() { systemctl is-active --quiet "$1" 2>/dev/null; }
-get_ssh()    { grep -iE "^\s*${1}\s" /etc/ssh/sshd_config 2>/dev/null | tail -1 | awk '{print $2}'; }
+get_ssh()    { grep -iE "^\s*${1}\s" /etc/ssh/sshd_config 2>/dev/null | head -1 | awk '{print $2}'; }
