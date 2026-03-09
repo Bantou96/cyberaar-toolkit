@@ -45,8 +45,8 @@ available in French & English.
 
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
-| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server, produces HTML + JSON security reports | v3.0.0 |
-| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 21 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.1.0 |
+| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 88 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.0.0 |
+| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 21 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.5.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
 
@@ -58,10 +58,18 @@ Both tools are independent: you can run the baseline script standalone without A
 Aar-Act/
 ├── automation/
 │   ├── scripts/
-│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v3.0.0)
-│   │   └── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
+│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.0.0) — generated bundle
+│   │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
+│   │   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
+│   │   ├── README.md                     # Baseline checker full reference
+│   │   └── src/                          # Source layout (edit here, not in the bundle)
+│   │       ├── main.sh                   # Shebang, CLI args, install/uninstall
+│   │       ├── run.sh                    # Execution entry point
+│   │       ├── lib/                      # core.sh, ansible_map.sh, remote.sh
+│   │       ├── checks/                   # 8 files — one per check section
+│   │       └── renderers/               # terminal.sh, json.sh, html.sh
 │   └── ansible-hardening/
-│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.1.0)
+│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.5.0)
 │       ├── requirements.yml              # ansible.posix + community.general
 │       ├── inventory/
 │       │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
@@ -110,9 +118,14 @@ ansible-galaxy collection install -r automation/ansible-hardening/requirements.y
 
 ## Deliverable 1 — Baseline Audit Script (`cyberaar-baseline.sh`)
 
-The standalone audit script audits a Linux server against CIS/ANSSI security controls and produces an **HTML report** (human-readable) and a **JSON report** (machine-parseable, suitable for SIEM ingestion).
+The standalone audit script runs **88 security checks** across 8 sections and produces:
 
-It runs entirely as a bash script — no Ansible, no dependencies beyond `bash` and standard Linux tools.
+- **Terminal output** — colour-coded PASS / WARN / FAIL with a security score
+- **HTML report** — self-contained file for sharing with management or auditors
+- **JSON report** — machine-readable, suitable for SIEM or CI pipeline ingestion
+- **Ansible remediation plan** — targeted `ansible-playbook` commands for every failing check, mapped to the correct role and tag
+
+No Ansible required — pure bash, no dependencies beyond standard Linux tools.
 
 ### Install to PATH (optional)
 
@@ -131,22 +144,33 @@ sudo bash automation/scripts/cyberaar-baseline.sh \
 
 # After installing to PATH
 sudo cyberaar-baseline --output-dir /var/log/cyberaar
+
+# Remote single host
+cyberaar-baseline --host 10.0.1.10 --user admin --output-dir /var/log/cyberaar
+
+# Fleet scan from Ansible inventory
+cyberaar-baseline --inventory automation/ansible-hardening/inventory/hosts \
+  --user admin --output-dir /var/log/cyberaar
 ```
 
 ### What it checks
 
-The script audits the following control categories and assigns a score per category and globally:
+88 checks across 8 sections — each mapped to a CIS benchmark control:
 
-- Filesystem configuration and mount options
-- Software update status
-- Logging and auditd configuration
-- Network parameters (sysctl)
-- SSH server configuration
-- User accounts and password policies
-- File permissions on sensitive paths
-- Kernel module blacklisting
-- Mandatory Access Control (SELinux / AppArmor) status
-- Firewall rules (firewalld / ufw)
+| Section | Checks | Coverage highlights |
+|---|---|---|
+| 1. System & OS | 10 | OS support, kernel updates, SELinux/AppArmor, time sync, GRUB perms, Secure Boot, `/dev/shm`, Ctrl-Alt-Del |
+| 2. Authentication | 14 | Root lock, empty passwords, password age/complexity, faillock lockout, shell timeout, UID 0 audit, group/gshadow perms |
+| 3. SSH Hardening | 15 | 15 sshd_config directives including ciphers, session timeout, banner, PermitEmpty, HostbasedAuth, sshd_config perms |
+| 4. Filesystem | 12 | World-writable files, SUID count, noexec mounts, sticky bit, crontab perms, unowned files, SSH key perms |
+| 5. Network | 11 | Firewall, IP forwarding, ICMP redirects, SYN cookies, source routing, martian logging, rp_filter, IPv6 RA |
+| 6. Logging & Audit | 8 | auditd, rsyslog, logrotate, audit rules, log size, `audit=1` at boot, journald persistence, remote syslog |
+| 7. Integrity | 8 | AIDE, rootkit scanner, suspicious cron, open ports, package GPG check, fail2ban, AIDE DB, cron dir perms |
+| 8. Compliance | 10 | Legal banner, /tmp partition, /home+/var partitions, umask, ASLR, kptr_restrict, dmesg_restrict, ptrace, USB blacklist |
+
+Checks that require human judgment are flagged `(manual review required)` in the output — the script highlights them, the operator decides.
+
+> Full reference: [`automation/scripts/README.md`](automation/scripts/README.md)
 
 ---
 
@@ -173,7 +197,7 @@ playbooks/site.yml
 │     │     kernel → MAC → auth → users → SSH → firewall →
 │     │     network → crypto → audit → integrity → time →
 │     │     boot → banner → services → updates → coredump →
-│     │     system → mounts → secureboot → permissions [→ fail2ban Ubuntu only]
+│     │     system → mounts → secureboot → permissions → fail2ban
 │     └── Each role is independently skippable via <role>_disabled=true
 │
 └── Step 3 — 3_execute_baseline_after.yml     [tags: baseline, after]
@@ -351,7 +375,7 @@ Each control area has **two parallel roles** — one for RHEL 9 family and one f
 | /tmp & /dev/shm mounts | `linux_tmp_mounts_rhel9` | `linux_tmp_mounts_ubuntu` | 1.1.x |
 | Secure Boot | `linux_secure_boot_rhel9` | `linux_secure_boot_ubuntu` | 1.5.1 |
 | File permissions | `linux_file_permissions_rhel9` | `linux_file_permissions_ubuntu` | 6.1 |
-| Fail2ban *(Ubuntu only)* | — | `linux_fail2ban_ubuntu` | — |
+| Fail2ban | `linux_fail2ban_rhel9` | `linux_fail2ban_ubuntu` | — |
 
 **RHEL 9 technology stack**: `firewalld`, `SELinux`, `dnf-automatic`, `authselect`, `grub2`
 
@@ -409,7 +433,7 @@ Use tags to run only a subset of the pipeline. All tags work with both `--tags` 
 | `system` | `linux_ctrl_alt_del_*` |
 | `mounts`, `filesystem` | `linux_tmp_mounts_*`, `linux_file_permissions_*` |
 | `permissions` | `linux_file_permissions_*` |
-| `fail2ban` | `linux_fail2ban_ubuntu` |
+| `fail2ban` | `linux_fail2ban_rhel9`, `linux_fail2ban_ubuntu` |
 | `baseline` | Baseline audit steps (Steps 1 & 3) |
 | `before` | Step 1 only |
 | `after` | Step 3 only |
@@ -531,6 +555,13 @@ No long commitments required — add one improvement when you have 10 minutes.
 5. Get **credit** in the Contributors list
 
 New hardening roles should follow the `linux_<category>_<rhel9|ubuntu>` naming convention and include parallel RHEL9 and Ubuntu implementations.
+
+**Contributing to the baseline script:** `cyberaar-baseline.sh` is a generated bundle — do not edit it directly. Edit the source files under `automation/scripts/src/`, then rebuild:
+
+```bash
+bash automation/scripts/build.sh
+bash -n automation/scripts/cyberaar-baseline.sh   # verify syntax
+```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 

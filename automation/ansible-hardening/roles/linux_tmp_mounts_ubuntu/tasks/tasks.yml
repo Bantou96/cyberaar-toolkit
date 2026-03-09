@@ -33,7 +33,7 @@
 - name: "Remount /dev/shm to apply options without reboot"
   when: "shm_result.changed"
   ansible.builtin.command: "mount -o remount /dev/shm"
-  changed_when: true
+  changed_when: false   # mount options already persisted to fstab above
   failed_when: false
 
 - name: "Verify /tmp mount options"

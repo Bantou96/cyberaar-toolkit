@@ -17,7 +17,10 @@
   register: "selinux_boolean_result"
   changed_when: "selinux_boolean_result.changed"
 
+# restorecon -R on large paths (/etc, /home, /var/log) can be very slow.
+# Disabled by default — set linux_selinux_relabel_enabled: true to run it.
 - name: "Restore default SELinux contexts on critical paths"
+  when: "linux_selinux_relabel_enabled | bool"
   ansible.builtin.command: "restorecon -R -v {{ item }}"
   loop: "{{ linux_selinux_relabel_paths }}"
   changed_when: false

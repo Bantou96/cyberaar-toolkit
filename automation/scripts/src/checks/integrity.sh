@@ -1,0 +1,97 @@
+_checks_integrity() {
+# =============================================================================
+#  7. INTEGRITY & MALWARE
+# =============================================================================
+section "7. INTEGRITY & MALWARE / Intégrité et Logiciels Malveillants"
+
+# INT-01 AIDE installed
+if cmd_exists aide || cmd_exists aide2; then
+  add_result "Integrity" "PASS" "INT-01" "AIDE installed" "AIDE installé" "File integrity monitor present" ""
+else
+  add_result "Integrity" "WARN" "INT-01" "AIDE not installed" "AIDE non installé" "No file integrity monitor" \
+    "Installez: 'dnf install aide && aide --init'"
+fi
+
+# INT-02 Rootkit scanner (manual verification required)
+if cmd_exists rkhunter || cmd_exists chkrootkit; then
+  add_result "Integrity" "PASS" "INT-02" "Rootkit scanner present" "Scanner rootkit présent" "rkhunter/chkrootkit found (run manually)" ""
+else
+  add_result "Integrity" "WARN" "INT-02" "No rootkit scanner" "Aucun scanner rootkit" "rkhunter/chkrootkit absent" \
+    "Installez: 'dnf install rkhunter' — exécutez ensuite 'rkhunter --check' manuellement."
+fi
+
+# INT-03 Suspicious cron entries
+SUSP_CRON=$(grep -rE '(wget|curl|bash|nc |ncat|python|perl).*(http|/tmp)' \
+  /etc/cron* /var/spool/cron/ 2>/dev/null | grep -vc '^#' || true)
+SUSP_CRON=${SUSP_CRON:-0}
+if [[ "$SUSP_CRON" -eq 0 ]]; then
+  add_result "Integrity" "PASS" "INT-03" "No suspicious cron entries" "Crons propres" "Crontabs look clean" ""
+else
+  add_result "Integrity" "FAIL" "INT-03" "Suspicious cron entries" "Crons suspects détectés" "$SUSP_CRON entry/entries (manual review required)" \
+    "Auditez: 'crontab -l' et /etc/cron* — cherchez wget/curl/bash vers /tmp."
+fi
+
+# INT-04 Open listening ports (always informational — manual review required)
+LISTEN_PORTS=$(ss -tlnp 2>/dev/null | grep -c "LISTEN" || echo "?")
+add_result "Integrity" "WARN" "INT-04" "Open listening ports" "Ports en écoute (revue manuelle)" "$LISTEN_PORTS port(s) listening" \
+  "Revue manuelle requise: 'ss -tlnp' — fermez tout port non justifié."
+
+# INT-05 Package manager GPG/signature check
+PKG_GPG_OK=false
+if [[ -f /etc/dnf/dnf.conf ]] || [[ -d /etc/yum.repos.d ]]; then
+  GPGCHECK_OFF=$(grep -rE "^\s*gpgcheck\s*=\s*0" \
+    /etc/dnf/dnf.conf /etc/yum.conf /etc/yum.repos.d/*.repo 2>/dev/null | wc -l)
+  [[ "$GPGCHECK_OFF" -eq 0 ]] && PKG_GPG_OK=true
+elif cmd_exists apt-get; then
+  UNAUTH=$(grep -rE "AllowUnauthenticated\s+true" \
+    /etc/apt/apt.conf /etc/apt/apt.conf.d/ 2>/dev/null | wc -l)
+  [[ "$UNAUTH" -eq 0 ]] && PKG_GPG_OK=true
+else
+  PKG_GPG_OK=true  # Cannot determine — assume OK
+fi
+if $PKG_GPG_OK; then
+  add_result "Integrity" "PASS" "INT-05" "Package signature check enabled" "Vérif signature paquets active" "gpgcheck enforced" ""
+else
+  add_result "Integrity" "FAIL" "INT-05" "Package signature check disabled" "Vérif signature paquets désactivée" "gpgcheck=0 found" \
+    "Activez: 'gpgcheck=1' dans /etc/dnf/dnf.conf et tous les fichiers .repo"
+fi
+
+# INT-06 fail2ban running
+if svc_active fail2ban; then
+  add_result "Integrity" "PASS" "INT-06" "fail2ban running" "fail2ban actif" "fail2ban: active" ""
+else
+  add_result "Integrity" "WARN" "INT-06" "fail2ban not running" "fail2ban inactif" "fail2ban: inactive or not installed" \
+    "Installez et activez: 'dnf install fail2ban && systemctl enable --now fail2ban'"
+fi
+
+# INT-07 AIDE database initialized
+AIDE_DB_OK=false
+for _aide_db in /var/lib/aide/aide.db.gz /var/lib/aide/aide.db /var/lib/aide/aide.db.new.gz; do
+  [[ -f "$_aide_db" ]] && AIDE_DB_OK=true && break
+done
+if $AIDE_DB_OK; then
+  add_result "Integrity" "PASS" "INT-07" "AIDE database initialized" "Base AIDE initialisée" "aide.db found" ""
+elif cmd_exists aide || cmd_exists aide2; then
+  add_result "Integrity" "FAIL" "INT-07" "AIDE installed but DB missing" "AIDE installé sans base de données" "aide.db not found" \
+    "Initialisez: 'aide --init && cp /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'"
+else
+  add_result "Integrity" "WARN" "INT-07" "AIDE not installed" "AIDE non installé" "No integrity DB" \
+    "Installez AIDE: 'dnf install aide && aide --init'"
+fi
+
+# INT-08 Cron directory permissions (not world-writable)
+CRON_DIR_ISSUES=""
+for _cdir in /etc/cron.d /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.hourly; do
+  [[ -d "$_cdir" ]] || continue
+  _CDIR_P=$(stat -c "%a" "$_cdir" 2>/dev/null || echo "")
+  # World-writable = last octet is 2,3,6,7
+  echo "$_CDIR_P" | grep -qE "^[0-9][0-9][2367]" && \
+    CRON_DIR_ISSUES="${CRON_DIR_ISSUES:+$CRON_DIR_ISSUES, }$_cdir ($_CDIR_P)"
+done
+if [[ -z "$CRON_DIR_ISSUES" ]]; then
+  add_result "Integrity" "PASS" "INT-08" "Cron directories not world-writable" "Répertoires cron sécurisés" "cron.d and cron.* OK" ""
+else
+  add_result "Integrity" "FAIL" "INT-08" "Cron directory world-writable" "Répertoires cron inscriptibles par tous" "$CRON_DIR_ISSUES" \
+    "Corrigez: 'chmod 700 /etc/cron.d /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.hourly'"
+fi
+}

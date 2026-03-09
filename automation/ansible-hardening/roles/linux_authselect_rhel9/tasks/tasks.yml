@@ -65,9 +65,9 @@
 
 - name: "Apply authselect changes if any modifications occurred"
   when:
-    - "authselect_profile_change.changed or
+    - "(authselect_profile_change.changed | default(false)) or
        (authselect_feature_change.results | default([]) | selectattr('changed', 'equalto', true) | list | length > 0) or
-       pwquality_updated.changed or faillock_updated.changed"
+       (pwquality_updated.changed | default(false)) or (faillock_updated.changed | default(false))"
   ansible.builtin.command: "authselect apply-changes"
   changed_when: true
   notify: "Restart sssd if active"
