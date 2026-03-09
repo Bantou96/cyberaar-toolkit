@@ -50,7 +50,9 @@ _remote_scan() {
   local ssh_opts=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes)
   [[ -n "$REMOTE_KEY" ]] && ssh_opts+=(-i "$REMOTE_KEY")
   local target="${REMOTE_USER}@${host}"
-  local remote_script="/tmp/.cyberaar-baseline-$$.sh"
+  local _rand
+  _rand=$(openssl rand -hex 8 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom 2>/dev/null | head -c 16)
+  local remote_script="/tmp/.cyberaar-baseline-${_rand}.sh"
 
   printf "\n${BOLD}${CYAN}━━━  Remote scan: %s  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n" "$host"
 
@@ -66,8 +68,8 @@ _remote_scan() {
 
   # Build remote flags
   local rflags=""
-  [[ -n "$html_out" ]] && rflags="$rflags --html-out /tmp/.cyberaar-report-$$.html"
-  [[ -n "$json_out" ]] && rflags="$rflags --json-out /tmp/.cyberaar-report-$$.json"
+  [[ -n "$html_out" ]] && rflags="$rflags --html-out /tmp/.cyberaar-report-${_rand}.html"
+  [[ -n "$json_out" ]] && rflags="$rflags --json-out /tmp/.cyberaar-report-${_rand}.json"
 
   # Execute on remote (always needs root — try sudo if not root user)
   if [[ "$REMOTE_USER" == "root" ]]; then
@@ -78,18 +80,18 @@ _remote_scan() {
 
   # Retrieve reports
   if [[ -n "$html_out" ]]; then
-    scp "${ssh_opts[@]/#-o/-o}" -q "${target}:/tmp/.cyberaar-report-$$.html" "$html_out" 2>/dev/null \
+    scp "${ssh_opts[@]/#-o/-o}" -q "${target}:/tmp/.cyberaar-report-${_rand}.html" "$html_out" 2>/dev/null \
       && printf "  🌐 HTML fetched → %s\n" "$html_out" \
       || printf "  ${YELLOW}⚠️   Could not fetch HTML report from %s${NC}\n" "$host"
   fi
   if [[ -n "$json_out" ]]; then
-    scp "${ssh_opts[@]/#-o/-o}" -q "${target}:/tmp/.cyberaar-report-$$.json" "$json_out" 2>/dev/null \
+    scp "${ssh_opts[@]/#-o/-o}" -q "${target}:/tmp/.cyberaar-report-${_rand}.json" "$json_out" 2>/dev/null \
       && printf "  📄 JSON fetched → %s\n" "$json_out" \
       || printf "  ${YELLOW}⚠️   Could not fetch JSON report from %s${NC}\n" "$host"
   fi
 
   # Cleanup remote temp files
-  ssh "${ssh_opts[@]}" "$target" "rm -f ${remote_script} /tmp/.cyberaar-report-$$.html /tmp/.cyberaar-report-$$.json" &>/dev/null || true
+  ssh "${ssh_opts[@]}" "$target" "rm -f ${remote_script} /tmp/.cyberaar-report-${_rand}.html /tmp/.cyberaar-report-${_rand}.json" &>/dev/null || true
 }
 
 # ── Fleet scan dispatcher ─────────────────────────────────────────────────────
@@ -136,6 +138,6 @@ if [[ -n "$REMOTE_HOST" || -n "$REMOTE_HOST_FILE" || -n "$ANSIBLE_INVENTORY" ]];
     "$FLEET_OK" "$FLEET_FAIL" "${#FLEET_HOSTS[@]}"
   printf "  📁 Reports in: %s\n" "${OUTPUT_DIR:-current directory}"
   printf "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-  printf "  🇸🇳  CyberAar — https://github.com/Bantou96/Aar-Act\n\n"
+  printf "  CyberAar — https://github.com/Bantou96/Aar-Act\n\n"
   exit 0
 fi

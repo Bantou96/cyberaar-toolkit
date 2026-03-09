@@ -44,5 +44,6 @@ _render_json() {
   }
 }
 EOF
+  chmod 600 "$JSON_OUT"
   printf "  📄 JSON: %s\n" "$JSON_OUT"
 }
