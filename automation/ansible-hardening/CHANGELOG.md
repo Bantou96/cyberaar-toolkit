@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] — 2026-03-09
+
+### Fixed
+
+- **SECURITY** `cyberaar-baseline.sh`: remote temp filenames now use `openssl rand -hex 8` instead of predictable `$$` PID, eliminating symlink/race attack surface on remote hosts
+- **SECURITY** `cyberaar-baseline.sh`: `chmod 600` applied to JSON and HTML output files after creation — reports contain full audit data and must not be world-readable
+- **BUG** `cyberaar-baseline.sh`: `grep -c ... || echo 0` pattern produced `"0\n0"` (double-zero) when grep matched nothing, causing `[[ -eq ]]` syntax error on INT-03, LOG-04, COMP-03, COMP-04 checks — replaced with `|| true` + `${VAR:-0}` guard
+
+### Changed
+
+- Removed region-specific branding from script output (🇸🇳 flag emoji, French Senegal tagline); project scope is now worldwide — Senegal origin context preserved in README only
+- Fixed stale version badge `v2.0.0` → `v4.0.0` in HTML report header and footer
+
+---
+
 ## [1.6.0] — 2026-03-07
 
 ### Added
