@@ -45,8 +45,8 @@ available in French & English.
 
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
-| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 88 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.0.0 |
-| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 21 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.5.0 |
+| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 93 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.1.0 |
+| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 47 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.7.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
 
@@ -69,7 +69,7 @@ Aar-Act/
 │   │       ├── checks/                   # 8 files — one per check section
 │   │       └── renderers/               # terminal.sh, json.sh, html.sh
 │   └── ansible-hardening/
-│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.5.0)
+│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.7.0)
 │       ├── requirements.yml              # ansible.posix + community.general
 │       ├── inventory/
 │       │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
@@ -84,7 +84,7 @@ Aar-Act/
 │       │   ├── 1_execute_baseline_before.yml   # Pre-hardening audit
 │       │   ├── 2_configure_hardening.yml       # Hardening roles (RHEL9 + Ubuntu)
 │       │   └── 3_execute_baseline_after.yml    # Post-hardening audit
-│       └── roles/                        # 21 hardening roles (parallel RHEL9 + Ubuntu)
+│       └── roles/                        # 47 hardening roles (parallel RHEL9 + Ubuntu)
 ├── practices/                            # Community security guides (English)
 ├── translations/                         # French versions of all guides
 ├── examples/                             # Senegal-specific templates & sample reports
@@ -155,18 +155,18 @@ cyberaar-baseline --inventory automation/ansible-hardening/inventory/hosts \
 
 ### What it checks
 
-88 checks across 8 sections — each mapped to a CIS benchmark control:
+93 checks across 8 sections — each mapped to a CIS benchmark control:
 
 | Section | Checks | Coverage highlights |
 |---|---|---|
 | 1. System & OS | 10 | OS support, kernel updates, SELinux/AppArmor, time sync, GRUB perms, Secure Boot, `/dev/shm`, Ctrl-Alt-Del |
-| 2. Authentication | 14 | Root lock, empty passwords, password age/complexity, faillock lockout, shell timeout, UID 0 audit, group/gshadow perms |
+| 2. Authentication | 16 | Root lock, empty passwords, password age/complexity, faillock lockout, shell timeout, UID 0 audit, group/gshadow perms, sudo use_pty, sudo logfile |
 | 3. SSH Hardening | 15 | 15 sshd_config directives including ciphers, session timeout, banner, PermitEmpty, HostbasedAuth, sshd_config perms |
 | 4. Filesystem | 12 | World-writable files, SUID count, noexec mounts, sticky bit, crontab perms, unowned files, SSH key perms |
-| 5. Network | 11 | Firewall, IP forwarding, ICMP redirects, SYN cookies, source routing, martian logging, rp_filter, IPv6 RA |
+| 5. Network | 12 | Firewall, IP forwarding, ICMP redirects, SYN cookies, source routing, martian logging, rp_filter, IPv6 RA, wireless disabled |
 | 6. Logging & Audit | 8 | auditd, rsyslog, logrotate, audit rules, log size, `audit=1` at boot, journald persistence, remote syslog |
 | 7. Integrity | 8 | AIDE, rootkit scanner, suspicious cron, open ports, package GPG check, fail2ban, AIDE DB, cron dir perms |
-| 8. Compliance | 10 | Legal banner, /tmp partition, /home+/var partitions, umask, ASLR, kptr_restrict, dmesg_restrict, ptrace, USB blacklist |
+| 8. Compliance | 12 | Legal banner, /tmp partition, /home+/var partitions, umask, ASLR, kptr_restrict, dmesg_restrict, ptrace, USB blacklist, cron service, cron.allow/at.allow |
 
 Checks that require human judgment are flagged `(manual review required)` in the output — the script highlights them, the operator decides.
 
@@ -176,7 +176,7 @@ Checks that require human judgment are flagged `(manual review required)` in the
 
 ## Deliverable 2 — Ansible Hardening Collection
 
-The Ansible collection (`cyberaar.hardening`) contains **21 hardening roles** organised in parallel pairs — each control area has a `_rhel9` variant and an `_ubuntu` variant. OS detection is automatic: the playbook applies the correct role set based on `ansible_os_family`.
+The Ansible collection (`cyberaar.hardening`) contains **47 hardening roles** organised in parallel pairs — each control area has a `_rhel9` variant and an `_ubuntu` variant (plus some Ubuntu-only roles like `fail2ban`). OS detection is automatic: the playbook applies the correct role set based on `ansible_os_family`.
 
 ### The Three-Step Pipeline
 
@@ -193,11 +193,12 @@ playbooks/site.yml
 ├── Step 2 — 2_configure_hardening.yml        [tags: hardening]
 │     ├── Verifies OS is supported (RedHat or Debian family)
 │     ├── Detects OS family and applies the matching role set
-│     ├── 21 roles applied in CIS dependency order:
+│     ├── 47 roles applied in CIS dependency order:
 │     │     kernel → MAC → auth → users → SSH → firewall →
-│     │     network → crypto → audit → integrity → time →
-│     │     boot → banner → services → updates → coredump →
-│     │     system → mounts → secureboot → permissions → fail2ban
+│     │     network → wireless → crypto → audit → integrity →
+│     │     time → boot → banner → services → updates →
+│     │     coredump → system → mounts → secureboot →
+│     │     permissions → sudo → cron → fail2ban
 │     └── Each role is independently skippable via <role>_disabled=true
 │
 └── Step 3 — 3_execute_baseline_after.yml     [tags: baseline, after]
@@ -376,6 +377,9 @@ Each control area has **two parallel roles** — one for RHEL 9 family and one f
 | Secure Boot | `linux_secure_boot_rhel9` | `linux_secure_boot_ubuntu` | 1.5.1 |
 | File permissions | `linux_file_permissions_rhel9` | `linux_file_permissions_ubuntu` | 6.1 |
 | Fail2ban | `linux_fail2ban_rhel9` | `linux_fail2ban_ubuntu` | — |
+| Wireless interfaces | `linux_wireless_rhel9` | `linux_wireless_ubuntu` | 3.1.2 |
+| Sudo hardening | `linux_sudo_hardening_rhel9` | `linux_sudo_hardening_ubuntu` | 1.3.2–1.3.3 |
+| Cron hardening | `linux_cron_hardening_rhel9` | `linux_cron_hardening_ubuntu` | 5.1 |
 
 **RHEL 9 technology stack**: `firewalld`, `SELinux`, `dnf-automatic`, `authselect`, `grub2`
 
@@ -434,6 +438,9 @@ Use tags to run only a subset of the pipeline. All tags work with both `--tags` 
 | `mounts`, `filesystem` | `linux_tmp_mounts_*`, `linux_file_permissions_*` |
 | `permissions` | `linux_file_permissions_*` |
 | `fail2ban` | `linux_fail2ban_rhel9`, `linux_fail2ban_ubuntu` |
+| `wireless` | `linux_wireless_rhel9`, `linux_wireless_ubuntu` |
+| `sudo` | `linux_sudo_hardening_rhel9`, `linux_sudo_hardening_ubuntu` |
+| `cron` | `linux_cron_hardening_rhel9`, `linux_cron_hardening_ubuntu` |
 | `baseline` | Baseline audit steps (Steps 1 & 3) |
 | `before` | Step 1 only |
 | `after` | Step 3 only |

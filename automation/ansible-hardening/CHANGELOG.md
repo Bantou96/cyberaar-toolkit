@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] — 2026-03-09
+
+### Added
+
+- **`linux_sudo_hardening_rhel9`** — new role: installs sudo, deploys `/etc/sudoers.d/99-cis-hardening` drop-in with `Defaults use_pty` and `Defaults logfile=` (CIS 1.3.2–1.3.3), validates with `visudo -cf`
+- **`linux_cron_hardening_rhel9`** — new role: hardens cron/at directory permissions (CIS 5.1.2–5.1.7), enforces `cron.allow`/`at.allow` allow-list model (CIS 5.1.8–5.1.9), enables `crond` service (CIS 5.1.1)
+- **`linux_wireless_rhel9`** — new role: disables wireless via `nmcli radio all off` (with check-mode guard), blacklists Wi-Fi kernel modules in `/etc/modprobe.d/99-cis-wireless.conf` (CIS 3.1.2)
+- **`linux_sudo_hardening_ubuntu`** — Ubuntu counterpart of `linux_sudo_hardening_rhel9`: same CIS controls via `/etc/sudoers.d/99-cis-hardening` drop-in with `visudo` validation
+- **`linux_cron_hardening_ubuntu`** — Ubuntu counterpart: uses `cron` service name; `cron.allow` group=`crontab` mode=`0640`; `at.allow` group=`daemon` mode=`0640` per Ubuntu package defaults
+- **`linux_wireless_ubuntu`** — Ubuntu counterpart: `rfkill block wifi` as primary mechanism (no NetworkManager required), `nmcli` fallback if present, kernel module blacklist with `update-initramfs -u -k all` for persistence (CIS 3.1.2)
+- **`cyberaar-baseline.sh` v4.1.0**: 5 new security checks (88 → 93 total)
+  - `AUTH-15`: sudo `use_pty` enforcement (CIS 1.3.2)
+  - `AUTH-16`: sudo logfile configuration (CIS 1.3.3)
+  - `NET-12`: wireless interfaces disabled (rfkill + nmcli + modprobe blacklist)
+  - `COMP-11`: cron service enabled and running (CIS 5.1.1)
+  - `COMP-12`: `cron.allow` and `at.allow` allow-list model enforced (CIS 5.1.8–5.1.9)
+- **Role documentation**: `docs/role-linux_sudo_hardening_ubuntu.md`, `docs/role-linux_cron_hardening_ubuntu.md`, `docs/role-linux_wireless_ubuntu.md`
+
+### Changed
+
+- `galaxy.yml`: version → 1.7.0; description updated to "47 roles (23 RHEL9, 24 Ubuntu/Debian)"; tags `sudo`, `cron`, `wireless` added
+- `playbooks/2_configure_hardening.yml`: `linux_wireless_ubuntu`, `linux_sudo_hardening_ubuntu`, `linux_cron_hardening_ubuntu` added with tags `network,wireless` / `auth,sudo` / `cron`
+- `src/lib/ansible_map.sh`: remediation mappings added for AUTH-15, AUTH-16, NET-12, COMP-11, COMP-12
+
+---
+
 ## [1.6.1] — 2026-03-09
 
 ### Fixed
