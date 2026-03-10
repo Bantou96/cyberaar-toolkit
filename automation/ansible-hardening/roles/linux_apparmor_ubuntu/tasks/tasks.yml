@@ -1,16 +1,23 @@
 ---
 
-# ── WSL detection ─────────────────────────────────────────────────────────────
-# WSL does not use GRUB — skip any task that writes to /etc/default/grub or
-# runs update-grub. AppArmor service management still applies.
+# ── GRUB / WSL detection ───────────────────────────────────────────────────────
+# WSL does not use GRUB. Containers and some cloud VMs also have no GRUB.
+# Guard all GRUB tasks on both WSL detection AND actual file existence so the
+# role is safe on any Ubuntu system regardless of bootloader.
 - name: "Detect WSL environment"
   ansible.builtin.stat:
     path: "/proc/sys/fs/binfmt_misc/WSLInterop"
   register: "_wsl_interop"
 
+- name: "Check GRUB config file exists"
+  ansible.builtin.stat:
+    path: "/etc/default/grub"
+  register: "_grub_config"
+
 - name: "Set WSL fact"
   ansible.builtin.set_fact:
     _is_wsl: "{{ _wsl_interop.stat.exists }}"
+    _has_grub: "{{ _grub_config.stat.exists }}"
 
 # ── AppArmor packages ─────────────────────────────────────────────────────────
 - name: "Ensure AppArmor packages are installed"
@@ -24,7 +31,9 @@
 
 # ── GRUB cmdline (skipped on WSL — no bootloader present) ────────────────────
 - name: "Ensure AppArmor is enabled in GRUB cmdline"
-  when: "not _is_wsl"
+  when:
+    - "not _is_wsl"
+    - "_has_grub"
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
     regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=")(.*)"$'
@@ -35,27 +44,36 @@
 - name: "Rebuild GRUB config if AppArmor cmdline changed"
   when:
     - "not _is_wsl"
+    - "_has_grub"
     - "grub_apparmor_result.changed"
   ansible.builtin.command: "update-grub"
   changed_when: true
 
-- name: "Note: GRUB cmdline skipped on WSL (no bootloader)"
-  when: "_is_wsl"
+- name: "Note: GRUB cmdline skipped on WSL or when no GRUB config present"
+  when: "_is_wsl or not _has_grub"
   ansible.builtin.debug:
-    msg: "WSL detected — skipping GRUB cmdline update. AppArmor is active via WSL kernel."
+    msg: "No GRUB config or WSL detected — skipping GRUB cmdline update. AppArmor must be enabled in the kernel/bootloader externally."
 
 # ── AppArmor service ──────────────────────────────────────────────────────────
-- name: "Enable and start AppArmor service"
+- name: "Enable AppArmor service at boot"
+  ansible.builtin.systemd:
+    name: "apparmor"
+    enabled: true
+    daemon_reload: false
+
+- name: "Start AppArmor service (best-effort — oneshot service loads profiles)"
   when: "not ansible_check_mode"
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "apparmor"
     state: "started"
-    enabled: true
+  changed_when: false
+  failed_when: false
 
 - name: "Collect currently loaded AppArmor profiles"
   when: "not ansible_check_mode"
   ansible.builtin.command: "apparmor_status --profiled"
   changed_when: false
+  failed_when: false
   register: "aa_profiled"
 
 - name: "Collect profiles in complain mode"
