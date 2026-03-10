@@ -1,12 +1,11 @@
 # Managed by Ansible role linux_ssh_hardening_rhel9
-# Generated: {{ ansible_date_time.iso8601 }}
-
 # CIS-aligned SSH server hardening
 
 PermitRootLogin {{ linux_ssh_permit_root_login }}
 PasswordAuthentication {{ linux_ssh_password_auth }}
 PermitEmptyPasswords {{ linux_ssh_permit_empty_passwords }}
 X11Forwarding {{ linux_ssh_x11_forwarding }}
+AllowTcpForwarding {{ linux_ssh_allow_tcp_forwarding }}
 
 Ciphers {{ linux_ssh_ciphers }}
 MACs {{ linux_ssh_macs }}

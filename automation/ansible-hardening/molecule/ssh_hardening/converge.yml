@@ -1,0 +1,16 @@
+---
+- name: "Converge — SSH Hardening"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Include linux_ssh_hardening_rhel9 (RedHat family)"
+      when: ansible_os_family == "RedHat"
+      ansible.builtin.include_role:
+        name: "linux_ssh_hardening_rhel9"
+
+    - name: "Include linux_ssh_hardening_ubuntu (Debian family)"
+      when: ansible_os_family == "Debian"
+      ansible.builtin.include_role:
+        name: "linux_ssh_hardening_ubuntu"
