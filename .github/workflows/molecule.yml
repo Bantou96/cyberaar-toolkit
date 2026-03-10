@@ -64,9 +64,8 @@ jobs:
 
       - name: Install Ansible collections
         run: |
-          ansible-galaxy collection install \
-            -r automation/ansible-hardening/requirements.yml \
-            "community.docker:>=3.0.0"
+          ansible-galaxy collection install -r automation/ansible-hardening/requirements.yml
+          ansible-galaxy collection install "community.docker:>=3.0.0"
 
       # Authenticate to avoid Docker Hub anonymous pull rate limit (100/6 h).
       # Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN in repo Settings → Secrets.
