@@ -5,22 +5,30 @@
       - "authselect"
       - "sssd"
       - "libpwquality"
-      - "pam_faillock"   # explicit for some setups
+      # pam_faillock.so ships inside the 'pam' package on RHEL/Rocky 9;
+      # there is no standalone pam_faillock package — removing it prevents
+      # dnf failures on any standard RHEL 9 installation.
     state: "present"
 
 - name: "Register current authselect configuration"
   ansible.builtin.command: "authselect current -r"
   changed_when: false
   check_mode: false
+  failed_when: false   # rc=2 on fresh systems with no existing config — not an error
   register: "authselect_current_raw"
 
 - name: "Parse current profile from authselect output"
   ansible.builtin.set_fact:
-    authselect_current_profile: "{{ authselect_current_raw.stdout_lines[0].split(':')[0] | trim | default('none') }}"
+    # 'authselect current -r' prints everything on one line: "sssd with-faillock with-mkhomedir"
+    authselect_current_profile: >-
+      {{ 'none' if authselect_current_raw.rc != 0
+         else (authselect_current_raw.stdout | split | first | default('none')) }}
 
 - name: "Parse current enabled features"
   ansible.builtin.set_fact:
-    authselect_current_features: "{{ authselect_current_raw.stdout_lines[1:] | join(' ') | split | unique | list }}"
+    authselect_current_features: >-
+      {{ [] if authselect_current_raw.rc != 0
+         else (authselect_current_raw.stdout | split)[1:] }}
 
 - name: "Select desired authselect profile if mismatch"
   when: "authselect_current_profile != linux_authselect_profile"

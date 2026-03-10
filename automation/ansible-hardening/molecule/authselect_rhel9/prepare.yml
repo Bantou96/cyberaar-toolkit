@@ -1,0 +1,11 @@
+---
+- name: "Prepare — Authselect RHEL9"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # Ensure dnf cache is fresh so package installs in converge succeed
+    - name: "Update dnf cache"
+      ansible.builtin.dnf:
+        update_cache: true

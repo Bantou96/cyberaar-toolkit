@@ -3,10 +3,11 @@
 # Desired authselect profile (sssd is common for enterprise with AD/IdM)
 linux_authselect_profile: "sssd"
 
-# Features to enable (CIS-aligned: faillock for lockout, pwquality for complexity)
+# Features to enable (CIS-aligned: faillock for lockout)
+# Note: 'with-pwquality' is NOT a valid authselect feature on RHEL/Rocky 9 —
+# pwquality is configured directly via /etc/security/pwquality.conf below.
 linux_authselect_features:
   - "with-faillock"
-  - "with-pwquality"
   - "with-mkhomedir"       # optional - create home on login
   - "with-pamaccess"       # optional - access.conf control
 
