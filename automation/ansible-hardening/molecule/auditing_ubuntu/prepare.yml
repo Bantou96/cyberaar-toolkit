@@ -1,0 +1,11 @@
+---
+- name: "Prepare — auditing Ubuntu"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600

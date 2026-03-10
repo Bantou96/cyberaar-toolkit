@@ -34,9 +34,17 @@
     name: "auditd"
     state: "started"
     enabled: true
+  failed_when: false
+
+- name: "Check if GRUB config exists"
+  ansible.builtin.stat:
+    path: "/etc/default/grub"
+  register: "_grub_file"
 
 - name: "Enable boot-time auditing in GRUB if configured"
-  when: "linux_auditd_enable_boot_auditing | bool"
+  when:
+    - "linux_auditd_enable_boot_auditing | bool"
+    - "_grub_file.stat.exists"
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
     regexp: '^GRUB_CMDLINE_LINUX='
@@ -45,10 +53,11 @@
   register: "grub_audit_result"
 
 - name: "Rebuild GRUB config if boot auditing enabled"
-  when: "grub_audit_result.changed | default(false)"
+  when:
+    - "_grub_file.stat.exists"
+    - "grub_audit_result.changed | default(false)"
   ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
   changed_when: true
-  notify: "Reboot required notice"   # optional separate handler
 
 # Optional debug / notice
 - name: "Notify about potential reboot for boot auditing"

@@ -4,9 +4,7 @@
   ansible.builtin.service:
     name: "auditd"
     state: "restarted"
-  # Alternative if service module fails in some edge cases (rare on RHEL 9):
-  # ansible.builtin.command: "service auditd restart"
-  # changed_when: true
+  failed_when: false
   listen: "Restart auditd"  # allows multiple notifies to same handler
 
 - name: "Restart rsyslog"
