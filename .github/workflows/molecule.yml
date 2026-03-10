@@ -1,0 +1,82 @@
+---
+name: Molecule Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "automation/ansible-hardening/**"
+      - ".github/workflows/molecule.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "automation/ansible-hardening/**"
+      - ".github/workflows/molecule.yml"
+
+jobs:
+  molecule:
+    name: ${{ matrix.scenario }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - ssh_hardening
+          - authselect_rhel9
+          - apparmor_ubuntu
+          - fail2ban_ubuntu
+          - auditing_ubuntu
+          - auditing_rhel9
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            ansible-core==2.20.2 \
+            molecule==26.3.0 \
+            molecule-docker==2.1.0 \
+            ansible-lint==26.3.0 \
+            docker==7.1.0
+
+      # molecule-docker 2.1.0 ships string conditionals incompatible with
+      # ansible-core 2.20's stricter when: evaluation.
+      # Patch: wrap lookup result with | length > 0 so it evaluates as bool.
+      - name: Patch molecule-docker for ansible-core 2.20
+        run: |
+          PKGS=$(python -c "import site; print(site.getsitepackages()[0])")
+          for f in create.yml destroy.yml; do
+            sed -i \
+              "s/when: (lookup('env', 'HOME'))/when: (lookup('env', 'HOME') | length > 0)/g" \
+              "$PKGS/molecule_docker/playbooks/$f"
+          done
+
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install \
+            -r automation/ansible-hardening/requirements.yml \
+            "community.docker:>=3.0.0"
+
+      # Authenticate to avoid Docker Hub anonymous pull rate limit (100/6 h).
+      # Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN in repo Settings → Secrets.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Run Molecule — ${{ matrix.scenario }}
+        working-directory: automation/ansible-hardening
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
+        run: molecule test -s ${{ matrix.scenario }}
