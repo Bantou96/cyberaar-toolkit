@@ -1,0 +1,34 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: ubuntu
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      # AppArmor filesystem — required for apparmor_status and aa-enforce
+      - /sys/kernel/security:/sys/kernel/security:ro
+    cgroupns_mode: host
+
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: prepare.yml
+    converge: converge.yml
+    verify: verify.yml
+  env:
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/roles"
+
+verifier:
+  name: ansible
+
+lint: |
+  set -e
+  ansible-lint

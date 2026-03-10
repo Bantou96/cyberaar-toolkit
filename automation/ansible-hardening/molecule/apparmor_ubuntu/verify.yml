@@ -1,0 +1,87 @@
+---
+- name: "Verify — AppArmor Ubuntu"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── AppArmor kernel support ────────────────────────────────────────────────
+    - name: "Check AppArmor filesystem is mounted"
+      ansible.builtin.stat:
+        path: /sys/kernel/security/apparmor
+      register: aa_fs
+
+    - name: "Note AppArmor kernel availability"
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'AppArmor filesystem found — running full profile assertions.'
+             if aa_fs.stat.exists
+             else 'AppArmor NOT in kernel (WSL2 or container without AppArmor support)
+                   — skipping profile assertions; verifying packages only.' }}
+
+    # ── AppArmor packages (always checked) ────────────────────────────────────
+    - name: "Assert apparmor-utils is installed"
+      ansible.builtin.command: which aa-enforce
+      changed_when: false
+      register: aa_enforce_bin
+      failed_when: aa_enforce_bin.rc != 0
+
+    - name: "Assert apparmor package is installed"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert apparmor package present"
+      ansible.builtin.assert:
+        that: "'apparmor' in ansible_facts.packages"
+        fail_msg: "apparmor package is not installed"
+
+    # ── AppArmor service ───────────────────────────────────────────────────────
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert AppArmor service is enabled"
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['apparmor.service'] is defined
+          - ansible_facts.services['apparmor.service'].status == 'enabled'
+        fail_msg: "apparmor.service is not enabled"
+
+    # ── Profile assertions (only when AppArmor kernel support is present) ──────
+    - name: "Get count of loaded profiles"
+      when: aa_fs.stat.exists
+      ansible.builtin.command: apparmor_status --profiled
+      changed_when: false
+      failed_when: false
+      register: aa_profiled
+
+    - name: "Assert at least 1 profile is loaded"
+      when: aa_fs.stat.exists
+      ansible.builtin.assert:
+        that: "(aa_profiled.stdout | int) > 0"
+        fail_msg: "No AppArmor profiles loaded (got: {{ aa_profiled.stdout }})"
+
+    - name: "Get count of profiles in complain mode"
+      when: aa_fs.stat.exists
+      ansible.builtin.command: apparmor_status --complaining
+      changed_when: false
+      failed_when: false
+      register: aa_complaining
+
+    - name: "Assert no profiles remain in complain mode"
+      when: aa_fs.stat.exists
+      ansible.builtin.assert:
+        that: "(aa_complaining.stdout | default('0') | int) == 0"
+        fail_msg: "{{ aa_complaining.stdout }} profile(s) still in complain mode"
+
+    - name: "Get count of profiles in enforce mode"
+      when: aa_fs.stat.exists
+      ansible.builtin.command: apparmor_status --enforced
+      changed_when: false
+      failed_when: false
+      register: aa_enforced
+
+    - name: "Assert profiles are in enforce mode"
+      when: aa_fs.stat.exists
+      ansible.builtin.assert:
+        that: "(aa_enforced.stdout | int) > 0"
+        fail_msg: "No AppArmor profiles in enforce mode (got: {{ aa_enforced.stdout }})"
