@@ -1,0 +1,127 @@
+---
+- name: "Verify — Authselect RHEL9"
+  hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── authselect profile ─────────────────────────────────────────────────────
+    - name: "Retrieve current authselect configuration"
+      ansible.builtin.command: authselect current -r
+      changed_when: false
+      register: authselect_current
+
+    - name: "Assert authselect profile is sssd"
+      ansible.builtin.assert:
+        that: "'sssd' in authselect_current.stdout_lines[0]"
+        fail_msg: "authselect profile is not 'sssd' (got: {{ authselect_current.stdout_lines[0] }})"
+
+    - name: "Assert with-faillock feature is enabled"
+      ansible.builtin.assert:
+        that: "'with-faillock' in authselect_current.stdout"
+        fail_msg: "authselect feature 'with-faillock' is not enabled"
+
+    # ── pwquality.conf — use grep to skip commented lines ─────────────────────
+    - name: "Retrieve effective (non-commented) pwquality settings"
+      ansible.builtin.command: grep -E '^[^#]' /etc/security/pwquality.conf
+      changed_when: false
+      failed_when: false
+      register: pwquality_effective
+
+    - name: "Assert minlen >= 14"
+      ansible.builtin.assert:
+        that: >
+          (pwquality_effective.stdout |
+           regex_search('minlen = (\\d+)') |
+           default('minlen = 0') |
+           split(' ') | last | int) >= 14
+        fail_msg: "pwquality minlen is not set to >= 14"
+
+    - name: "Assert dcredit <= -1 (require at least 1 digit)"
+      ansible.builtin.assert:
+        that: >
+          (pwquality_effective.stdout |
+           regex_search('dcredit = (-?\\d+)') |
+           default('dcredit = 0') |
+           split(' ') | last | int) <= -1
+        fail_msg: "pwquality dcredit is not <= -1"
+
+    - name: "Assert ucredit <= -1 (require at least 1 uppercase)"
+      ansible.builtin.assert:
+        that: >
+          (pwquality_effective.stdout |
+           regex_search('ucredit = (-?\\d+)') |
+           default('ucredit = 0') |
+           split(' ') | last | int) <= -1
+        fail_msg: "pwquality ucredit is not <= -1"
+
+    - name: "Assert minclass >= 3"
+      ansible.builtin.assert:
+        that: >
+          (pwquality_effective.stdout |
+           regex_search('minclass = (\\d+)') |
+           default('minclass = 0') |
+           split(' ') | last | int) >= 3
+        fail_msg: "pwquality minclass is not >= 3"
+
+    - name: "Assert maxrepeat <= 3"
+      ansible.builtin.assert:
+        that: >
+          (pwquality_effective.stdout |
+           regex_search('maxrepeat = (\\d+)') |
+           default('maxrepeat = 99') |
+           split(' ') | last | int) <= 3
+        fail_msg: "pwquality maxrepeat is not <= 3"
+
+    # ── faillock.conf — use grep to skip commented lines ──────────────────────
+    - name: "Retrieve effective (non-commented) faillock settings"
+      ansible.builtin.command: grep -E '^[^#]' /etc/security/faillock.conf
+      changed_when: false
+      failed_when: false
+      register: faillock_effective
+
+    - name: "Assert faillock deny <= 5"
+      ansible.builtin.assert:
+        that: >
+          (faillock_effective.stdout |
+           regex_search('deny = (\\d+)') |
+           default('deny = 99') |
+           split(' ') | last | int) <= 5
+        fail_msg: "faillock deny is not <= 5"
+
+    - name: "Assert faillock unlock_time >= 600"
+      ansible.builtin.assert:
+        that: >
+          (faillock_effective.stdout |
+           regex_search('unlock_time = (\\d+)') |
+           default('unlock_time = 0') |
+           split(' ') | last | int) >= 600
+        fail_msg: "faillock unlock_time is not >= 600 seconds"
+
+    - name: "Assert faillock even_deny_root is configured"
+      ansible.builtin.assert:
+        that: "'even_deny_root' in faillock_effective.stdout"
+        fail_msg: "faillock even_deny_root is not configured"
+
+    # ── PAM stack sanity ───────────────────────────────────────────────────────
+    - name: "Check system-auth contains pam_pwquality"
+      ansible.builtin.command: grep -q pam_pwquality /etc/pam.d/system-auth
+      changed_when: false
+      failed_when: false
+      register: pam_pwquality_check
+
+    - name: "Assert pam_pwquality is in system-auth"
+      ansible.builtin.assert:
+        that: "pam_pwquality_check.rc == 0"
+        fail_msg: "pam_pwquality.so not found in /etc/pam.d/system-auth"
+
+    - name: "Check system-auth contains pam_faillock"
+      ansible.builtin.command: grep -q pam_faillock /etc/pam.d/system-auth
+      changed_when: false
+      failed_when: false
+      register: pam_faillock_check
+
+    - name: "Assert pam_faillock is in system-auth"
+      ansible.builtin.assert:
+        that: "pam_faillock_check.rc == 0"
+        fail_msg: "pam_faillock.so not found in /etc/pam.d/system-auth"
