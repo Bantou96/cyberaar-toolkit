@@ -1,0 +1,10 @@
+---
+- name: "Converge — fail2ban Ubuntu"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Include linux_fail2ban_ubuntu"
+      ansible.builtin.include_role:
+        name: "linux_fail2ban_ubuntu"
