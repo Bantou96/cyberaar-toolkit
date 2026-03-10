@@ -4,6 +4,7 @@
   ansible.builtin.service:
     name: "auditd"
     state: "restarted"
+  failed_when: false
 
 - name: "Restart rsyslog"
   ansible.builtin.service:

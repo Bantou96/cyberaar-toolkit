@@ -1,0 +1,14 @@
+---
+- name: "Converge — auditing Ubuntu"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    # Disable remote forwarding — no syslog server in test environment
+    linux_auditing_forwarding_disabled: true
+
+  tasks:
+    - name: "Include linux_auditing_ubuntu"
+      ansible.builtin.include_role:
+        name: "linux_auditing_ubuntu"

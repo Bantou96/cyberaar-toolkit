@@ -1,0 +1,111 @@
+---
+- name: "Verify — auditing RHEL9"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── Packages (always checked) ──────────────────────────────────────────────
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert audit package is installed"
+      ansible.builtin.assert:
+        that: "'audit' in ansible_facts.packages"
+        fail_msg: "audit package is not installed"
+
+    - name: "Assert audit-libs package is installed"
+      ansible.builtin.assert:
+        that: "'audit-libs' in ansible_facts.packages"
+        fail_msg: "audit-libs package is not installed"
+
+    # ── Config files (always checked) ─────────────────────────────────────────
+    - name: "Assert auditd.conf exists with correct permissions"
+      ansible.builtin.stat:
+        path: /etc/audit/auditd.conf
+      register: auditd_conf
+
+    - name: "Assert auditd.conf is present and correct"
+      ansible.builtin.assert:
+        that:
+          - auditd_conf.stat.exists
+          - auditd_conf.stat.mode == '0640'
+          - auditd_conf.stat.pw_name == 'root'
+        fail_msg: "auditd.conf missing or wrong permissions"
+
+    - name: "Assert CIS audit rules file exists"
+      ansible.builtin.stat:
+        path: /etc/audit/rules.d/99-cis-audit.rules
+      register: audit_rules
+
+    - name: "Assert rules file is present and correct"
+      ansible.builtin.assert:
+        that:
+          - audit_rules.stat.exists
+          - audit_rules.stat.mode == '0640'
+        fail_msg: "99-cis-audit.rules missing or wrong permissions"
+
+    - name: "Read audit rules content"
+      ansible.builtin.slurp:
+        src: /etc/audit/rules.d/99-cis-audit.rules
+      register: rules_content
+
+    - name: "Assert rules file contains CIS audit rules"
+      ansible.builtin.assert:
+        that: "'-w /etc/passwd' in (rules_content.content | b64decode)"
+        fail_msg: "Expected CIS audit rules not found in rules file"
+
+    # ── Service enabled at boot (always checked) ───────────────────────────────
+    - name: "Check auditd is-enabled"
+      ansible.builtin.command: systemctl is-enabled auditd
+      changed_when: false
+      register: auditd_enabled
+
+    - name: "Assert auditd is enabled at boot"
+      ansible.builtin.assert:
+        that: auditd_enabled.stdout in ['enabled', 'enabled-runtime', 'static', 'generated']
+        fail_msg: "auditd not enabled at boot (got: {{ auditd_enabled.stdout }})"
+
+    # ── Service running / audit rules loaded (kernel-dependent) ───────────────
+    - name: "Check auditd process is running"
+      ansible.builtin.command: pgrep auditd
+      changed_when: false
+      failed_when: false
+      register: auditd_pgrep
+
+    - name: "Note auditd availability"
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'auditd process running — asserting loaded rules.'
+             if auditd_pgrep.rc == 0
+             else 'auditd NOT running (kernel audit subsystem unavailable in this container)
+                   — skipping process/rules assertions; packages and config verified above.' }}
+
+    - name: "Get currently loaded audit rules"
+      when: auditd_pgrep.rc == 0
+      ansible.builtin.command: auditctl -l
+      changed_when: false
+      register: auditctl_rules
+
+    - name: "Assert audit rules are loaded"
+      when: auditd_pgrep.rc == 0
+      ansible.builtin.assert:
+        that: auditctl_rules.rc == 0
+        fail_msg: "auditctl -l failed (rc={{ auditctl_rules.rc }}): {{ auditctl_rules.stderr }}"
+
+    # ── rsyslog (always checked) ───────────────────────────────────────────────
+    - name: "Assert rsyslog is installed"
+      ansible.builtin.assert:
+        that: "'rsyslog' in ansible_facts.packages"
+        fail_msg: "rsyslog package is not installed"
+
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert rsyslog service is running"
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['rsyslog.service'] is defined
+          - ansible_facts.services['rsyslog.service'].state == 'running'
+        fail_msg: "rsyslog.service is not running"
