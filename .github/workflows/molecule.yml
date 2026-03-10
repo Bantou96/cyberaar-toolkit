@@ -8,6 +8,7 @@ on:
       - "automation/ansible-hardening/**"
       - ".github/workflows/molecule.yml"
   pull_request:
+  workflow_dispatch:
     branches: [main]
     paths:
       - "automation/ansible-hardening/**"
