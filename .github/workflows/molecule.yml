@@ -68,8 +68,10 @@ jobs:
           ansible-galaxy collection install "community.docker:>=3.0.0"
 
       # Authenticate to avoid Docker Hub anonymous pull rate limit (100/6 h).
-      # Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN in repo Settings → Secrets.
+      # Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN in repo Settings → Secrets → Actions.
+      # Step is skipped gracefully if the secrets are not configured.
       - name: Log in to Docker Hub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
