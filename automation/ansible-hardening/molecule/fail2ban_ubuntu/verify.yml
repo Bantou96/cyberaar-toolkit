@@ -1,0 +1,92 @@
+---
+- name: "Verify — fail2ban Ubuntu"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── Package ────────────────────────────────────────────────────────────────
+    - name: "Assert fail2ban package is installed"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert fail2ban package present"
+      ansible.builtin.assert:
+        that: "'fail2ban' in ansible_facts.packages"
+        fail_msg: "fail2ban package is not installed"
+
+    # ── Config file ────────────────────────────────────────────────────────────
+    - name: "Assert jail.local exists"
+      ansible.builtin.stat:
+        path: /etc/fail2ban/jail.local
+      register: jail_local
+
+    - name: "Assert jail.local is present"
+      ansible.builtin.assert:
+        that: jail_local.stat.exists
+        fail_msg: "/etc/fail2ban/jail.local was not deployed"
+
+    - name: "Assert jail.local has correct permissions"
+      ansible.builtin.assert:
+        that:
+          - jail_local.stat.mode == '0644'
+          - jail_local.stat.pw_name == 'root'
+        fail_msg: "jail.local has wrong owner/mode (got {{ jail_local.stat.pw_name }}:{{ jail_local.stat.mode }})"
+
+    - name: "Read jail.local content"
+      ansible.builtin.slurp:
+        src: /etc/fail2ban/jail.local
+      register: jail_local_content
+
+    - name: "Assert [sshd] jail section is present"
+      ansible.builtin.assert:
+        that: "'[sshd]' in (jail_local_content.content | b64decode)"
+        fail_msg: "[sshd] section missing from jail.local"
+
+    - name: "Assert maxretry is configured"
+      ansible.builtin.assert:
+        that: "'maxretry = 5' in (jail_local_content.content | b64decode)"
+        fail_msg: "maxretry not set correctly in jail.local"
+
+    # ── Service ────────────────────────────────────────────────────────────────
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert fail2ban service is enabled"
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['fail2ban.service'] is defined
+          - ansible_facts.services['fail2ban.service'].status == 'enabled'
+        fail_msg: "fail2ban.service is not enabled"
+
+    - name: "Assert fail2ban service is running"
+      ansible.builtin.assert:
+        that: ansible_facts.services['fail2ban.service'].state == 'running'
+        fail_msg: "fail2ban.service is not running"
+
+    # ── Jail status (best-effort — journald may be limited in containers) ──────
+    - name: "Check fail2ban-client can communicate with daemon"
+      ansible.builtin.command: fail2ban-client ping
+      changed_when: false
+      failed_when: false
+      register: f2b_ping
+
+    - name: "Note fail2ban daemon reachability"
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'fail2ban daemon reachable (pong received).'
+             if f2b_ping.rc == 0
+             else 'fail2ban daemon not reachable in this container environment (rc=' + (f2b_ping.rc | string) + ') — skipping jail status check.' }}
+
+    - name: "Check sshd jail is active"
+      when: f2b_ping.rc == 0
+      ansible.builtin.command: fail2ban-client status sshd
+      changed_when: false
+      failed_when: false
+      register: f2b_sshd
+
+    - name: "Assert sshd jail is active"
+      when: f2b_ping.rc == 0
+      ansible.builtin.assert:
+        that: f2b_sshd.rc == 0
+        fail_msg: "fail2ban sshd jail is not active: {{ f2b_sshd.stderr | default('') }}"
