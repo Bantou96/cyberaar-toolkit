@@ -1,0 +1,77 @@
+---
+- name: "Verify — SSH Hardening"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── sshd service running ───────────────────────────────────────────────────
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert sshd is running"
+      ansible.builtin.assert:
+        that: >
+          (ansible_facts.services['sshd.service'] is defined and
+           ansible_facts.services['sshd.service'].state == 'running') or
+          (ansible_facts.services['ssh.service'] is defined and
+           ansible_facts.services['ssh.service'].state == 'running')
+        fail_msg: "sshd/ssh service is not running"
+
+    # ── sshd effective config (sshd -T parses all includes) ───────────────────
+    - name: "Retrieve effective sshd config"
+      ansible.builtin.command: sshd -T
+      changed_when: false
+      register: sshd_effective
+
+    - name: "Assert PermitRootLogin no"
+      ansible.builtin.assert:
+        that: "'permitrootlogin no' in sshd_effective.stdout | lower"
+        fail_msg: "PermitRootLogin is not set to 'no'"
+
+    - name: "Assert PasswordAuthentication no"
+      ansible.builtin.assert:
+        that: "'passwordauthentication no' in sshd_effective.stdout | lower"
+        fail_msg: "PasswordAuthentication is not set to 'no'"
+
+    - name: "Assert PermitEmptyPasswords no"
+      ansible.builtin.assert:
+        that: "'permitemptypasswords no' in sshd_effective.stdout | lower"
+        fail_msg: "PermitEmptyPasswords is not set to 'no'"
+
+    - name: "Assert X11Forwarding no"
+      ansible.builtin.assert:
+        that: "'x11forwarding no' in sshd_effective.stdout | lower"
+        fail_msg: "X11Forwarding is not set to 'no'"
+
+    - name: "Assert AllowTcpForwarding no"
+      ansible.builtin.assert:
+        that: "'allowtcpforwarding no' in sshd_effective.stdout | lower"
+        fail_msg: "AllowTcpForwarding is not set to 'no'"
+
+    - name: "Assert MaxAuthTries <= 4"
+      ansible.builtin.assert:
+        that: >
+          (sshd_effective.stdout | lower |
+           regex_search('maxauthtries \\d+') |
+           default('maxauthtries 99') |
+           split(' ') | last | int) <= 4
+        fail_msg: "MaxAuthTries is not <= 4"
+
+    - name: "Assert ClientAliveInterval set"
+      ansible.builtin.assert:
+        that: "'clientaliveinterval' in sshd_effective.stdout | lower"
+        fail_msg: "ClientAliveInterval is not configured"
+
+    # ── sshd_config file permissions ──────────────────────────────────────────
+    - name: "Check sshd_config permissions"
+      ansible.builtin.stat:
+        path: /etc/ssh/sshd_config
+      register: sshd_config_stat
+
+    - name: "Assert sshd_config is owned by root"
+      ansible.builtin.assert:
+        that:
+          - sshd_config_stat.stat.pw_name == 'root'
+          - sshd_config_stat.stat.mode == '0600'
+        fail_msg: "sshd_config has wrong owner or permissions (expected root:root 0600)"

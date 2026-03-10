@@ -1,0 +1,41 @@
+---
+- name: "Prepare — SSH Hardening"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── Debian / Ubuntu ────────────────────────────────────────────────────────
+    - name: "Update apt cache (Debian family)"
+      when: ansible_os_family == "Debian"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: "Ensure openssh-server is installed (Debian family)"
+      when: ansible_os_family == "Debian"
+      ansible.builtin.apt:
+        name: openssh-server
+        state: present
+
+    - name: "Create sshd privilege separation directory (Debian family)"
+      when: ansible_os_family == "Debian"
+      ansible.builtin.file:
+        path: /run/sshd
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # ── RHEL / Rocky ───────────────────────────────────────────────────────────
+    - name: "Ensure openssh-server is installed (RedHat family)"
+      when: ansible_os_family == "RedHat"
+      ansible.builtin.dnf:
+        name: openssh-server
+        state: present
+
+    - name: "Generate SSH host keys if missing (RedHat family)"
+      when: ansible_os_family == "RedHat"
+      ansible.builtin.command: ssh-keygen -A
+      args:
+        creates: /etc/ssh/ssh_host_rsa_key

@@ -17,3 +17,11 @@ _site/
 # Details at https://github.com/github/pages-gem/issues/768
 Gemfile.lock
 CLAUDE.md
+
+# Ansible collections installed locally (not part of the collection itself)
+ansible_collections/
+
+# Molecule ephemeral directories and Python cache
+.cache/
+__pycache__/
+*.pyc

@@ -1,0 +1,3 @@
+molecule==26.3.0
+molecule-docker==2.1.0
+ansible-lint==26.3.0
