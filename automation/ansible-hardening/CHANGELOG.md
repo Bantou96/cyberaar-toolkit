@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] — 2026-03-11
+
+### Added
+
+- **29 Molecule test scenarios** — full integration test coverage for all 47 roles across RHEL 9 (Rocky Linux 9) and Ubuntu 22.04 Docker containers; all 29 scenarios run in CI on every PR targeting `automation/ansible-hardening/`
+- **`ansible-lint` CI job** — `.github/workflows/molecule.yml` now gates every PR with `ansible-lint roles/ playbooks/` (profile: `basic`) before running Molecule; enforces collection-wide code quality
+- **`.ansible-lint` configuration** — `automation/ansible-hardening/.ansible-lint`: `profile: basic`, `var-naming[no-role-prefix]` explicitly skipped (shared variable names intentionally unprefixed so one `group_vars` entry controls both OS variants), `molecule/` excluded
+
+### Fixed
+
+- **BUG** `linux_bootloader_password_rhel9` / `ubuntu`: `grub2-mkpasswd-pbkdf2` received the password only once via stdin; the command requires it twice (password + confirmation). Fixed: `stdin: "{{ linux_bootloader_password }}\n{{ linux_bootloader_password }}\n"`
+- **BUG** `linux_bootloader_password_rhel9` / `ubuntu`: `regex_search` pattern did not match the actual command output format. Fixed: `regex_search('grub\\.pbkdf2\\.sha512\\.\\S+')`
+- **BUG** `linux_bootloader_password_rhel9`: handler `Rebuild GRUB config` was defined as a `block` — Ansible does not support blocks in handlers. Removed the invalid block; GRUB rebuild is handled inline by the existing `grub2-mkconfig` tasks
+- **BUG** `linux_bootloader_password_ubuntu` / `linux_secure_boot_ubuntu`: `update-grub` fails in Docker containers (overlay filesystem). Added `failed_when: false` to the handler and to the `/boot` chmod task
+- **BUG** `linux_crypto_policies_rhel9`: sshd reload loop lacked `failed_when: false`; fails in containers where sshd is not running. Fixed
+- **BUG** `linux_core_dumps_ubuntu`: `systemctl daemon-reload` called via `ansible.builtin.command` (command-instead-of-module). Replaced with `ansible.builtin.systemd: daemon_reload: true`
+- **BUG** `linux_tmp_mounts_ubuntu`: handler used `command: systemctl restart tmp.mount`; replaced with `ansible.builtin.systemd: name: tmp.mount / state: restarted / daemon_reload: true`
+- **BUG** `playbooks/1_execute_baseline_before.yml` / `3_execute_baseline_after.yml`: fetch tasks used `ignore_errors: true`. Replaced with `failed_when: false`
+
+### Changed
+
+- `galaxy.yml`: version → 1.8.0
+- YAML formatting standardised across all 47 role files (`yaml[new-line-at-end-of-file]`, `yaml[line-length]` violations resolved; 668 lint findings reduced to 0)
+
+---
+
 ## [1.7.1] — 2026-03-09
 
 ### Fixed

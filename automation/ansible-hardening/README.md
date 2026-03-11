@@ -10,8 +10,8 @@ Provide a practical, maintainable, and idempotent set of Ansible roles to signif
 **Current focus**  
 RHEL 9 family – CIS Red Hat Enterprise Linux 9 Benchmark v2.0.0 (Level 1 & selected Level 2)
 
-**Current version**: v1.3.0 (March 2026)
-**Total roles**: 24
+**Current version**: v1.8.0 (March 2026)
+**Total roles**: 47
 **License**: [GPL-3.0](../../LICENSE)
 
 OS detection is **automatic**: one playbook, one run — the correct role set is applied per host based on `ansible_os_family`.
@@ -45,6 +45,9 @@ OS detection is **automatic**: one playbook, one run — the correct role set is
 | `linux_secure_boot_rhel9` | Secure Boot + /boot permissions | 1.5.1 | secureboot |
 | `linux_file_permissions_rhel9` | Critical file perms + world-writable scan | 6.1 | permissions |
 | `linux_fail2ban_rhel9` | Dynamic IP banning (sshd + firewalld) | — | fail2ban |
+| `linux_wireless_rhel9` | Disable wireless via nmcli + module blacklist | 3.1.2 | wireless |
+| `linux_sudo_hardening_rhel9` | sudo use_pty, logfile, visudo validation | 1.3.2–1.3.3 | sudo |
+| `linux_cron_hardening_rhel9` | cron/at dir permissions + allow-list model | 5.1 | cron |
 
 ### Ubuntu 20.04 / 22.04 / 24.04 — Debian 11 / 12
 
@@ -71,6 +74,9 @@ OS detection is **automatic**: one playbook, one run — the correct role set is
 | `linux_secure_boot_ubuntu` | Secure Boot + /boot permissions | 1.5.1 | secureboot |
 | `linux_file_permissions_ubuntu` | Critical file perms + world-writable scan | 6.1 | permissions |
 | `linux_fail2ban_ubuntu` | Brute-force protection via Fail2ban | — | fail2ban |
+| `linux_wireless_ubuntu` | rfkill + nmcli + module blacklist + initramfs | 3.1.2 | wireless |
+| `linux_sudo_hardening_ubuntu` | sudo use_pty, logfile, visudo validation | 1.3.2–1.3.3 | sudo |
+| `linux_cron_hardening_ubuntu` | cron/at dir permissions + allow-list model | 5.1 | cron |
 
 Full per-role documentation is in [`docs/`](docs/) — see [`docs/roles-overview.md`](docs/roles-overview.md).
 
