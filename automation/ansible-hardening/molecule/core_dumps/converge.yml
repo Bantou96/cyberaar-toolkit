@@ -1,0 +1,14 @@
+---
+- name: "Converge — core_dumps RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_core_dumps_rhel9
+
+- name: "Converge — core_dumps Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_core_dumps_ubuntu

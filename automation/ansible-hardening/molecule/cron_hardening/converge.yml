@@ -1,0 +1,14 @@
+---
+- name: "Converge — cron_hardening RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_cron_hardening_rhel9
+
+- name: "Converge — cron_hardening Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_cron_hardening_ubuntu

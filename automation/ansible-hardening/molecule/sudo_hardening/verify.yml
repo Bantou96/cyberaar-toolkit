@@ -1,0 +1,72 @@
+---
+- name: "Verify — sudo_hardening RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert sudo is installed"
+      ansible.builtin.assert:
+        that: "'sudo' in ansible_facts.packages"
+        fail_msg: "sudo package is not installed"
+
+    - name: "Assert use_pty is in /etc/sudoers"
+      ansible.builtin.command: grep -E 'Defaults\s+use_pty' /etc/sudoers
+      changed_when: false
+      register: pty_check
+      failed_when: pty_check.rc != 0
+
+    - name: "Assert sudo logfile is configured"
+      ansible.builtin.command: grep -rE 'Defaults\s+logfile=' /etc/sudoers /etc/sudoers.d/
+      changed_when: false
+      register: logfile_check
+      failed_when: logfile_check.rc != 0
+
+    - name: "Assert /var/log/sudo.log exists"
+      ansible.builtin.stat:
+        path: /var/log/sudo.log
+      register: sudo_log
+      failed_when: not sudo_log.stat.exists
+
+- name: "Verify — sudo_hardening Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert sudo is installed"
+      ansible.builtin.assert:
+        that: "'sudo' in ansible_facts.packages"
+        fail_msg: "sudo package is not installed"
+
+    - name: "Assert /etc/sudoers.d/99-cis-hardening exists"
+      ansible.builtin.stat:
+        path: /etc/sudoers.d/99-cis-hardening
+      register: sudoers_drop_in
+      failed_when: not sudoers_drop_in.stat.exists
+
+    - name: "Assert use_pty is in drop-in file"
+      ansible.builtin.command: grep -E 'Defaults\s+use_pty' /etc/sudoers.d/99-cis-hardening
+      changed_when: false
+      register: pty_check
+      failed_when: pty_check.rc != 0
+
+    - name: "Assert sudo logfile is configured in drop-in"
+      ansible.builtin.command: grep -E 'Defaults\s+logfile=' /etc/sudoers.d/99-cis-hardening
+      changed_when: false
+      register: logfile_check
+      failed_when: logfile_check.rc != 0
+
+    - name: "Assert /var/log/sudo.log exists"
+      ansible.builtin.stat:
+        path: /var/log/sudo.log
+      register: sudo_log
+      failed_when: not sudo_log.stat.exists

@@ -1,0 +1,14 @@
+---
+- name: "Converge — login_banner RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_login_banner_rhel9
+
+- name: "Converge — login_banner Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_login_banner_ubuntu

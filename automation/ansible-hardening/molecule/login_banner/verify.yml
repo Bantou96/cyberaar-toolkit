@@ -1,0 +1,68 @@
+---
+- name: "Verify — login_banner RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Assert /etc/issue.net exists and has content"
+      ansible.builtin.stat:
+        path: /etc/issue.net
+      register: issue_net
+      failed_when: not issue_net.stat.exists or issue_net.stat.size == 0
+
+    - name: "Assert /etc/motd exists and has content"
+      ansible.builtin.stat:
+        path: /etc/motd
+      register: motd
+      failed_when: not motd.stat.exists or motd.stat.size == 0
+
+    - name: "Assert /etc/issue exists and has content"
+      ansible.builtin.stat:
+        path: /etc/issue
+      register: issue
+      failed_when: not issue.stat.exists or issue.stat.size == 0
+
+    - name: "Note banner file stats"
+      ansible.builtin.debug:
+        msg:
+          - "/etc/issue.net: {{ issue_net.stat.size }} bytes"
+          - "/etc/motd: {{ motd.stat.size }} bytes"
+          - "/etc/issue: {{ issue.stat.size }} bytes"
+
+- name: "Verify — login_banner Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Assert /etc/issue.net exists and has content"
+      ansible.builtin.stat:
+        path: /etc/issue.net
+      register: issue_net
+      failed_when: not issue_net.stat.exists or issue_net.stat.size == 0
+
+    - name: "Assert /etc/motd exists"
+      ansible.builtin.stat:
+        path: /etc/motd
+      register: motd
+      failed_when: not motd.stat.exists
+
+    - name: "Assert /etc/issue exists and has content"
+      ansible.builtin.stat:
+        path: /etc/issue
+      register: issue
+      failed_when: not issue.stat.exists or issue.stat.size == 0
+
+    - name: "Check dynamic MOTD scripts are non-executable (best-effort)"
+      ansible.builtin.command: >
+        find /etc/update-motd.d -maxdepth 1 -type f -perm /0111
+      changed_when: false
+      register: exec_motd_scripts
+      failed_when: false
+
+    - name: "Note dynamic MOTD script state"
+      ansible.builtin.debug:
+        msg: >-
+          Executable dynamic MOTD scripts remaining (expected 0 or absent):
+          {{ exec_motd_scripts.stdout_lines | default([]) }}

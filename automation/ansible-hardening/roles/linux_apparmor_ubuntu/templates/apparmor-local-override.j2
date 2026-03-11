@@ -1,5 +1,4 @@
 # AppArmor local override for {{ item.profile }}
 # Managed by Ansible role linux_apparmor_ubuntu
-# Generated: {{ ansible_date_time.iso8601 }}
 
 {{ item.content | default('# No custom rules defined') }}

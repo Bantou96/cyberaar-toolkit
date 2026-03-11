@@ -1,0 +1,14 @@
+---
+- name: "Converge — ip_forwarding RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_ip_forwarding_rhel9
+
+- name: "Converge — ip_forwarding Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_ip_forwarding_ubuntu

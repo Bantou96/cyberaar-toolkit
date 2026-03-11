@@ -1,0 +1,25 @@
+---
+- name: "Prepare — ctrl_alt_del RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false
+
+    - name: "Remove pre-existing ctrl-alt-del.target symlink (container artifact)"
+      ansible.builtin.raw: rm -f /etc/systemd/system/ctrl-alt-del.target
+      changed_when: false
+
+- name: "Prepare — ctrl_alt_del Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600

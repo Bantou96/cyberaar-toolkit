@@ -1,0 +1,58 @@
+---
+- name: "Verify — disable_services RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: false
+
+  tasks:
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Note avahi-daemon service state"
+      ansible.builtin.debug:
+        msg: >-
+          avahi-daemon: {{ ansible_facts.services['avahi-daemon.service'].state
+            | default('not present') }}
+
+    - name: "Assert avahi-daemon is not running (if present)"
+      when: ansible_facts.services['avahi-daemon.service'] is defined
+      ansible.builtin.assert:
+        that: ansible_facts.services['avahi-daemon.service'].state != 'running'
+        fail_msg: "avahi-daemon is still running — should be masked/stopped"
+
+    - name: "Assert cups is not running (if present)"
+      when: ansible_facts.services['cups.service'] is defined
+      ansible.builtin.assert:
+        that: ansible_facts.services['cups.service'].state != 'running'
+        fail_msg: "cups is still running — should be masked/stopped"
+
+- name: "Verify — disable_services Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Note avahi-daemon service state"
+      ansible.builtin.debug:
+        msg: >-
+          avahi-daemon: {{ ansible_facts.services['avahi-daemon.service'].state
+            | default('not present') }}
+
+    - name: "Assert avahi-daemon is not running (if present)"
+      when: ansible_facts.services['avahi-daemon.service'] is defined
+      ansible.builtin.assert:
+        that: ansible_facts.services['avahi-daemon.service'].state != 'running'
+        fail_msg: "avahi-daemon is still running — should be stopped/disabled"
+
+    - name: "Check telnet.socket is masked"
+      ansible.builtin.command: systemctl is-enabled telnet.socket
+      changed_when: false
+      register: telnet_status
+      failed_when: false
+
+    - name: "Note telnet.socket state"
+      ansible.builtin.debug:
+        msg: "telnet.socket: {{ telnet_status.stdout | default('not found') }}"

@@ -1,0 +1,73 @@
+---
+- name: "Verify — file_permissions RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Assert /etc/passwd has mode 0644"
+      ansible.builtin.stat:
+        path: /etc/passwd
+      register: passwd_stat
+      failed_when: not passwd_stat.stat.exists or passwd_stat.stat.mode != '0644'
+
+    - name: "Assert /etc/shadow has mode 0000"
+      ansible.builtin.stat:
+        path: /etc/shadow
+      register: shadow_stat
+      failed_when: not shadow_stat.stat.exists or shadow_stat.stat.mode != '0000'
+
+    - name: "Assert /etc/group has mode 0644"
+      ansible.builtin.stat:
+        path: /etc/group
+      register: group_stat
+      failed_when: not group_stat.stat.exists or group_stat.stat.mode != '0644'
+
+    - name: "Assert umask profile.d script is deployed"
+      ansible.builtin.stat:
+        path: /etc/profile.d/99-cis-umask.sh
+      register: umask_script
+      failed_when: not umask_script.stat.exists
+
+    - name: "Assert umask value is in /root/.bashrc"
+      ansible.builtin.command: grep -E '^umask' /root/.bashrc
+      changed_when: false
+      register: bashrc_umask
+      failed_when: bashrc_umask.rc != 0
+
+- name: "Verify — file_permissions Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Assert /etc/passwd has mode 0644"
+      ansible.builtin.stat:
+        path: /etc/passwd
+      register: passwd_stat
+      failed_when: not passwd_stat.stat.exists or passwd_stat.stat.mode != '0644'
+
+    - name: "Assert /etc/shadow has mode 0640"
+      ansible.builtin.stat:
+        path: /etc/shadow
+      register: shadow_stat
+      failed_when: not shadow_stat.stat.exists or shadow_stat.stat.mode != '0640'
+
+    - name: "Assert /etc/group has mode 0644"
+      ansible.builtin.stat:
+        path: /etc/group
+      register: group_stat
+      failed_when: not group_stat.stat.exists or group_stat.stat.mode != '0644'
+
+    - name: "Assert /etc/sudoers has mode 0440"
+      ansible.builtin.stat:
+        path: /etc/sudoers
+      register: sudoers_stat
+      failed_when: not sudoers_stat.stat.exists or sudoers_stat.stat.mode != '0440'
+
+    - name: "Note file permission states"
+      ansible.builtin.debug:
+        msg:
+          - "/etc/passwd mode: {{ passwd_stat.stat.mode }}"
+          - "/etc/shadow mode: {{ shadow_stat.stat.mode }}"
+          - "/etc/sudoers mode: {{ sudoers_stat.stat.mode }}"

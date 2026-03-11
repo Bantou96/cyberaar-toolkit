@@ -1,0 +1,75 @@
+---
+- name: "Verify — user_management RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Read /etc/login.defs"
+      ansible.builtin.slurp:
+        src: /etc/login.defs
+      register: login_defs
+
+    - name: "Assert PASS_MAX_DAYS is configured"
+      ansible.builtin.assert:
+        that: login_defs.content | b64decode is search('(?m)^PASS_MAX_DAYS\s+\d+')
+        fail_msg: "PASS_MAX_DAYS not found in /etc/login.defs"
+
+    - name: "Assert PASS_MIN_DAYS is configured"
+      ansible.builtin.assert:
+        that: login_defs.content | b64decode is search('(?m)^PASS_MIN_DAYS\s+\d+')
+        fail_msg: "PASS_MIN_DAYS not found in /etc/login.defs"
+
+    - name: "Assert PASS_WARN_AGE is configured"
+      ansible.builtin.assert:
+        that: login_defs.content | b64decode is search('(?m)^PASS_WARN_AGE\s+\d+')
+        fail_msg: "PASS_WARN_AGE not found in /etc/login.defs"
+
+    - name: "Read /etc/sudoers"
+      ansible.builtin.slurp:
+        src: /etc/sudoers
+      register: sudoers
+
+    - name: "Assert wheel group has sudo access"
+      ansible.builtin.assert:
+        that: sudoers.content | b64decode is search('(?m)^%wheel')
+        fail_msg: "%wheel entry not found in /etc/sudoers"
+
+    - name: "Assert PermitRootLogin is set to no in sshd_config"
+      ansible.builtin.command: grep -E '^PermitRootLogin\s+no' /etc/ssh/sshd_config
+      changed_when: false
+      register: permit_root
+      failed_when: permit_root.rc != 0
+
+- name: "Verify — user_management Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Read /etc/login.defs"
+      ansible.builtin.slurp:
+        src: /etc/login.defs
+      register: login_defs
+
+    - name: "Assert UMASK is configured in login.defs"
+      ansible.builtin.assert:
+        that: login_defs.content | b64decode is search('(?m)^UMASK\s+\d+')
+        fail_msg: "UMASK not found in /etc/login.defs"
+
+    - name: "Check /etc/default/useradd"
+      ansible.builtin.stat:
+        path: /etc/default/useradd
+      register: useradd_file
+
+    - name: "Assert INACTIVE is configured in /etc/default/useradd"
+      when: useradd_file.stat.exists
+      ansible.builtin.command: grep -E '^INACTIVE=' /etc/default/useradd
+      changed_when: false
+      register: inactive_check
+      failed_when: inactive_check.rc != 0
+
+    - name: "Note if /etc/default/useradd absent"
+      when: not useradd_file.stat.exists
+      ansible.builtin.debug:
+        msg: "/etc/default/useradd does not exist on this system — INACTIVE check skipped"

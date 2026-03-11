@@ -1,0 +1,14 @@
+---
+- name: "Converge — sudo_hardening RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_sudo_hardening_rhel9
+
+- name: "Converge — sudo_hardening Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_sudo_hardening_ubuntu

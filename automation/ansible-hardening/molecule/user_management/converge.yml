@@ -1,0 +1,14 @@
+---
+- name: "Converge — user_management RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_user_management_rhel9
+
+- name: "Converge — user_management Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_user_management_ubuntu

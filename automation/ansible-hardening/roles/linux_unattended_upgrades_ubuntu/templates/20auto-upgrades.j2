@@ -1,6 +1,5 @@
 // APT periodic auto-upgrade settings
 // Managed by Ansible role linux_unattended_upgrades_ubuntu
-// Generated: {{ ansible_date_time.iso8601 }}
 
 APT::Periodic::Update-Package-Lists "{{ linux_unattended_upgrades_update_package_lists }}";
 APT::Periodic::Download-Upgradeable-Packages "{{ linux_unattended_upgrades_download_upgradeable }}";

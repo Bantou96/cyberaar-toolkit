@@ -1,0 +1,14 @@
+---
+- name: "Converge — ctrl_alt_del RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_ctrl_alt_del_rhel9
+
+- name: "Converge — ctrl_alt_del Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_ctrl_alt_del_ubuntu
