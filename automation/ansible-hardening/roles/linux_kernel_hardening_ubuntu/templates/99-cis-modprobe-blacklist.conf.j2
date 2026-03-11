@@ -1,6 +1,5 @@
 # CIS Ubuntu Linux Benchmark - Disable unused kernel modules
 # Managed by Ansible role: linux_kernel_hardening_ubuntu
-# Last applied: {{ ansible_date_time.iso8601 }}
 
 {% if linux_kernel_blacklist_filesystems | bool %}
 install cramfs /bin/false

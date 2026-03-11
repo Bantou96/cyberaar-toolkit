@@ -30,6 +30,8 @@ jobs:
           - fail2ban_ubuntu
           - auditing_ubuntu
           - auditing_rhel9
+          - selinux_rhel9
+          - kernel_hardening
 
     steps:
       - name: Checkout

@@ -1,0 +1,55 @@
+---
+- name: "Verify — SELinux RHEL9"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── /etc/selinux/config verification ─────────────────────────────────────
+    - name: "Read /etc/selinux/config"
+      ansible.builtin.slurp:
+        src: /etc/selinux/config
+      register: selinux_config_raw
+
+    - name: "Set selinux_config fact"
+      ansible.builtin.set_fact:
+        selinux_config: "{{ selinux_config_raw.content | b64decode }}"
+
+    - name: "Assert SELINUX=permissive is set in config"
+      ansible.builtin.assert:
+        that: "selinux_config is search('^SELINUX=permissive', multiline=True)"
+        fail_msg: "/etc/selinux/config does not contain SELINUX=permissive"
+
+    - name: "Assert SELINUXTYPE=targeted is set in config"
+      ansible.builtin.assert:
+        that: "selinux_config is search('^SELINUXTYPE=targeted', multiline=True)"
+        fail_msg: "/etc/selinux/config does not contain SELINUXTYPE=targeted"
+
+    # ── Runtime state (informational — SELinux may be disabled in container) ─
+    - name: "Check SELinux runtime status"
+      ansible.builtin.command: getenforce
+      changed_when: false
+      failed_when: false
+      register: selinux_runtime
+
+    - name: "Note SELinux runtime state"
+      ansible.builtin.debug:
+        msg: >-
+          SELinux runtime state: {{ selinux_runtime.stdout | default('unknown') }}
+          (containers typically report Disabled or Permissive regardless of config —
+          config file values verified above are what matter for production boot).
+
+    # ── Required packages ─────────────────────────────────────────────────────
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert selinux-policy-targeted is installed"
+      ansible.builtin.assert:
+        that: "'selinux-policy-targeted' in ansible_facts.packages"
+        fail_msg: "selinux-policy-targeted package is not installed"
+
+    - name: "Assert python3-libselinux is installed"
+      ansible.builtin.assert:
+        that: "'python3-libselinux' in ansible_facts.packages"
+        fail_msg: "python3-libselinux package is not installed"
