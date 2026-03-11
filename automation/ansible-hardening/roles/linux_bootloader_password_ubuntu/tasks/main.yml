@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply GRUB bootloader password protection (Ubuntu/Debian family)"
   when: "linux_bootloader_password_disabled is not defined or not linux_bootloader_password_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_bootloader_password_ubuntu"
-
-...

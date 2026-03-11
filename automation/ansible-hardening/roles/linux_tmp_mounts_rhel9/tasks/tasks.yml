@@ -1,5 +1,4 @@
 ---
-
 - name: "Gather current mount facts"
   ansible.builtin.setup:
     filter: "ansible_mounts"
@@ -14,7 +13,7 @@
   loop: "{{ linux_tmp_mount_paths }}"
   register: "tmp_fstab_result"
 
-- name: "Remount tmp filesystems to apply options"
+- name: "Remount tmp filesystems to apply options" # noqa: command-instead-of-module
   when: "tmp_fstab_result.results | selectattr('changed', 'equalto', true) | list | length > 0"
   ansible.builtin.command: "mount -o remount {{ item }}"
   loop: "{{ linux_tmp_mount_paths }}"
@@ -52,7 +51,7 @@
   register: "home_fstab_result"
   failed_when: false
 
-- name: "Remount /home if options were updated"
+- name: "Remount /home if options were updated" # noqa: command-instead-of-module
   when:
     - "linux_home_nodev_enabled | bool"
     - "home_fstab_result.changed | default(false)"
@@ -88,5 +87,3 @@
     msg:
       - "World-writable dirs found: {{ world_writable_dirs.stdout_lines | default([]) | length }}"
       - "Sticky bit applied to: {{ world_writable_dirs.stdout_lines | default([]) }}"
-
-...

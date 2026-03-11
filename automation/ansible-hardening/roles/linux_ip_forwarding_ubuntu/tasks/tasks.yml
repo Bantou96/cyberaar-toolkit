@@ -1,5 +1,4 @@
 ---
-
 - name: "Disable IP forwarding (IPv4)"
   ansible.posix.sysctl:
     name: "net.ipv4.ip_forward"
@@ -49,5 +48,3 @@
       - "accept_redirects (IPv4/IPv6): 0"
       - "IPv4 forward changed: {{ ipv4_forward_result.changed | default(false) }}"
       - "IPv6 forward changed: {{ ipv6_forward_result.changed | default(false) }}"
-
-...

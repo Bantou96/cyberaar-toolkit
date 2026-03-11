@@ -1,7 +1,4 @@
 ---
-
 - name: "Remount tmp filesystems if changed"
   ansible.builtin.debug:
     msg: "Tmp mounts remounted after options update. Changes applied immediately."
-
-...

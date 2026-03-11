@@ -1,5 +1,4 @@
 ---
-
 - name: "Install chrony package"
   ansible.builtin.package:
     name: "chrony"
@@ -34,5 +33,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "{{ chrony_status.stdout_lines | default([]) }}"
-
-...

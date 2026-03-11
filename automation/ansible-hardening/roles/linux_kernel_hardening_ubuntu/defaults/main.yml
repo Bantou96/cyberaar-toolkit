@@ -28,5 +28,3 @@ linux_kernel_unload_blacklisted: false
 
 # Role disable var
 linux_kernel_hardening_disabled: false
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure unattended-upgrades packages are installed"
   ansible.builtin.package:
     name:
@@ -47,5 +46,3 @@
       - "50unattended-upgrades updated: {{ unattended_conf_result.changed | default(false) }}"
       - "20auto-upgrades updated: {{ auto_upgrades_result.changed | default(false) }}"
       - "Dry-run output: {{ uu_dryrun.stdout_lines | default([]) }}"
-
-...

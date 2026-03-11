@@ -17,11 +17,8 @@ linux_firewall_allow_rules: []
 
 # Custom deny rules
 linux_firewall_deny_rules: []
-
 # Disable IP forwarding in UFW sysctl (unless this is a router)
 linux_firewall_disable_ip_forward: true
 
 # Role disable var
 linux_firewall_disabled: false
-
-...

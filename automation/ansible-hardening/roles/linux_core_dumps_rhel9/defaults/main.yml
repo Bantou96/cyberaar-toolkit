@@ -14,5 +14,3 @@ linux_core_pattern: "/dev/null"
 
 # Role disable var
 linux_core_dumps_disabled: false
-
-...

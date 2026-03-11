@@ -13,7 +13,7 @@ linux_critical_files:
     owner: "root"
     group: "root"
   - path: "/etc/shadow"
-    mode: "0000"          # or "0640" if pam_unix needs read
+    mode: "0000" # or "0640" if pam_unix needs read
     owner: "root"
     group: "root"
   - path: "/etc/group"
@@ -45,9 +45,7 @@ linux_critical_files:
 linux_restrict_su_to_wheel: true
 
 # Remove world-writable files in /etc, /boot, /var/log (careful scan)
-linux_remove_world_writable: false   # set true only after testing
+linux_remove_world_writable: false # set true only after testing
 
 # Role disable
 linux_file_permissions_disabled: false
-
-...

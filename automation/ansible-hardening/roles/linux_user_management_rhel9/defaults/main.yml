@@ -2,7 +2,7 @@
 
 # Lock root account (disable direct login – CIS 5.2.1 / 5.3.3.4.3)
 linux_root_login_disabled: true
-linux_root_ssh_disabled: true           # Deny root login via SSH
+linux_root_ssh_disabled: true # Deny root login via SSH
 
 # Remove or lock legacy/unused system accounts (CIS 5.2.1 – many are obsolete)
 linux_legacy_accounts_to_lock:
@@ -19,14 +19,14 @@ linux_legacy_accounts_to_lock:
   - "halt"
 
 # Password policy enforcement (CIS 5.4.x)
-linux_password_min_days: 1              # Min days before change (prevent immediate reuse)
-linux_password_max_days: 90             # Max days before expiry
-linux_password_warn_days: 7             # Warn 7 days before expiry
-linux_password_history: 5               # Remember 5 previous passwords
+linux_password_min_days: 1 # Min days before change (prevent immediate reuse)
+linux_password_max_days: 90 # Max days before expiry
+linux_password_warn_days: 7 # Warn 7 days before expiry
+linux_password_history: 5 # Remember 5 previous passwords
 
 # Enforce wheel group for sudo (CIS 5.7 – restrict su/sudo)
 linux_restrict_sudo_to_wheel: true
-linux_sudo_wheel_group_members: []      # List of allowed sudo users – leave empty to keep current
+linux_sudo_wheel_group_members: [] # List of allowed sudo users – leave empty to keep current
 
 # Remove users with empty/null passwords (critical security)
 linux_remove_empty_password_users: true
@@ -35,15 +35,13 @@ linux_remove_empty_password_users: true
 linux_system_shell: "/sbin/nologin"
 
 # CIS 6.2.x — User account security audits
-linux_audit_home_dirs: true          # 6.2.5 home dirs exist, 6.2.6 permissions <= 750
-linux_audit_dot_files: true          # 6.2.8 dot files not group/world writable
-linux_audit_forward_files: true      # 6.2.10 no .forward files
-linux_audit_netrc_files: true        # 6.2.11 no .netrc files
-linux_audit_rhosts_files: true       # 6.2.13 no .rhosts files
-linux_audit_duplicate_ids: true      # 6.2.14-6.2.17 no dup UIDs/GIDs/usernames/groups
-linux_audit_shadow_group: true       # 6.2.18 shadow group is empty
+linux_audit_home_dirs: true # 6.2.5 home dirs exist, 6.2.6 permissions <= 750
+linux_audit_dot_files: true # 6.2.8 dot files not group/world writable
+linux_audit_forward_files: true # 6.2.10 no .forward files
+linux_audit_netrc_files: true # 6.2.11 no .netrc files
+linux_audit_rhosts_files: true # 6.2.13 no .rhosts files
+linux_audit_duplicate_ids: true # 6.2.14-6.2.17 no dup UIDs/GIDs/usernames/groups
+linux_audit_shadow_group: true # 6.2.18 shadow group is empty
 
 # Role disable var
 linux_user_management_disabled: false
-
-...

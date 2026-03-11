@@ -1,7 +1,7 @@
 ---
 
 # Desired SELinux mode (enforcing is CIS Level 1 recommendation)
-linux_selinux_mode: "enforcing"          # enforcing | permissive | disabled
+linux_selinux_mode: "enforcing" # enforcing | permissive | disabled
 
 # SELinux policy type (targeted is default and sufficient for most servers)
 linux_selinux_policy: "targeted"
@@ -9,15 +9,15 @@ linux_selinux_policy: "targeted"
 # SELinux booleans to set (hardening-focused – set to off where possible)
 linux_selinux_booleans:
   - name: "deny_ptrace"
-    state: "on"                         # Restrict ptrace (debugging) – good defense-in-depth
+    state: "on" # Restrict ptrace (debugging) – good defense-in-depth
   - name: "ssh_sysadm_login"
-    state: "off"                        # Prevent SSH logins as sysadm_u (admin role)
+    state: "off" # Prevent SSH logins as sysadm_u (admin role)
   - name: "httpd_can_network_connect"
-    state: "off"                        # Disable if no web server needs outbound
+    state: "off" # Disable if no web server needs outbound
   - name: "httpd_can_sendmail"
-    state: "off"                        # Disable unless web app sends mail
+    state: "off" # Disable unless web app sends mail
   - name: "use_nfs_home_dirs"
-    state: "off"                        # If no NFS homes
+    state: "off" # If no NFS homes
 
 # Paths to relabel if contexts corrupted (e.g. after manual changes)
 linux_selinux_relabel_paths:
@@ -38,5 +38,3 @@ linux_selinux_relabel_enabled: false
 
 # Role disable var (e.g. if using AppArmor elsewhere – rare on RHEL)
 linux_selinux_disabled: false
-
-...

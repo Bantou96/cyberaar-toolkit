@@ -1,5 +1,4 @@
 ---
-
 - name: "Restart sshd"
   ansible.builtin.service:
     name: "sshd"
@@ -8,5 +7,3 @@
 - name: "PAM changes applied"
   ansible.builtin.debug:
     msg: "Password history & expiry updated in login.defs & pwquality.conf. New sessions will apply."
-
-...

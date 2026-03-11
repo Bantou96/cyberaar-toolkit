@@ -1,5 +1,4 @@
 ---
-
 - name: "Deploy core dump limits configuration"
   ansible.builtin.template:
     src: "coredump-limits.conf.j2"
@@ -38,9 +37,10 @@
     group: "root"
   register: "systemd_coredump_result"
 
-- name: "Reload systemd daemon after coredump config"
+- name: "Reload systemd daemon after coredump config" # noqa: no-handler
   when: "systemd_coredump_result.changed"
-  ansible.builtin.command: "systemctl daemon-reload"
+  ansible.builtin.systemd:
+    daemon_reload: true
   changed_when: false
 
 - name: "Debug core dump status (verbosity >=1)"
@@ -56,5 +56,3 @@
       - "limits updated: {{ limits_result.changed | default(false) }}"
       - "sysctl updated: {{ sysctl_result.changed | default(false) }}"
       - "fs.suid_dumpable: {{ suid_dumpable.stdout | default('not checked') }}"
-
-...

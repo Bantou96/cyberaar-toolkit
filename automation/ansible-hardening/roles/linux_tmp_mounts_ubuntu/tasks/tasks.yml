@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure /etc/systemd/system directory exists"
   ansible.builtin.file:
     path: "/etc/systemd/system"
@@ -25,15 +24,15 @@
 - name: "Deploy /dev/shm mount hardening via fstab"
   ansible.builtin.lineinfile:
     path: "/etc/fstab"
-    regexp: '^tmpfs\s+/dev/shm'
+    regexp: "^tmpfs\\s+/dev/shm"
     line: "tmpfs /dev/shm tmpfs defaults,noexec,nosuid,nodev 0 0"
     create: false
   register: "shm_result"
 
-- name: "Remount /dev/shm to apply options without reboot"
+- name: "Remount /dev/shm to apply options without reboot" # noqa: command-instead-of-module no-handler
   when: "shm_result.changed"
   ansible.builtin.command: "mount -o remount /dev/shm"
-  changed_when: false   # mount options already persisted to fstab above
+  changed_when: false # mount options already persisted to fstab above
   failed_when: false
 
 - name: "Verify /tmp mount options"
@@ -48,5 +47,3 @@
     msg:
       - "tmp.mount updated: {{ tmp_mount_result.changed | default(false) }}"
       - "/tmp options: {{ tmp_options.stdout | default('not mounted') }}"
-
-...

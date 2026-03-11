@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply UFW firewall hardening (Ubuntu/Debian family)"
   when: "linux_firewall_disabled is not defined or not linux_firewall_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_firewall_ubuntu"
-
-...

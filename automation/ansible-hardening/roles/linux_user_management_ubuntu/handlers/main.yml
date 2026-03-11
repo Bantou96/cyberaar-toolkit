@@ -1,8 +1,5 @@
 ---
-
 # No service restart needed for user management changes
 - name: "User management notice"
   ansible.builtin.debug:
     msg: "User management hardening applied. Changes take effect on next login."
-
-...

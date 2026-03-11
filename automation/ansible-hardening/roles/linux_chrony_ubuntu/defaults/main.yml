@@ -26,5 +26,3 @@ linux_chrony_hwtimestamp: false
 
 # Role disable var
 linux_chrony_disabled: false
-
-...

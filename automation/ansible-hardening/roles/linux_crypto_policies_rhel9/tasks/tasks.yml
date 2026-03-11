@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure crypto-policies package is present"
   ansible.builtin.package:
     name: "crypto-policies"
@@ -52,5 +51,3 @@
       Current: '{{ linux_crypto_policies_active }}'
       | Desired: '{{ linux_crypto_policies_policy }}'
       | Subpolicy changed: {{ linux_crypto_policies_subpolicy_result.changed }}
-
-...

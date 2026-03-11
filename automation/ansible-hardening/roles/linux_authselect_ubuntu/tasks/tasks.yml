@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure PAM password quality packages are installed"
   ansible.builtin.package:
     name:
@@ -67,5 +66,3 @@
       - "pam common-auth updated: {{ pam_auth_result.changed | default(false) }}"
       - "faillock updated: {{ faillock_result.changed | default(false) }}"
       - "login.defs updated: {{ logindefs_result.changed | default(false) }}"
-
-...

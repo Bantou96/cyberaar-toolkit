@@ -5,19 +5,19 @@ linux_disable_unnecessary_services_enabled: true
 
 # Services to mask/disable (even if installed)
 linux_services_to_mask:
-  - "avahi-daemon"           # CIS 2.2.4  — mDNS – unnecessary on servers, potential info leak
-  - "cups"                   # CIS 2.2.16 — printing – almost never needed on servers
+  - "avahi-daemon" # CIS 2.2.4  — mDNS – unnecessary on servers, potential info leak
+  - "cups" # CIS 2.2.16 — printing – almost never needed on servers
   - "cups-browsed"
   - "bluetooth"
-  - "ModemManager"           # mobile broadband – server irrelevant
-  - "nfs-server"             # CIS 2.2.12 — if no NFS exports
-  - "rpcbind"                # CIS 2.2.13 — if no NFS/RPC
-  - "postfix"                # CIS 2.2.18 — mail transfer – disable unless relay needed
-  - "autofs"                 # CIS 1.1.22 — automounting – physical attack vector
-  - "xinetd"                 # CIS 2.1.1  — legacy super-daemon – replaced by systemd sockets
-  - "rsyncd"                 # CIS 2.2.3  — unencrypted file sync – use sftp/scp instead
-  - "snmpd"                  # CIS 2.2.5  — SNMP v1/v2 transmit data in clear
-  - "ypserv"                 # CIS 2.2.17 — NIS server – insecure legacy protocol
+  - "ModemManager" # mobile broadband – server irrelevant
+  - "nfs-server" # CIS 2.2.12 — if no NFS exports
+  - "rpcbind" # CIS 2.2.13 — if no NFS/RPC
+  - "postfix" # CIS 2.2.18 — mail transfer – disable unless relay needed
+  - "autofs" # CIS 1.1.22 — automounting – physical attack vector
+  - "xinetd" # CIS 2.1.1  — legacy super-daemon – replaced by systemd sockets
+  - "rsyncd" # CIS 2.2.3  — unencrypted file sync – use sftp/scp instead
+  - "snmpd" # CIS 2.2.5  — SNMP v1/v2 transmit data in clear
+  - "ypserv" # CIS 2.2.17 — NIS server – insecure legacy protocol
 
 # The services below are intentionally NOT in the default mask list because they
 # are legitimate production services on many hosts (web, DNS, mail, DHCP, LDAP).
@@ -35,10 +35,10 @@ linux_services_to_mask:
 
 # Services to stop/disable but NOT mask (if they might be needed occasionally)
 linux_services_to_disable:
-  - "NetworkManager-wait-online"  # desktop-oriented
-  - "atd"                    # at jobs – rarely used
-  - "lpd"                    # legacy printing
-  - "rhnsd"                  # CIS 1.2.2  — Red Hat Network polling daemon
+  - "NetworkManager-wait-online" # desktop-oriented
+  - "atd" # at jobs – rarely used
+  - "lpd" # legacy printing
+  - "rhnsd" # CIS 1.2.2  — Red Hat Network polling daemon
 
 # Packages to remove (optional – set to false if you prefer just disable/mask)
 linux_packages_to_remove:
@@ -51,29 +51,27 @@ linux_packages_to_remove:
     - "ModemManager"
     - "bluetooth"
     - "xinetd"
-    - "rsync"                # remove rsyncd server package if not needed
-    - "net-snmp"             # CIS 2.2.5
-    - "squid"                # CIS 2.2.6
-    - "samba"                # CIS 2.2.7
-    - "dovecot"              # CIS 2.2.8
-    - "httpd"                # CIS 2.2.9
-    - "vsftpd"               # CIS 2.2.10
-    - "bind"                 # CIS 2.2.11
-    - "openldap-servers"     # CIS 2.2.14
-    - "dhcp-server"          # CIS 2.2.15
-    - "ypserv"               # CIS 2.2.17
-    - "ypbind"               # CIS 2.3.1  — NIS client
-    - "rsh"                  # CIS 2.3.2  — legacy remote shell client
-    - "talk"                 # CIS 2.3.3  — legacy messaging
-    - "telnet"               # CIS 2.3.4  — insecure remote access
-    - "openldap-clients"     # CIS 2.3.5  — LDAP client
+    - "rsync" # remove rsyncd server package if not needed
+    - "net-snmp" # CIS 2.2.5
+    - "squid" # CIS 2.2.6
+    - "samba" # CIS 2.2.7
+    - "dovecot" # CIS 2.2.8
+    - "httpd" # CIS 2.2.9
+    - "vsftpd" # CIS 2.2.10
+    - "bind" # CIS 2.2.11
+    - "openldap-servers" # CIS 2.2.14
+    - "dhcp-server" # CIS 2.2.15
+    - "ypserv" # CIS 2.2.17
+    - "ypbind" # CIS 2.3.1  — NIS client
+    - "rsh" # CIS 2.3.2  — legacy remote shell client
+    - "talk" # CIS 2.3.3  — legacy messaging
+    - "telnet" # CIS 2.3.4  — insecure remote access
+    - "openldap-clients" # CIS 2.3.5  — LDAP client
 
 # Keep these even if in lists above (overrides)
 linux_services_exceptions:
-  - "chronyd"                # keep NTP if you use it instead of timesyncd
-  - "sshd"                   # obviously
+  - "chronyd" # keep NTP if you use it instead of timesyncd
+  - "sshd" # obviously
 
 # Role global disable
 linux_unnecessary_services_disabled: false
-
-...

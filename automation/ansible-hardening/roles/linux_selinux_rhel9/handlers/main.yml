@@ -1,5 +1,4 @@
 ---
-
 - name: "SELinux configuration changed - reboot required"
   ansible.builtin.debug:
     msg: >
@@ -12,5 +11,3 @@
     msg: >
       /.autorelabel file created → full SELinux relabel will run on next boot.
       **Reboot the server** to apply.
-
-...

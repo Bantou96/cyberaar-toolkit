@@ -19,5 +19,3 @@ linux_fail2ban_action: "%(action_)s"
 
 # Role disable var
 linux_fail2ban_disabled: false
-
-...

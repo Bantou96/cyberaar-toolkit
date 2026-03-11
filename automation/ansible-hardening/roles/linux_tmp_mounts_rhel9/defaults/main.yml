@@ -24,5 +24,3 @@ linux_sticky_bit_enabled: true
 
 # Role disable var
 linux_tmp_mounts_disabled: false
-
-...

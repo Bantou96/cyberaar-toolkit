@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure auditd packages are installed"
   ansible.builtin.package:
     name:
@@ -47,7 +46,7 @@
     - "_grub_file.stat.exists"
   ansible.builtin.lineinfile:
     path: "/etc/default/grub"
-    regexp: '^GRUB_CMDLINE_LINUX='
+    regexp: "^GRUB_CMDLINE_LINUX="
     line: "GRUB_CMDLINE_LINUX=\"audit=1\""
     backrefs: true
   register: "grub_audit_result"
@@ -60,7 +59,7 @@
   changed_when: true
 
 # Optional debug / notice
-- name: "Notify about potential reboot for boot auditing"
+- name: "Notify about potential reboot for boot auditing" # noqa: no-handler
   when: "grub_audit_result.changed | default(false)"
   ansible.builtin.debug:
     msg: "Boot-time auditing changes applied. Reboot required for full effect if GRUB was modified."
@@ -71,8 +70,8 @@
     - "not linux_auditing_forwarding_disabled | bool"
   ansible.builtin.lineinfile:
     path: "{{ linux_auditd_syslog_plugin_path }}"
-    regexp: '^active ='
-    line: 'active = {{ linux_auditd_syslog_plugin_active }}'
+    regexp: "^active ="
+    line: "active = {{ linux_auditd_syslog_plugin_active }}"
     mode: "0640"
   notify: "Restart auditd"
 
@@ -103,7 +102,7 @@
   register: "rsyslog_forward_result"
   notify:
     - "Restart rsyslog"
-    - "Restart auditd"   # ensure audit events flow through if plugin active
+    - "Restart auditd" # ensure audit events flow through if plugin active
 
 # Optional: disk queue directory
 - name: "Create rsyslog disk queue directory if enabled"
@@ -114,5 +113,3 @@
     mode: "0700"
     owner: "root"
     group: "root"
-
-...

@@ -20,5 +20,3 @@ linux_crypto_disable_legacy_tls: true
 
 # Role disable var
 linux_crypto_disabled: false
-
-...

@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply critical file permissions hardening (Ubuntu/Debian family)"
   when: "linux_file_permissions_disabled is not defined or not linux_file_permissions_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_file_permissions_ubuntu"
-
-...

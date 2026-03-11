@@ -4,7 +4,7 @@
 linux_chrony_enabled: true
 
 # Chrony mode: client (default), server, or both
-linux_chrony_mode: "client"          # client | server | both
+linux_chrony_mode: "client" # client | server | both
 
 # NTP servers (CIS recommends at least 3–4 trusted sources)
 linux_chrony_servers:
@@ -23,5 +23,3 @@ linux_chrony_allow:
 
 # Role disable var
 linux_chrony_disabled: false
-
-...

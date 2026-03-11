@@ -43,5 +43,3 @@ linux_ssh_subsystem: "sftp internal-sftp"
 
 # Role disable var
 linux_ssh_hardening_disabled: false
-
-...

@@ -1,0 +1,16 @@
+---
+# ansible-lint configuration for cyberaar.hardening
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: basic
+
+# Skip rules that conflict with intentional design decisions.
+skip_list:
+  # Shared variable names (e.g. linux_wireless_disabled, linux_aide_monitored_paths)
+  # are deliberately unprefixed so a single group_vars entry controls both the
+  # rhel9 and ubuntu role variants. Enforcing per-role prefixes would break this.
+  - var-naming[no-role-prefix]
+
+# Paths to exclude from linting (molecule ephemeral dirs, test fixtures, etc.)
+exclude_paths:
+  - molecule/

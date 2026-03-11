@@ -1,5 +1,4 @@
 ---
-
 - name: "Deploy /etc/issue (local console pre-login banner)"
   ansible.builtin.template:
     src: "issue.j2"
@@ -67,5 +66,3 @@
       - "/etc/issue updated: {{ issue_result.changed | default(false) }}"
       - "/etc/issue.net updated: {{ issue_net_result.changed | default(false) }}"
       - "/etc/motd updated: {{ motd_result.changed | default(false) }}"
-
-...

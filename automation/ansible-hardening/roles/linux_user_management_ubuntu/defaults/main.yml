@@ -35,5 +35,3 @@ linux_user_management_inactive_days: 30
 
 # Role disable var
 linux_user_management_disabled: false
-
-...

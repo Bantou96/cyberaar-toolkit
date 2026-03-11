@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure openssh-server is installed"
   ansible.builtin.package:
     name: "openssh-server"
@@ -47,5 +46,3 @@
       - "sshd_config updated: {{ sshd_config_result.changed | default(false) }}"
       - "SSHD test: {{ sshd_test.rc | default('unknown') }}"
   when: "ansible_verbosity >= 1"
-
-...

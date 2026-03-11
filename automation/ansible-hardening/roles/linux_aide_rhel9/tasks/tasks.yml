@@ -1,5 +1,4 @@
 ---
-
 - name: "Install AIDE package"
   ansible.builtin.package:
     name: "aide"
@@ -16,14 +15,14 @@
   register: "aide_init"
   changed_when: "aide_init.rc == 0"
 
-- name: "Activate the newly initialized AIDE database"
+- name: "Activate the newly initialized AIDE database" # noqa: no-handler
   when: "aide_init.changed | default(false)"
   ansible.builtin.command: "mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz"
   args:
     removes: "/var/lib/aide/aide.db.new.gz"
   changed_when: true
 
-- name: "Configure AIDE monitoring rules in /etc/aide.conf"
+- name: "Configure AIDE monitoring rules in /etc/aide.conf" # noqa: risky-file-permissions
   ansible.builtin.lineinfile:
     path: "/etc/aide.conf"
     regexp: "^{{ item | regex_escape() }}\\s"
@@ -34,13 +33,13 @@
   register: "aide_config_changed"
   changed_when: "aide_config_changed.changed"
 
-- name: "Re-run AIDE init if monitoring rules were changed"
+- name: "Re-run AIDE init if monitoring rules were changed" # noqa: no-handler
   when: "aide_config_changed.changed"
   ansible.builtin.command: "aide --init"
   register: "aide_reinit"
   changed_when: "aide_reinit.rc == 0"
 
-- name: "Activate updated AIDE database after config change"
+- name: "Activate updated AIDE database after config change" # noqa: no-handler
   when: "aide_reinit.changed | default(false)"
   ansible.builtin.command: "mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz"
   args:
@@ -51,12 +50,12 @@
   ansible.builtin.cron:
     name: "Daily AIDE integrity check"
     minute: "{{ linux_aide_cron_time.split(' ')[0] }}"
-    hour:   "{{ linux_aide_cron_time.split(' ')[1] }}"
-    day:    "{{ linux_aide_cron_time.split(' ')[2] }}"
-    month:  "{{ linux_aide_cron_time.split(' ')[3] }}"
+    hour: "{{ linux_aide_cron_time.split(' ')[1] }}"
+    day: "{{ linux_aide_cron_time.split(' ')[2] }}"
+    month: "{{ linux_aide_cron_time.split(' ')[3] }}"
     weekday: "{{ linux_aide_cron_time.split(' ')[4] }}"
-    job:    "/usr/sbin/aide --check | /usr/bin/mail -s 'AIDE Integrity Report on {{ ansible_facts.hostname }}' root@localhost"
-    state:  "present"
+    job: "/usr/sbin/aide --check | /usr/bin/mail -s 'AIDE Integrity Report on {{ ansible_facts.hostname }}' root@localhost"
+    state: "present"
 
 - name: "Debug AIDE status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
@@ -66,5 +65,3 @@
       - "AIDE database initialized: {{ aide_init.changed | default(false) }}"
       - "Config changed: {{ aide_config_changed.changed | default(false) }}"
       - "Re-init triggered: {{ aide_reinit.changed | default(false) }}"
-
-...

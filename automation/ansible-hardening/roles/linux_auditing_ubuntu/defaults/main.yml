@@ -48,5 +48,3 @@ linux_rsyslog_queue_disk: true
 linux_rsyslog_queue_file: "/var/spool/rsyslog/queue"
 linux_rsyslog_queue_size: "100000"
 linux_auditing_forwarding_disabled: false
-
-...

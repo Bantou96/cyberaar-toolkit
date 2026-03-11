@@ -1,5 +1,4 @@
 ---
-
 # Ubuntu/Debian does not have update-crypto-policies (RHEL-specific).
 # We configure OpenSSL, TLS, and cipher policies directly.
 
@@ -61,5 +60,3 @@
     msg:
       - "openssl.cnf updated: {{ openssl_cnf_result.changed | default(false) }}"
       - "GnuTLS configured: {{ gnutls_result.changed | default(false) }}"
-
-...

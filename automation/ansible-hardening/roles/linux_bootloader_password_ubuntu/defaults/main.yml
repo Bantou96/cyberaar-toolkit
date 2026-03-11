@@ -16,5 +16,3 @@ linux_bootloader_grub_cfg_path: "/boot/grub/grub.cfg"
 
 # Role disable var
 linux_bootloader_password_disabled: false
-
-...

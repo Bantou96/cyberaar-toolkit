@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply user and group management hardening (Ubuntu/Debian family)"
   when: "linux_user_management_disabled is not defined or not linux_user_management_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_user_management_ubuntu"
-
-...

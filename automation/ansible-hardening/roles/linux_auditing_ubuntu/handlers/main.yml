@@ -1,5 +1,4 @@
 ---
-
 - name: "Restart auditd"
   ansible.builtin.service:
     name: "auditd"
@@ -10,5 +9,3 @@
   ansible.builtin.service:
     name: "rsyslog"
     state: "restarted"
-
-...

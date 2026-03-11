@@ -1,5 +1,4 @@
 ---
-
 # CIS 1.3.1 — Ensure sudo is installed
 - name: "Ensure sudo is installed (CIS 1.3.1)"
   ansible.builtin.package:
@@ -11,7 +10,7 @@
 - name: "Ensure sudo uses pty to prevent background process escalation (CIS 1.3.2)"
   ansible.builtin.lineinfile:
     path: "/etc/sudoers"
-    regexp: '^Defaults\s+use_pty'
+    regexp: "^Defaults\\s+use_pty"
     line: "Defaults    use_pty"
     validate: "/usr/sbin/visudo -cf %s"
     insertafter: "^## Defaults"
@@ -22,7 +21,7 @@
 - name: "Ensure sudo logfile is configured (CIS 1.3.3)"
   ansible.builtin.lineinfile:
     path: "/etc/sudoers"
-    regexp: '^Defaults\s+logfile='
+    regexp: "^Defaults\\s+logfile="
     line: 'Defaults    logfile="{{ linux_sudo_logfile }}"'
     validate: "/usr/sbin/visudo -cf %s"
     insertafter: "^## Defaults"
@@ -46,5 +45,3 @@
       - "sudo use_pty applied: {{ sudo_pty_result.changed | default(false) }}"
       - "sudo logfile: {{ linux_sudo_logfile if linux_sudo_logfile_enabled else 'disabled' }}"
       - "sudo logfile applied: {{ sudo_log_result.changed | default(false) }}"
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Fail if GRUB password is not provided via environment variable"
   when: "linux_bootloader_password is undefined or linux_bootloader_password == ''"
   ansible.builtin.fail:
@@ -76,11 +75,11 @@
   when:
     - ansible_distribution == 'RedHat' or ansible_distribution in ['AlmaLinux', 'Rocky']
     - ansible_distribution_major_version == '9'
-    - ansible_facts['mounts'] | selectattr('mount', 'equalto', '/boot/efi') | list | length > 0  # only if EFI present
+    - ansible_facts['mounts'] | selectattr('mount', 'equalto', '/boot/efi') | list | length > 0 # only if EFI present
   ansible.builtin.file:
     path: "/boot/efi/EFI/redhat/user.cfg"
     state: "absent"
-  changed_when: false  # safe no-op if missing
+  changed_when: false # safe no-op if missing
   register: legacy_efi_user_cfg_removed
   failed_when: false
 
@@ -148,5 +147,3 @@
     msg:
       - "rescue.service auth applied: {{ rescue_service_result.changed | default(false) }}"
       - "emergency.service auth applied: {{ emergency_service_result.changed | default(false) }}"
-
-...

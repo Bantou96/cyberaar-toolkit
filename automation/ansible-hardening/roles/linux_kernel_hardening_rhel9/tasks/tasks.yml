@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure sysctl.d directory exists"
   ansible.builtin.file:
     path: "/etc/sysctl.d"
@@ -66,15 +65,13 @@
     - "udf"
     - "usb_storage"
     # Add others from template if enabled
-  failed_when: false  # many won't be loaded: ignore errors
+  failed_when: false # many won't be loaded: ignore errors
   register: "module_unload"
   changed_when: "module_unload.rc == 0"
 
-- name: "Notify admin about reboot requirement for module blacklisting"
+- name: "Notify admin about reboot requirement for module blacklisting" # noqa: no-handler
   when: "modprobe_template_result.changed"
   ansible.builtin.debug:
     msg: "Kernel module blacklisting applied. Full effect requires reboot (or manual unload). Changes made: {{ modprobe_template_result.changed }}"
 
 # No automatic reboot — production safety
-
-...

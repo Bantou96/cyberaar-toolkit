@@ -18,11 +18,9 @@ linux_unattended_upgrades_reboot: false
 linux_unattended_upgrades_reboot_time: "03:00"
 
 # APT periodic settings
-linux_unattended_upgrades_update_package_lists: "1"   # Run apt update daily
+linux_unattended_upgrades_update_package_lists: "1" # Run apt update daily
 linux_unattended_upgrades_download_upgradeable: "1"
 linux_unattended_upgrades_autoclean_interval: "7"
 
 # Role disable var
 linux_unattended_upgrades_disabled: false
-
-...

@@ -8,5 +8,3 @@ linux_tmp_mounts_size: ""
 
 # Role disable var
 linux_tmp_mounts_disabled: false
-
-...

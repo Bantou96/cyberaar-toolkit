@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply AIDE file integrity monitoring (RHEL 9 family)"
   when: "linux_aide_disabled is not defined or not linux_aide_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_aide_rhel9"
-
-...

@@ -81,7 +81,6 @@
   hosts: "{{ target | default('linux_servers') }}"
   gather_facts: true
   tags: [hardening]
-
   pre_tasks:
     - name: "CyberAar | Verify supported OS"
       ansible.builtin.assert:
@@ -112,7 +111,6 @@
   # Applied when: ansible_os_family == "RedHat"
   # ══════════════════════════════════════════════════════════════════════════
   roles:
-
     # ── RHEL9 Roles ────────────────────────────────────────────────────────
     - role: "linux_kernel_hardening_rhel9"
       tags: [hardening, kernel, sysctl]
@@ -303,7 +301,6 @@
       tags: [hardening, filesystem, permissions]
       when: ansible_os_family == "Debian"
 
-
   post_tasks:
     - name: "CyberAar | Hardening complete notification"
       ansible.builtin.debug:
@@ -315,5 +312,3 @@
           - " Next   : Run 3_baseline_after.yml to measure impact"
           - "════════════════════════════════════════════════════════"
       tags: [always]
-
-...

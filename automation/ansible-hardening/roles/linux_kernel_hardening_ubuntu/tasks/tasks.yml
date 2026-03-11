@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure sysctl.d directory exists"
   ansible.builtin.file:
     path: "/etc/sysctl.d"
@@ -47,7 +46,7 @@
   register: "module_unload"
   changed_when: "module_unload.rc == 0"
 
-- name: "Notify about reboot requirement for module blacklisting"
+- name: "Notify about reboot requirement for module blacklisting" # noqa: no-handler
   when: "modprobe_template_result.changed"
   ansible.builtin.debug:
     msg: "Kernel module blacklisting applied. Full effect requires reboot."
@@ -64,5 +63,3 @@
     msg:
       - "ASLR value: {{ aslr_value.stdout | default('not checked') }}"
       - "Sysctl file updated: {{ sysctl_template_result.changed | default(false) }}"
-
-...

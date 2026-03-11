@@ -1,27 +1,25 @@
 ---
 
 # Default zone to apply (CIS recommends 'drop' for servers with no services, or 'public' with restrictions)
-linux_firewalld_default_zone: "drop"  # or "public" / "internal"
+linux_firewalld_default_zone: "drop" # or "public" / "internal"
 
 # Whether to enforce firewalld at all (disable role if using nftables directly)
 linux_firewalld_enabled: true
 
 # Allowed ports/services (list of dicts or simple strings)
 linux_firewalld_allowed_services:
-  - "ssh"  # Always allow SSH minimally
+  - "ssh" # Always allow SSH minimally
 
-linux_firewalld_allowed_ports: []  # e.g. ["443/tcp", "8080/tcp"]
+linux_firewalld_allowed_ports: [] # e.g. ["443/tcp", "8080/tcp"]
 
 # Restrict SSH to specific sources (CIDR or IP) - highly recommended for critical infra
-linux_firewalld_ssh_sources: []  # e.g. ["192.168.1.0/24", "203.0.113.50/32"] – leave empty for any
+linux_firewalld_ssh_sources: [] # e.g. ["192.168.1.0/24", "203.0.113.50/32"] – leave empty for any
 
 # Enable rich rule for SSH rate limiting / additional protection
-linux_firewalld_ssh_rate_limit: "3/m"  # e.g. 3 attempts per minute
+linux_firewalld_ssh_rate_limit: "3/m" # e.g. 3 attempts per minute
 
 # Log dropped packets (useful for monitoring attacks)
-linux_firewalld_log_denied: "all"      # all | unicast | broadcast | multicast | off
+linux_firewalld_log_denied: "all" # all | unicast | broadcast | multicast | off
 
 # Role disable var
 linux_firewalld_disabled: false
-
-...

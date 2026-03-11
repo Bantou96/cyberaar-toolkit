@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply Ctrl+Alt+Del disable hardening (RHEL 9 family)"
   when: "linux_ctrl_alt_del_disabled is not defined or not linux_ctrl_alt_del_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_ctrl_alt_del_rhel9"
-
-...

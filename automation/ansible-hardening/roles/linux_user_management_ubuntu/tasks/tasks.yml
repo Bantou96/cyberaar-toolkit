@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure shadow utilities are installed"
   ansible.builtin.package:
     name: "passwd"
@@ -30,27 +29,27 @@
 - name: "Ensure root PATH does not include unsafe directories"
   ansible.builtin.lineinfile:
     path: "/root/.bashrc"
-    regexp: '^export PATH='
-    line: 'export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    regexp: "^export PATH="
+    line: "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     create: true
     mode: "0640"
 
 - name: "Set umask in /etc/login.defs"
   ansible.builtin.lineinfile:
     path: "/etc/login.defs"
-    regexp: '^UMASK'
+    regexp: "^UMASK"
     line: "UMASK           {{ linux_user_management_umask }}"
 
 - name: "Set umask in /etc/profile"
   ansible.builtin.lineinfile:
     path: "/etc/profile"
-    regexp: '^umask'
+    regexp: "^umask"
     line: "umask {{ linux_user_management_umask }}"
 
 - name: "Set default umask in /etc/bash.bashrc"
   ansible.builtin.lineinfile:
     path: "/etc/bash.bashrc"
-    regexp: '^umask'
+    regexp: "^umask"
     line: "umask {{ linux_user_management_umask }}"
     create: true
     mode: "0644"
@@ -58,7 +57,7 @@
 - name: "Ensure inactive accounts are locked after grace period"
   ansible.builtin.lineinfile:
     path: "/etc/default/useradd"
-    regexp: '^INACTIVE='
+    regexp: "^INACTIVE="
     line: "INACTIVE={{ linux_user_management_inactive_days }}"
     create: false
 
@@ -76,5 +75,3 @@
       - "UID-0 non-root accounts: {{ uid0_non_root.stdout | default('none') }}"
       - "System accounts locked: {{ system_accounts_locked.changed | default(false) }}"
       - "Empty password users found: {{ empty_password_users.stdout | default('none') }}"
-
-...
