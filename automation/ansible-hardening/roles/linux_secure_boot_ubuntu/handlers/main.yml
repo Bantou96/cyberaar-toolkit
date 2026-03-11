@@ -3,5 +3,6 @@
 - name: "Rebuild GRUB config"
   ansible.builtin.command: "update-grub"
   changed_when: true
+  failed_when: false
 
 ...

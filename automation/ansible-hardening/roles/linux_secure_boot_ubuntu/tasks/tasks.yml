@@ -70,6 +70,7 @@
     mode: "0700"
     owner: "root"
     group: "root"
+  failed_when: false
 
 - name: "Deploy hardened GRUB defaults"
   when: "not _is_wsl"

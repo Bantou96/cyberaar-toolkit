@@ -50,6 +50,9 @@ jobs:
           - dnf_automatic
           - unattended_upgrades
           - aide
+          - crypto_policies
+          - secure_boot
+          - bootloader_password
 
     steps:
       - name: Checkout
