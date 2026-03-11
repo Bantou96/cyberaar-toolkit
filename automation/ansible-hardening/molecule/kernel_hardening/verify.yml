@@ -1,0 +1,90 @@
+---
+- name: "Verify — kernel hardening (all hosts)"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    # ── sysctl config file ────────────────────────────────────────────────────
+    - name: "Assert sysctl hardening file exists"
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-cis-kernel-hardening.conf
+      register: sysctl_file
+
+    - name: "Assert sysctl file is present"
+      ansible.builtin.assert:
+        that: sysctl_file.stat.exists
+        fail_msg: "/etc/sysctl.d/99-cis-kernel-hardening.conf was not deployed"
+
+    - name: "Read sysctl hardening file"
+      ansible.builtin.slurp:
+        src: /etc/sysctl.d/99-cis-kernel-hardening.conf
+      register: sysctl_raw
+
+    - name: "Set sysctl_conf fact"
+      ansible.builtin.set_fact:
+        sysctl_conf: "{{ sysctl_raw.content | b64decode }}"
+
+    - name: "Assert ASLR is configured"
+      ansible.builtin.assert:
+        that: "sysctl_conf is search('kernel.randomize_va_space\\s*=\\s*2')"
+        fail_msg: "kernel.randomize_va_space = 2 not found in sysctl config"
+
+    - name: "Assert ptrace scope is configured"
+      ansible.builtin.assert:
+        that: "sysctl_conf is search('kernel.yama.ptrace_scope\\s*=\\s*1')"
+        fail_msg: "kernel.yama.ptrace_scope = 1 not found in sysctl config"
+
+    - name: "Assert dmesg restrict is configured"
+      ansible.builtin.assert:
+        that: "sysctl_conf is search('kernel.dmesg_restrict\\s*=\\s*1')"
+        fail_msg: "kernel.dmesg_restrict = 1 not found in sysctl config"
+
+    - name: "Assert IPv4 forwarding is disabled"
+      ansible.builtin.assert:
+        that: "sysctl_conf is search('net.ipv4.ip_forward\\s*=\\s*0')"
+        fail_msg: "net.ipv4.ip_forward = 0 not found in sysctl config"
+
+    # ── modprobe blacklist file ───────────────────────────────────────────────
+    - name: "Assert modprobe blacklist file exists"
+      ansible.builtin.stat:
+        path: /etc/modprobe.d/99-cis-modprobe-blacklist.conf
+      register: modprobe_file
+
+    - name: "Assert modprobe blacklist file is present"
+      ansible.builtin.assert:
+        that: modprobe_file.stat.exists
+        fail_msg: "/etc/modprobe.d/99-cis-modprobe-blacklist.conf was not deployed"
+
+    - name: "Read modprobe blacklist file"
+      ansible.builtin.slurp:
+        src: /etc/modprobe.d/99-cis-modprobe-blacklist.conf
+      register: modprobe_raw
+
+    - name: "Set modprobe_conf fact"
+      ansible.builtin.set_fact:
+        modprobe_conf: "{{ modprobe_raw.content | b64decode }}"
+
+    - name: "Assert cramfs is blacklisted"
+      ansible.builtin.assert:
+        that: "modprobe_conf is search('blacklist cramfs')"
+        fail_msg: "cramfs not blacklisted in modprobe config"
+
+    - name: "Assert usb-storage is blacklisted"
+      ansible.builtin.assert:
+        that: "modprobe_conf is search('blacklist usb.storage')"
+        fail_msg: "usb-storage not blacklisted in modprobe config"
+
+    # ── Runtime sysctl check (informational — containers may restrict writes) ─
+    - name: "Read ASLR value from running kernel"
+      ansible.builtin.command: sysctl -n kernel.randomize_va_space
+      changed_when: false
+      failed_when: false
+      register: aslr_runtime
+
+    - name: "Note ASLR runtime value"
+      ansible.builtin.debug:
+        msg: >-
+          kernel.randomize_va_space runtime = {{ aslr_runtime.stdout | default('unreadable') }}
+          (privileged containers typically reflect host kernel values;
+          config file correctness verified above).

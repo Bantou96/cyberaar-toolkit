@@ -1,0 +1,22 @@
+---
+- name: "Converge — kernel hardening RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  vars:
+    linux_kernel_unload_blacklisted: false
+
+  roles:
+    - role: linux_kernel_hardening_rhel9
+
+- name: "Converge — kernel hardening Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  vars:
+    linux_kernel_unload_blacklisted: false
+
+  roles:
+    - role: linux_kernel_hardening_ubuntu

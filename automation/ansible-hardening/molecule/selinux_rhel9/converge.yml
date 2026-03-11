@@ -1,0 +1,17 @@
+---
+- name: "Converge — SELinux RHEL9"
+  hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    # Use permissive in containers — enforcing requires kernel SELinux support
+    linux_selinux_mode: "permissive"
+    linux_selinux_policy: "targeted"
+    # Disable all booleans — seboolean fails when SELinux is not active in kernel
+    linux_selinux_booleans: []
+    linux_selinux_relabel_enabled: false
+    linux_selinux_force_autorelabel: false
+
+  roles:
+    - role: linux_selinux_rhel9
