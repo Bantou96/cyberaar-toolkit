@@ -89,7 +89,7 @@
     - "not ansible_check_mode"
     - "(aa_complaining.stdout | default('0') | int) > 0"
   ansible.builtin.command: "aa-enforce /etc/apparmor.d/*"
-  changed_when: "(aa_complaining.stdout | default('0') | int) > 0"
+  changed_when: "'Setting' in (aa_enforce_result.stdout | default(''))"
   failed_when: false
   register: "aa_enforce_result"
 
