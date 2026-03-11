@@ -1,5 +1,4 @@
 ---
-
 - name: "GRUB config updated - reboot recommended"
   ansible.builtin.debug:
     msg: >-
@@ -10,5 +9,3 @@
 - name: "Reload systemd daemon"
   ansible.builtin.systemd:
     daemon_reload: true
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Mask Ctrl+Alt+Del target to prevent reboot"
   when: "linux_ctrl_alt_del_enabled | bool"
   ansible.builtin.systemd:
@@ -34,7 +33,7 @@
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: "Verify Ctrl+Alt+Del mask status (verbosity >=1)"
+- name: "Verify Ctrl+Alt+Del mask status (verbosity >=1)" # noqa: command-instead-of-module
   when: "ansible_verbosity >= 1"
   ansible.builtin.command: "systemctl is-enabled ctrl-alt-del.target"
   changed_when: false
@@ -45,5 +44,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "ctrl-alt-del.target status: {{ cad_status.stdout | default('unknown') }}"
-
-...

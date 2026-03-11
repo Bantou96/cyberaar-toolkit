@@ -18,5 +18,3 @@ linux_single_user_auth: true
 
 # Role disable var
 linux_bootloader_password_disabled: false
-
-...

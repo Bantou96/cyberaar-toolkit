@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure SELinux is configured to desired mode and policy"
   ansible.posix.selinux:
     policy: "{{ linux_selinux_policy }}"
@@ -42,5 +41,3 @@
       - "SELinux config changed: {{ selinux_config_result.changed | default(false) }}"
       - "Booleans changed: {{ selinux_boolean_result.results | selectattr('changed', 'equalto', true) | map(attribute='item.name') | list | default([]) }}"
       - "Restorecon output (last): {{ restorecon_result.results[-1].stdout | default('none') if restorecon_result.results | length > 0 else 'none' }}"
-
-...

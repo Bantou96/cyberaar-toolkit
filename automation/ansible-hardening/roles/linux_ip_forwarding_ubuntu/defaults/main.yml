@@ -9,5 +9,3 @@ linux_ip_forwarding_enable_ipv6: false
 
 # Role disable var
 linux_ip_forwarding_disabled: false
-
-...

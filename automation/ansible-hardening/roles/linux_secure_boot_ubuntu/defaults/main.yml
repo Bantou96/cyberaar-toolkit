@@ -9,5 +9,3 @@ linux_secure_boot_grub_cfg: "/boot/grub/grub.cfg"
 
 # Role disable var
 linux_secure_boot_disabled: false
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure fail2ban is installed"
   ansible.builtin.package:
     name: "fail2ban"
@@ -57,5 +56,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "{{ fail2ban_status.stdout_lines }}"
-
-...

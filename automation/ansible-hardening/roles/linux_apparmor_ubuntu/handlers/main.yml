@@ -1,8 +1,5 @@
 ---
-
 - name: "Reload AppArmor profiles"
   ansible.builtin.command: "apparmor_parser -r /etc/apparmor.d/*"
   changed_when: false
   failed_when: false
-
-...

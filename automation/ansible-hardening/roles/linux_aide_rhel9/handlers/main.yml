@@ -1,10 +1,7 @@
 ---
-
 # Handlers are optional for this role
 # If needed later (e.g. restart cron after config), you can add here
 
 - name: "Placeholder handler (not used currently)"
   ansible.builtin.debug:
     msg: "No handler triggered – AIDE changes handled directly in tasks"
-
-...

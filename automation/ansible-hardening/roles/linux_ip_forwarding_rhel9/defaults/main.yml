@@ -14,5 +14,3 @@ linux_accept_redirects: "0"
 
 # Role disable var
 linux_ip_forwarding_disabled: false
-
-...

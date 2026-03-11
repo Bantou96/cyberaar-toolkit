@@ -12,5 +12,3 @@ linux_login_banner_disable_dynamic_motd: true
 
 # Role disable var
 linux_login_banner_disabled: false
-
-...

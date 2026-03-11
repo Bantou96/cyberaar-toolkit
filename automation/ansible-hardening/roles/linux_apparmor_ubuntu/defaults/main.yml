@@ -20,5 +20,3 @@ linux_apparmor_local_overrides: []
 
 # Role disable var
 linux_apparmor_disabled: false
-
-...

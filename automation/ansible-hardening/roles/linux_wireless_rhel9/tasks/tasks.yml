@@ -1,5 +1,4 @@
 ---
-
 # CIS 3.1.2 — Ensure wireless interfaces are disabled
 
 - name: "Check if NetworkManager CLI (nmcli) is available"
@@ -50,7 +49,7 @@
   when: "linux_wireless_blacklist_modules | bool"
   register: "wireless_modprobe_result"
 
-- name: "Notify about module blacklist (reboot needed for full effect)"
+- name: "Notify about module blacklist (reboot needed for full effect)" # noqa: no-handler
   when: "wireless_modprobe_result.changed"
   ansible.builtin.debug:
     msg: "Wireless module blacklist applied. Reboot required for full effect."
@@ -62,5 +61,3 @@
       - "nmcli available: {{ nmcli_available.rc == 0 }}"
       - "nmcli wireless disabled: {{ wireless_nmcli_result.changed | default(false) }}"
       - "kernel module blacklist applied: {{ wireless_modprobe_result.changed | default(false) }}"
-
-...

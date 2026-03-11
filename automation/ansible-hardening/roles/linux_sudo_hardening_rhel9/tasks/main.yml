@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply sudo hardening (RHEL 9 family)"
   when: "not (linux_sudo_hardening_disabled | default(false) | bool)"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_sudo_hardening_rhel9"
-
-...

@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply cron/at hardening (RHEL 9 family)"
   when: "not (linux_cron_hardening_disabled | default(false) | bool)"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_cron_hardening_rhel9"
-
-...

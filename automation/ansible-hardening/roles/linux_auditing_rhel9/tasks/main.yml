@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply auditd auditing hardening (RHEL 9 family)"
   when: "linux_auditing_disabled is not defined or not linux_auditing_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_auditing_rhel9"
-
-...

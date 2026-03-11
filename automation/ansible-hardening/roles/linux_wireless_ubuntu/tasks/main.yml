@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply wireless hardening (Ubuntu/Debian)"
   when: "not (linux_wireless_disabled | default(false) | bool)"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_wireless_ubuntu"
-
-...

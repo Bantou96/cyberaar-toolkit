@@ -2,12 +2,12 @@
 
 # General settings
 linux_fail2ban_enabled: true
-linux_fail2ban_backend: "firewalld"          # firewalld (recommended), iptables, nftables
+linux_fail2ban_backend: "firewalld" # firewalld (recommended), iptables, nftables
 
 # Global defaults (applied unless overridden per jail)
-linux_fail2ban_bantime: "3600"               # 1 hour
-linux_fail2ban_findtime: "600"               # 10 minutes
-linux_fail2ban_maxretry: "5"                 # 5 failures
+linux_fail2ban_bantime: "3600" # 1 hour
+linux_fail2ban_findtime: "600" # 10 minutes
+linux_fail2ban_maxretry: "5" # 5 failures
 linux_fail2ban_ignoreip:
   - "127.0.0.1/8"
   - "::1"
@@ -16,8 +16,8 @@ linux_fail2ban_ignoreip:
 # SSH jail (most important for servers)
 linux_fail2ban_jail_sshd_enabled: true
 linux_fail2ban_jail_sshd_port: "22"
-linux_fail2ban_jail_sshd_maxretry: "4"       # stricter than global
-linux_fail2ban_jail_sshd_bantime: "86400"    # 24 hours on SSH
+linux_fail2ban_jail_sshd_maxretry: "4" # stricter than global
+linux_fail2ban_jail_sshd_bantime: "86400" # 24 hours on SSH
 linux_fail2ban_jail_sshd_findtime: "600"
 
 # Optional: ban IPs that firewalld already rejected (synergy)
@@ -32,5 +32,3 @@ linux_fail2ban_email_sender: "fail2ban@{{ ansible_fqdn }}"
 
 # Role disable var
 linux_fail2ban_disabled: false
-
-...

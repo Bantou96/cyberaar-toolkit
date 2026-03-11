@@ -1,5 +1,4 @@
 ---
-
 - name: "Set permissions on critical authentication files"
   ansible.builtin.file:
     path: "{{ item.path }}"
@@ -47,7 +46,7 @@
       {{ world_writable_files.stdout_lines }}
       Review and remove write permissions: chmod o-w <file>
 
-- name: "Find unowned files"
+- name: "Find unowned files" # noqa: risky-shell-pipe
   when: "linux_file_permissions_find_unowned | bool"
   ansible.builtin.shell: >
     find / -xdev -nouser -o -nogroup 2>/dev/null | head -20
@@ -63,5 +62,3 @@
       - "System files updated: {{ system_files_result.results | selectattr('changed') | list | length }}"
       - "World-writable files: {{ world_writable_files.stdout_lines | default([]) }}"
       - "Unowned files sample: {{ unowned_files.stdout_lines | default([]) }}"
-
-...

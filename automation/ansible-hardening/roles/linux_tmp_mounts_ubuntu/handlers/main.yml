@@ -1,8 +1,7 @@
 ---
-
 - name: "Reload and restart tmp.mount"
-  ansible.builtin.shell: "systemctl daemon-reload && systemctl restart tmp.mount"
-  changed_when: false
+  ansible.builtin.systemd:
+    name: "tmp.mount"
+    state: "restarted"
+    daemon_reload: true
   failed_when: false
-
-...

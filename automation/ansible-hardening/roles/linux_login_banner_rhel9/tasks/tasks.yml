@@ -1,5 +1,4 @@
 ---
-
 - name: "Deploy CyberAar pre-login banner (/etc/issue.net)"
   when: "linux_login_banner_prelogin | bool"
   ansible.builtin.template:
@@ -43,5 +42,3 @@
       - "Pre-login banner (/etc/issue.net) updated: {{ prelogin_banner_result.changed | default(false) }}"
       - "Post-login banner (/etc/motd) updated: {{ motd_result.changed | default(false) }}"
       - "Console banner (/etc/issue) updated: {{ issue_banner_result.changed | default(false) }}"
-
-...

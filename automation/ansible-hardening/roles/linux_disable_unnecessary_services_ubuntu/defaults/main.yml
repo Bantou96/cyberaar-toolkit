@@ -2,31 +2,31 @@
 
 # Services to stop and disable — add condition: false to skip specific items
 linux_disable_services_list:
-  - name: "avahi-daemon"          # mDNS — unnecessary on servers (CIS 2.2.2)
-  - name: "cups"                  # Printing — unnecessary on servers (CIS 2.2.4)
+  - name: "avahi-daemon" # mDNS — unnecessary on servers (CIS 2.2.2)
+  - name: "cups" # Printing — unnecessary on servers (CIS 2.2.4)
   - name: "cups-browsed"
     condition: true
-  - name: "isc-dhcp-server"       # DHCP server — only needed on infra servers (CIS 2.2.5)
-    condition: false               # set to true to disable
+  - name: "isc-dhcp-server" # DHCP server — only needed on infra servers (CIS 2.2.5)
+    condition: false # set to true to disable
   - name: "isc-dhcp-server6"
     condition: false
-  - name: "slapd"                 # LDAP server (CIS 2.2.6)
-  - name: "nfs-server"            # NFS (CIS 2.2.7)
-  - name: "rpcbind"               # RPC (CIS 2.2.8)
-  - name: "bind9"                 # DNS server (CIS 2.2.9) — set condition: true if needed
+  - name: "slapd" # LDAP server (CIS 2.2.6)
+  - name: "nfs-server" # NFS (CIS 2.2.7)
+  - name: "rpcbind" # RPC (CIS 2.2.8)
+  - name: "bind9" # DNS server (CIS 2.2.9) — set condition: true if needed
     condition: false
-  - name: "vsftpd"                # FTP (CIS 2.2.10)
-  - name: "apache2"               # HTTP server — set condition: false to keep (CIS 2.2.11)
+  - name: "vsftpd" # FTP (CIS 2.2.10)
+  - name: "apache2" # HTTP server — set condition: false to keep (CIS 2.2.11)
     condition: false
-  - name: "dovecot"               # Mail server (CIS 2.2.12)
-  - name: "samba"                 # Samba (CIS 2.2.13)
-  - name: "squid"                 # Web proxy (CIS 2.2.14)
-  - name: "snmpd"                 # SNMP (CIS 2.2.15)
-  - name: "rsync"                 # rsync daemon (CIS 2.2.16)
-    condition: false               # often needed: set true to disable
-  - name: "nis"                   # NIS — legacy (CIS 2.2.17)
-  - name: "talk"                  # talk (CIS 2.2.18)
-  - name: "telnet"                # Telnet — never on servers (CIS 2.2.19)
+  - name: "dovecot" # Mail server (CIS 2.2.12)
+  - name: "samba" # Samba (CIS 2.2.13)
+  - name: "squid" # Web proxy (CIS 2.2.14)
+  - name: "snmpd" # SNMP (CIS 2.2.15)
+  - name: "rsync" # rsync daemon (CIS 2.2.16)
+    condition: false # often needed: set true to disable
+  - name: "nis" # NIS — legacy (CIS 2.2.17)
+  - name: "talk" # talk (CIS 2.2.18)
+  - name: "telnet" # Telnet — never on servers (CIS 2.2.19)
 
 # Mask critical services that must never be re-enabled
 linux_disable_services_mask: true
@@ -47,5 +47,3 @@ linux_disable_services_packages_to_remove:
 
 # Role disable var
 linux_disable_services_disabled: false
-
-...

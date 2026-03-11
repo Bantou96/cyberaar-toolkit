@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply authentication hardening with authselect (RHEL 9 family)"
   when: "linux_authselect_disabled is not defined or not linux_authselect_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_authselect_rhel9"
-
-...

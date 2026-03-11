@@ -1,5 +1,4 @@
 ---
-
 # FIX: mokutil is only present on EFI/UEFI systems. On BIOS systems or VMs
 # it may not be installed, returning rc != 0 before even checking Secure Boot.
 # Use failed_when: false + explicit result handling instead of hard fail.
@@ -55,5 +54,3 @@
       - "Host: {{ inventory_hostname }}"
       - "Secure Boot state: {{ secure_boot_state }}"
       - "Checked: {{ secure_boot_checked }}"
-
-...

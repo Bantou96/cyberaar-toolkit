@@ -1,5 +1,4 @@
 ---
-
 - name: "Set default umask for all users (via profile.d)"
   when: "linux_umask_apply_profile | bool"
   ansible.builtin.template:
@@ -11,7 +10,7 @@
 - name: "Set root umask in /root/.bashrc"
   ansible.builtin.lineinfile:
     path: "/root/.bashrc"
-    regexp: '^umask'
+    regexp: "^umask"
     line: "umask {{ linux_umask_default }}"
     create: true
     mode: "0600"
@@ -30,9 +29,9 @@
   when: "linux_restrict_su_to_wheel | bool"
   ansible.builtin.lineinfile:
     path: "/etc/pam.d/su"
-    regexp: '^#?auth\s+required\s+pam_wheel.so'
+    regexp: "^#?auth\\s+required\\s+pam_wheel.so"
     line: "auth            required        pam_wheel.so use_uid"
-    insertafter: '^#.*pam_wheel.so'
+    insertafter: "^#.*pam_wheel.so"
   notify: "PAM changes applied"
 
 - name: "Find and report (but do not auto-fix) world-writable files in sensitive dirs"
@@ -56,12 +55,10 @@
       - "WARNING: World-writable files detected (CIS recommends removal):"
       - "{{ world_writable_files.files | map(attribute='path') | list }}"
 
-# Optional: auto-fix world-writable (dangerous – only if you trust the scan)
-#- name: "Remove world-writable bit from sensitive files"
+# Optional: auto-fix world-writable (dangerous - only if you trust the scan)
+# - name: "Remove world-writable bit from sensitive files"
 #  ansible.builtin.file:
 #    path: "{{ item.path }}"
 #    mode: "{{ item.mode | int - 2 if (item.mode | int & 2) else item.mode }}"
 #  loop: "{{ world_writable_files.files }}"
 #  when: "linux_remove_world_writable | bool and world_writable_files.matched > 0"
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Stop and disable unnecessary services"
   when:
     - "item.condition | default(true) | bool"
@@ -37,5 +36,3 @@
     msg:
       - "Services stopped/disabled: {{ services_disabled.results | selectattr('changed') | map(attribute='item.name') | list }}"
       - "Services masked: {{ linux_disable_services_masked if linux_disable_services_mask else [] }}"
-
-...

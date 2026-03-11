@@ -1,5 +1,4 @@
 ---
-
 # ── WSL detection ─────────────────────────────────────────────────────────────
 - name: "Detect WSL environment"
   ansible.builtin.stat:
@@ -81,5 +80,3 @@
     msg:
       - "GRUB password protection applied: {{ 'yes' if grub_users_result.changed else 'already present' }}"
       - "Superuser defined: {{ linux_bootloader_superuser }}"
-
-...

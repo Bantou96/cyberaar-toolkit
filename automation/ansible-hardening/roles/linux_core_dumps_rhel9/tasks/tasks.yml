@@ -1,5 +1,4 @@
 ---
-
 - name: "Set core dump limit to 0 in limits.conf"
   ansible.builtin.lineinfile:
     path: "/etc/security/limits.conf"
@@ -51,5 +50,3 @@
       - "Root core limit applied: {{ root_limits_result.changed | default(false) }}"
       - "fs.suid_dumpable: {{ linux_core_suid_dumpable }}"
       - "kernel.core_pattern: {{ linux_core_pattern }}"
-
-...

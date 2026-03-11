@@ -30,5 +30,3 @@ linux_authselect_remember: 24
 
 # Role disable var
 linux_authselect_disabled: false
-
-...

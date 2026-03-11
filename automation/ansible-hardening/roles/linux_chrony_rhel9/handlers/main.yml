@@ -1,9 +1,6 @@
 ---
-
 - name: "Restart chronyd"
   ansible.builtin.service:
     name: "chronyd"
     state: "restarted"
   failed_when: false
-
-...

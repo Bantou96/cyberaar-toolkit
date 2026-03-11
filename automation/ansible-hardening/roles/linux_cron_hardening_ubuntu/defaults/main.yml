@@ -33,5 +33,3 @@ linux_at_allow_enabled: true
 
 # Role disable var
 linux_cron_hardening_disabled: false
-
-...

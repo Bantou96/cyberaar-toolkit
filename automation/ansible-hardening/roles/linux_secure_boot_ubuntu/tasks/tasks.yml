@@ -1,5 +1,4 @@
 ---
-
 # ── WSL detection ─────────────────────────────────────────────────────────────
 - name: "Detect WSL environment"
   ansible.builtin.stat:
@@ -91,5 +90,3 @@
       - "WSL environment: {{ _is_wsl }}"
       - "Secure Boot status: {{ secure_boot_status.stdout | default('N/A — WSL') }}"
       - "GRUB defaults updated: {{ grub_defaults_result.changed | default(false) }}"
-
-...

@@ -19,16 +19,14 @@ linux_kernel_hardening_disabled: false
 linux_kernel_sysctl_reload: true
 
 # Module blacklisting controls
-linux_kernel_blacklist_filesystems: true          # CIS 1.1.1.1 to 1.1.1.7 + usb-storage
+linux_kernel_blacklist_filesystems: true # CIS 1.1.1.1 to 1.1.1.7 + usb-storage
 linux_kernel_blacklist_usb_storage: true
-linux_kernel_blacklist_firewire: false            # rare, but high-risk if present
+linux_kernel_blacklist_firewire: false # rare, but high-risk if present
 linux_kernel_blacklist_thunderbolt: false
-linux_kernel_blacklist_atm: false                 # very rare
+linux_kernel_blacklist_atm: false # very rare
 
 # Path for modprobe blacklist file
 linux_kernel_modprobe_file: "/etc/modprobe.d/99-cis-modprobe-blacklist.conf"
 
 # Whether to attempt unloading modules if loaded (requires reboot for full effect anyway)
 linux_kernel_unload_blacklisted: false
-
-...

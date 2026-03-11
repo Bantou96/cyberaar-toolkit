@@ -1,5 +1,4 @@
 ---
-
 # =============================================================================
 #  CyberAar | Main Playbook Orchestrator
 #  Run: ansible-playbook 0_execute_full_pipeline.yml -i inventory/hosts.yml
@@ -16,5 +15,3 @@
 - name: "CyberAar | Step 3 — Post-Hardening Baseline"
   ansible.builtin.import_playbook: 3_execute_baseline_after.yml
   tags: [baseline, after]
-
-...

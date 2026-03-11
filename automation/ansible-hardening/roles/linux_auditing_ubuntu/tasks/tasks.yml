@@ -1,5 +1,4 @@
 ---
-
 # ── Package install ───────────────────────────────────────────────────────────
 - name: "Ensure auditd packages are installed"
   ansible.builtin.package:
@@ -42,7 +41,7 @@
   failed_when: false
   register: "auditd_service_result"
 
-- name: "Fallback — start auditd via command if service module failed"
+- name: "Fallback — start auditd via command if service module failed" # noqa: command-instead-of-module
   when: "auditd_service_result.failed | default(false)"
   ansible.builtin.command: "service auditd start"
   changed_when: true
@@ -77,7 +76,7 @@
   ansible.builtin.debug:
     msg: "GRUB not found — boot-time audit=1 cmdline skipped."
 
-- name: "Notify about reboot for boot auditing"
+- name: "Notify about reboot for boot auditing" # noqa: no-handler
   when: "grub_audit_result.changed | default(false)"
   ansible.builtin.debug:
     msg: "Boot-time auditing changes applied. Reboot required for full effect."
@@ -121,7 +120,7 @@
     - "_syslog_plugin_file.stat.exists or not ansible_check_mode"
   ansible.builtin.lineinfile:
     path: "/etc/audit/plugins.d/syslog.conf"
-    regexp: '^active ='
+    regexp: "^active ="
     line: "active = {{ linux_auditd_syslog_plugin_active }}"
     mode: "0640"
   notify: "Restart auditd"
@@ -172,5 +171,3 @@
     mode: "0700"
     owner: "root"
     group: "root"
-
-...

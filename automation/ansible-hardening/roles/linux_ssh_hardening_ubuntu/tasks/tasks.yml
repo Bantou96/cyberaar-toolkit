@@ -1,5 +1,4 @@
 ---
-
 # ── WSL / systemd detection ───────────────────────────────────────────────────
 # WSL without systemd cannot manage services via the service module.
 # SSH config deployment and validation still run — only service start/enable is guarded.
@@ -79,5 +78,3 @@
       - "sshd_config updated: {{ sshd_config_result.changed | default(false) }}"
       - "Banner updated: {{ banner_result.changed | default(false) }}"
       - "SSHD config test rc: {{ sshd_test.rc | default('unknown') }}"
-
-...

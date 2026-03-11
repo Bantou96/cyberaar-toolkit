@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply unattended security upgrades (Ubuntu/Debian family)"
   when: "linux_unattended_upgrades_disabled is not defined or not linux_unattended_upgrades_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_unattended_upgrades_ubuntu"
-
-...

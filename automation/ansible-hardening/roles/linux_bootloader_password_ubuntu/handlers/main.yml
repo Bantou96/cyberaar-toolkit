@@ -1,5 +1,4 @@
 ---
-
 - name: "Rebuild GRUB config"
   ansible.builtin.command: "update-grub"
   changed_when: true
@@ -10,5 +9,3 @@
     msg: >
       GRUB configuration updated with password protection.
       Reboot recommended to verify password prompt in GRUB menu.
-
-...

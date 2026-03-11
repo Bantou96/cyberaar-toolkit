@@ -12,5 +12,3 @@ linux_sudo_logfile: "/var/log/sudo.log"
 
 # Role disable var
 linux_sudo_hardening_disabled: false
-
-...

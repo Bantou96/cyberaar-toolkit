@@ -49,5 +49,3 @@ linux_ssh_sshd_binary: "/usr/sbin/sshd"
 
 # Role disable var
 linux_ssh_hardening_disabled: false
-
-...

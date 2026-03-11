@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply IP forwarding hardening (RHEL 9 family)"
   when: "linux_ip_forwarding_disabled is not defined or not linux_ip_forwarding_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_ip_forwarding_rhel9"
-
-...

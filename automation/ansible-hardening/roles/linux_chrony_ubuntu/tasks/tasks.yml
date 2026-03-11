@@ -1,5 +1,4 @@
 ---
-
 - name: "Disable systemd-timesyncd before installing chrony (prevents conflict)"
   ansible.builtin.service:
     name: "systemd-timesyncd"
@@ -43,5 +42,3 @@
     msg:
       - "chrony.conf updated: {{ chrony_conf_result.changed | default(false) }}"
       - "chrony tracking: {{ chrony_tracking.stdout_lines | default(['not available']) }}"
-
-...

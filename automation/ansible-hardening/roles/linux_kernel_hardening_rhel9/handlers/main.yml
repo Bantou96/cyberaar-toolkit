@@ -1,9 +1,6 @@
 ---
-
 # No longer needed if we handle reload directly in tasks
 # But keep for consistency if you want to notify from other roles later
 - name: "Reload sysctl configuration"
   ansible.builtin.command: "sysctl --system"
   changed_when: false
-
-...

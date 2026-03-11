@@ -1,5 +1,4 @@
 ---
-
 - name: "Install dnf-automatic package"
   ansible.builtin.package:
     name: "dnf-automatic"
@@ -33,5 +32,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "{{ dnf_timer_status.stdout_lines | default([]) }}"
-
-...

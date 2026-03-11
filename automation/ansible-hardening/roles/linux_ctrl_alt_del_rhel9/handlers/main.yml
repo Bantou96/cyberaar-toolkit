@@ -1,7 +1,4 @@
 ---
-
 - name: "Reload systemd after Ctrl+Alt+Del changes"
   ansible.builtin.systemd:
     daemon_reload: true
-
-...

@@ -14,5 +14,3 @@ linux_login_banner_issue: true
 
 # Role disable var
 linux_login_banner_disabled: false
-
-...

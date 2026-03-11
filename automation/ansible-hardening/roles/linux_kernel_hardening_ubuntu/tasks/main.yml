@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply kernel hardening sysctls (Ubuntu/Debian family)"
   when: "linux_kernel_hardening_disabled is not defined or not linux_kernel_hardening_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_kernel_hardening_ubuntu"
-
-...

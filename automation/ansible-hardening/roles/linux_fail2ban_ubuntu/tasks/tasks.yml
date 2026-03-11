@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure fail2ban is installed"
   ansible.builtin.package:
     name: "fail2ban"
@@ -34,5 +33,3 @@
     msg:
       - "jail.local updated: {{ fail2ban_jail_result.changed | default(false) }}"
       - "fail2ban sshd jail: {{ fail2ban_status.stdout | default('not available') }}"
-
-...

@@ -14,7 +14,7 @@
   ansible.builtin.command: "authselect current -r"
   changed_when: false
   check_mode: false
-  failed_when: false   # rc=2 on fresh systems with no existing config — not an error
+  failed_when: false # rc=2 on fresh systems with no existing config — not an error
   register: "authselect_current_raw"
 
 - name: "Parse current profile from authselect output"
@@ -73,9 +73,11 @@
 
 - name: "Apply authselect changes if any modifications occurred"
   when:
-    - "(authselect_profile_change.changed | default(false)) or
-       (authselect_feature_change.results | default([]) | selectattr('changed', 'equalto', true) | list | length > 0) or
-       (pwquality_updated.changed | default(false)) or (faillock_updated.changed | default(false))"
+    - >-
+      (authselect_profile_change.changed | default(false)) or
+      (authselect_feature_change.results | default([]) | selectattr('changed', 'equalto', true) | list | length > 0) or
+      (pwquality_updated.changed | default(false)) or
+      (faillock_updated.changed | default(false))
   ansible.builtin.command: "authselect apply-changes"
   changed_when: true
   notify: "Restart sssd if active"
@@ -89,5 +91,3 @@
       - "Desired profile: {{ linux_authselect_profile }}"
       - "Enabled features: {{ authselect_current_features }}"
       - "Any changes applied: {{ (authselect_profile_change.changed | default(false)) or (authselect_feature_change.changed | default(false)) }}"
-
-...

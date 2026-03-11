@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply Secure Boot and bootloader hardening (Ubuntu/Debian family)"
   when: "linux_secure_boot_disabled is not defined or not linux_secure_boot_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_secure_boot_ubuntu"
-
-...

@@ -8,7 +8,6 @@
   hosts: "{{ target | default('linux_servers') }}"
   gather_facts: true
   tags: [baseline, after]
-
   vars:
     baseline_output_dir: "/var/log/cyberaar/baseline"
     baseline_timestamp: "{{ ansible_date_time.epoch }}"
@@ -34,14 +33,14 @@
         src: "{{ baseline_report_html }}"
         dest: "{{ playbook_dir }}/../reports/after/{{ baseline_host }}/"
         flat: true
-      ignore_errors: true
+      failed_when: false
 
     - name: "Fetch JSON report to controller"
       ansible.builtin.fetch:
         src: "{{ baseline_report_json }}"
         dest: "{{ playbook_dir }}/../reports/after/{{ baseline_host }}/"
         flat: true
-      ignore_errors: true
+      failed_when: false
 
     - name: "Summary — baseline reports saved"
       ansible.builtin.debug:
@@ -49,5 +48,3 @@
           - "✅ Post-hardening baseline complete for {{ baseline_host }}"
           - "📄 HTML → {{ baseline_report_html }}"
           - "📄 JSON → {{ baseline_report_json }}"
-
-...

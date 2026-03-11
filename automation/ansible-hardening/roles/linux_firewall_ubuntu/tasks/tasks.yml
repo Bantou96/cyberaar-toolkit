@@ -1,5 +1,4 @@
 ---
-
 # ── WSL / systemd detection ───────────────────────────────────────────────────
 - name: "Detect WSL environment"
   ansible.builtin.stat:
@@ -113,5 +112,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "{{ ufw_status.stdout_lines }}"
-
-...

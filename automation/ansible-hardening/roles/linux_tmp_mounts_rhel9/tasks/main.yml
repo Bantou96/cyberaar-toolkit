@@ -1,8 +1,5 @@
 ---
-
 - name: "Apply tmp mounts hardening (RHEL 9 family)"
   when: "linux_tmp_mounts_disabled is not defined or not linux_tmp_mounts_disabled | bool"
   ansible.builtin.import_tasks: "tasks.yml"
   tags: "linux_tmp_mounts_rhel9"
-
-...

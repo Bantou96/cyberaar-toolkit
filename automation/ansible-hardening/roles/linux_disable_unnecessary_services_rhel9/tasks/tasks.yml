@@ -1,5 +1,4 @@
 ---
-
 - name: "Gather the package facts"
   ansible.builtin.package_facts:
     manager: auto
@@ -51,5 +50,3 @@
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg: "Unnecessary services masked/disabled. Review with 'systemctl list-unit-files --type=service' and 'systemctl status <service>'"
-
-...

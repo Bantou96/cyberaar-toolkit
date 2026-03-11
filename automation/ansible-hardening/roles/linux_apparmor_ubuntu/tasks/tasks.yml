@@ -1,5 +1,4 @@
 ---
-
 # ── GRUB / WSL detection ───────────────────────────────────────────────────────
 # WSL does not use GRUB. Containers and some cloud VMs also have no GRUB.
 # Guard all GRUB tasks on both WSL detection AND actual file existence so the
@@ -124,5 +123,3 @@
       - "Profiles loaded: {{ aa_profiled.stdout | default('unknown') }}"
       - "Profiles in complain mode: {{ aa_complaining.stdout | default('0') }}"
       - "Enforce-all triggered: {{ aa_enforce_result.changed | default(false) }}"
-
-...

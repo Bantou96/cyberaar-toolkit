@@ -1,5 +1,4 @@
 ---
-
 - name: "Install AIDE package"
   ansible.builtin.package:
     name: "aide"
@@ -53,10 +52,10 @@
   # rc=0: success  rc=14: db init ok but warnings  both are fine
   failed_when: "aide_init.rc not in [0, 14]"
   changed_when: "aide_init.rc in [0, 14]"
-  async: 600     # AIDE init can take several minutes on a full filesystem
+  async: 600 # AIDE init can take several minutes on a full filesystem
   poll: 15
 
-- name: "Activate the newly initialized AIDE database"
+- name: "Activate the newly initialized AIDE database" # noqa: no-handler
   when: "aide_init.changed | default(false)"
   ansible.builtin.command: "mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db"
   args:
@@ -92,5 +91,3 @@
       - "AIDE config changed: {{ aide_conf_result.changed | default(false) }}"
       - "AIDE config valid: {{ aide_config_check.rc == 0 }}"
       - "AIDE init ran: {{ aide_init.changed | default(false) }}"
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: "Ensure firewalld is installed"
   ansible.builtin.package:
     name: "firewalld"
@@ -13,7 +12,7 @@
   failed_when: false
   register: "_firewalld_service"
 
-- name: "Check if firewalld is actually running"
+- name: "Check if firewalld is actually running" # noqa: command-instead-of-module
   ansible.builtin.command: systemctl is-active firewalld
   changed_when: false
   failed_when: false
@@ -124,5 +123,3 @@
     immediate: "{{ _firewalld_active | bool }}"
     state: disabled
   loop: "{{ fw_info.firewalld_zones[linux_firewalld_default_zone].services | default([]) | difference(linux_firewalld_allowed_services) }}"
-
-...

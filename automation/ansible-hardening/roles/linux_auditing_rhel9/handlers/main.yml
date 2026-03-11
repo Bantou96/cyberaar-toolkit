@@ -1,15 +1,12 @@
 ---
-
 - name: "Restart auditd"
   ansible.builtin.service:
     name: "auditd"
     state: "restarted"
   failed_when: false
-  listen: "Restart auditd"  # allows multiple notifies to same handler
+  listen: "Restart auditd" # allows multiple notifies to same handler
 
 - name: "Restart rsyslog"
   ansible.builtin.service:
     name: "rsyslog"
     state: "restarted"
-
-...

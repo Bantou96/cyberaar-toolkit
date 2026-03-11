@@ -19,5 +19,3 @@ linux_dnf_automatic_random_sleep: 300
 
 # Role disable var
 linux_dnf_automatic_disabled: false
-
-...

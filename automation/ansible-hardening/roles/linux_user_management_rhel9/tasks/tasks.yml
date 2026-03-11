@@ -1,5 +1,4 @@
 ---
-
 - name: "Gather user & group facts"
   ansible.builtin.getent:
     database: passwd
@@ -14,7 +13,7 @@
   when: "linux_root_ssh_disabled | bool"
   ansible.builtin.lineinfile:
     path: "/etc/ssh/sshd_config"
-    regexp: '^#?PermitRootLogin'
+    regexp: "^#?PermitRootLogin"
     line: "PermitRootLogin no"
     validate: "/usr/sbin/sshd -T -f %s"
   notify: "Restart sshd"
@@ -31,7 +30,7 @@
     name: "{{ item }}"
     shell: "{{ linux_system_shell }}"
     password_lock: true
-    state: present  # don't remove, just lock
+    state: present # don't remove, just lock
   loop: "{{ linux_legacy_accounts_to_lock }}"
 
 - name: "Enforce password expiry & history policies"
@@ -40,15 +39,15 @@
     regexp: "^{{ item.regexp }}"
     line: "{{ item.line }}"
   loop:
-    - { regexp: '^PASS_MAX_DAYS', line: "PASS_MAX_DAYS {{ linux_password_max_days }}" }
-    - { regexp: '^PASS_MIN_DAYS', line: "PASS_MIN_DAYS {{ linux_password_min_days }}" }
-    - { regexp: '^PASS_WARN_AGE', line: "PASS_WARN_AGE {{ linux_password_warn_days }}" }
+    - { regexp: "^PASS_MAX_DAYS", line: "PASS_MAX_DAYS {{ linux_password_max_days }}" }
+    - { regexp: "^PASS_MIN_DAYS", line: "PASS_MIN_DAYS {{ linux_password_min_days }}" }
+    - { regexp: "^PASS_WARN_AGE", line: "PASS_WARN_AGE {{ linux_password_warn_days }}" }
 
 - name: "Restrict sudo to wheel group only"
   when: "linux_restrict_sudo_to_wheel | bool"
   ansible.builtin.lineinfile:
     path: "/etc/sudoers"
-    regexp: '^%wheel'
+    regexp: "^%wheel"
     line: "%wheel ALL=(ALL) ALL"
     validate: "/usr/sbin/visudo -cf %s"
 
@@ -58,7 +57,7 @@
     - "item.value[0] == '' or item.value[0] == '!!' or item.value[0] is none"
   ansible.builtin.user:
     name: "{{ item.key }}"
-    password: "!"   # Lock with invalid hash
+    password: "!" # Lock with invalid hash
     state: present
   loop: "{{ shadow_db.ansible_facts.getent_shadow | dict2items }}"
 
@@ -263,5 +262,3 @@
       - "Duplicate UIDs: {{ dup_uid_check.stdout_lines | default([]) }}"
       - "Duplicate GIDs: {{ dup_gid_check.stdout_lines | default([]) }}"
       - "Shadow group members: {{ shadow_group_check.stdout | default('none') | trim }}"
-
-...
