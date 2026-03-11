@@ -1,0 +1,54 @@
+---
+- name: "Verify — ip_forwarding RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Assert sysctl config file is deployed"
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-cis-ip-forwarding.conf
+      register: sysctl_file
+      failed_when: not sysctl_file.stat.exists
+
+    - name: "Read sysctl config"
+      ansible.builtin.slurp:
+        src: /etc/sysctl.d/99-cis-ip-forwarding.conf
+      register: sysctl_raw
+
+    - name: "Assert net.ipv4.ip_forward is set to 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('net\.ipv4\.ip_forward\s*=\s*0')
+        fail_msg: "net.ipv4.ip_forward = 0 not found in sysctl config"
+
+    - name: "Assert accept_redirects is set to 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('accept_redirects\s*=\s*0')
+        fail_msg: "accept_redirects = 0 not found in sysctl config"
+
+- name: "Verify — ip_forwarding Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Assert sysctl config file is deployed"
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-cis-ip-forwarding.conf
+      register: sysctl_file
+      failed_when: not sysctl_file.stat.exists
+
+    - name: "Read sysctl config"
+      ansible.builtin.slurp:
+        src: /etc/sysctl.d/99-cis-ip-forwarding.conf
+      register: sysctl_raw
+
+    - name: "Assert net.ipv4.ip_forward is set to 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('net\.ipv4\.ip_forward\s*=\s*0')
+        fail_msg: "net.ipv4.ip_forward = 0 not found in sysctl config"
+
+    - name: "Assert accept_redirects is set to 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('accept_redirects\s*=\s*0')
+        fail_msg: "accept_redirects = 0 not found in sysctl config"

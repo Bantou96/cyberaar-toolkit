@@ -1,0 +1,62 @@
+---
+- name: "Verify — core_dumps RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Assert sysctl config file is deployed"
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-cis-core-dumps.conf
+      register: sysctl_file
+      failed_when: not sysctl_file.stat.exists
+
+    - name: "Read sysctl config"
+      ansible.builtin.slurp:
+        src: /etc/sysctl.d/99-cis-core-dumps.conf
+      register: sysctl_raw
+
+    - name: "Assert fs.suid_dumpable is 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('fs\.suid_dumpable\s*=\s*0')
+        fail_msg: "fs.suid_dumpable = 0 not found in sysctl config"
+
+    - name: "Assert core limit is set in /etc/security/limits.conf"
+      ansible.builtin.command: grep -E '^\*\s+hard\s+core\s+0' /etc/security/limits.conf
+      changed_when: false
+      register: limits_check
+      failed_when: limits_check.rc != 0
+
+- name: "Verify — core_dumps Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Assert limits drop-in is deployed"
+      ansible.builtin.stat:
+        path: /etc/security/limits.d/99-cis-coredump.conf
+      register: limits_file
+      failed_when: not limits_file.stat.exists
+
+    - name: "Assert sysctl config file is deployed"
+      ansible.builtin.stat:
+        path: /etc/sysctl.d/99-cis-coredump.conf
+      register: sysctl_file
+      failed_when: not sysctl_file.stat.exists
+
+    - name: "Assert systemd coredump config directory exists"
+      ansible.builtin.stat:
+        path: /etc/systemd/coredump.conf.d/99-cis-coredump.conf
+      register: systemd_coredump
+      failed_when: not systemd_coredump.stat.exists
+
+    - name: "Read sysctl core dump config"
+      ansible.builtin.slurp:
+        src: /etc/sysctl.d/99-cis-coredump.conf
+      register: sysctl_raw
+
+    - name: "Assert fs.suid_dumpable is 0"
+      ansible.builtin.assert:
+        that: sysctl_raw.content | b64decode is search('fs\.suid_dumpable\s*=\s*0')
+        fail_msg: "fs.suid_dumpable = 0 not found in sysctl config"

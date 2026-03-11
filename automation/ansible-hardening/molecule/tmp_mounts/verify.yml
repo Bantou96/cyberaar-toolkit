@@ -1,0 +1,65 @@
+---
+- name: "Verify — tmp_mounts RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Check /tmp mount options"
+      ansible.builtin.command: findmnt -n -o OPTIONS /tmp
+      changed_when: false
+      register: tmp_opts
+      failed_when: false
+
+    - name: "Note /tmp mount options"
+      ansible.builtin.debug:
+        msg: "/tmp options: {{ tmp_opts.stdout | default('not separately mounted') }}"
+
+    - name: "Check /etc/fstab has /tmp entry with hardening options"
+      ansible.builtin.command: grep -E '/tmp\s+tmpfs' /etc/fstab
+      changed_when: false
+      register: fstab_tmp
+      failed_when: false
+
+    - name: "Assert /tmp is in fstab with tmpfs"
+      ansible.builtin.assert:
+        that: fstab_tmp.rc == 0
+        fail_msg: "/tmp tmpfs entry not found in /etc/fstab"
+
+    - name: "Read /etc/fstab"
+      ansible.builtin.slurp:
+        src: /etc/fstab
+      register: fstab_raw
+
+    - name: "Assert noexec option is present for /tmp in fstab"
+      ansible.builtin.assert:
+        that: fstab_raw.content | b64decode is search('/tmp.*noexec')
+        fail_msg: "noexec not found for /tmp in /etc/fstab"
+
+- name: "Verify — tmp_mounts Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Assert tmp.mount systemd unit is deployed"
+      ansible.builtin.stat:
+        path: /etc/systemd/system/tmp.mount
+      register: tmp_mount_unit
+      failed_when: not tmp_mount_unit.stat.exists
+
+    - name: "Read tmp.mount"
+      ansible.builtin.slurp:
+        src: /etc/systemd/system/tmp.mount
+      register: tmp_mount_raw
+
+    - name: "Assert noexec is in tmp.mount Options"
+      ansible.builtin.assert:
+        that: tmp_mount_raw.content | b64decode is search('noexec')
+        fail_msg: "noexec not found in /etc/systemd/system/tmp.mount"
+
+    - name: "Assert /dev/shm entry is in /etc/fstab"
+      ansible.builtin.command: grep -E 'tmpfs\s+/dev/shm' /etc/fstab
+      changed_when: false
+      register: shm_fstab
+      failed_when: shm_fstab.rc != 0

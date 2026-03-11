@@ -1,0 +1,14 @@
+---
+- name: "Converge — disable_services RHEL9"
+  hosts: rhel9
+  become: false
+
+  roles:
+    - role: linux_disable_unnecessary_services_rhel9
+
+- name: "Converge — disable_services Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_disable_unnecessary_services_ubuntu

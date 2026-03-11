@@ -1,0 +1,88 @@
+---
+- name: "Verify — cron_hardening RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert cronie is installed"
+      ansible.builtin.assert:
+        that: "'cronie' in ansible_facts.packages"
+        fail_msg: "cronie package is not installed"
+
+    - name: "Assert /etc/crontab has mode 0600"
+      ansible.builtin.stat:
+        path: /etc/crontab
+      register: crontab_stat
+      failed_when: >-
+        not crontab_stat.stat.exists
+        or crontab_stat.stat.mode != '0600'
+
+    - name: "Assert /etc/cron.d has mode 0700"
+      ansible.builtin.stat:
+        path: /etc/cron.d
+      register: crond_stat
+      failed_when: >-
+        not crond_stat.stat.exists
+        or crond_stat.stat.mode != '0700'
+
+    - name: "Assert /etc/cron.allow exists"
+      ansible.builtin.stat:
+        path: /etc/cron.allow
+      register: cron_allow
+      failed_when: not cron_allow.stat.exists
+
+    - name: "Note cron hardening state"
+      ansible.builtin.debug:
+        msg:
+          - "/etc/crontab mode: {{ crontab_stat.stat.mode }}"
+          - "/etc/cron.d mode: {{ crond_stat.stat.mode }}"
+          - "/etc/cron.allow exists: {{ cron_allow.stat.exists }}"
+
+- name: "Verify — cron_hardening Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert cron is installed"
+      ansible.builtin.assert:
+        that: "'cron' in ansible_facts.packages"
+        fail_msg: "cron package is not installed"
+
+    - name: "Assert /etc/crontab has mode 0600"
+      ansible.builtin.stat:
+        path: /etc/crontab
+      register: crontab_stat
+      failed_when: >-
+        not crontab_stat.stat.exists
+        or crontab_stat.stat.mode != '0600'
+
+    - name: "Assert /etc/cron.d has mode 0700"
+      ansible.builtin.stat:
+        path: /etc/cron.d
+      register: crond_stat
+      failed_when: >-
+        not crond_stat.stat.exists
+        or crond_stat.stat.mode != '0700'
+
+    - name: "Assert /etc/cron.allow exists"
+      ansible.builtin.stat:
+        path: /etc/cron.allow
+      register: cron_allow
+      failed_when: not cron_allow.stat.exists
+
+    - name: "Note cron hardening state"
+      ansible.builtin.debug:
+        msg:
+          - "/etc/crontab mode: {{ crontab_stat.stat.mode }}"
+          - "/etc/cron.d mode: {{ crond_stat.stat.mode }}"
+          - "/etc/cron.allow exists: {{ cron_allow.stat.exists }}"

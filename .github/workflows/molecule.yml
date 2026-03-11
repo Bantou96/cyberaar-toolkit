@@ -34,6 +34,16 @@ jobs:
           - kernel_hardening
           - firewall
           - chrony
+          - login_banner
+          - cron_hardening
+          - ctrl_alt_del
+          - ip_forwarding
+          - tmp_mounts
+          - core_dumps
+          - disable_services
+          - file_permissions
+          - sudo_hardening
+          - user_management
 
     steps:
       - name: Checkout

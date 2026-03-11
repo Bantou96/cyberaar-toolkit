@@ -1,0 +1,42 @@
+---
+- name: "Verify — ctrl_alt_del RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Check ctrl-alt-del.target mask status"
+      ansible.builtin.command: systemctl is-enabled ctrl-alt-del.target
+      changed_when: false
+      register: cad_status
+      failed_when: false
+
+    - name: "Assert ctrl-alt-del.target is masked"
+      ansible.builtin.assert:
+        that: cad_status.stdout | trim == 'masked'
+        fail_msg: >-
+          ctrl-alt-del.target is not masked (got '{{ cad_status.stdout | trim }}')
+
+    - name: "Assert drop-in override exists"
+      ansible.builtin.stat:
+        path: /etc/systemd/system/ctrl-alt-del.target.d/override.conf
+      register: override_conf
+      failed_when: not override_conf.stat.exists
+
+- name: "Verify — ctrl_alt_del Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Check ctrl-alt-del.target mask status"
+      ansible.builtin.command: systemctl is-enabled ctrl-alt-del.target
+      changed_when: false
+      register: cad_status
+      failed_when: false
+
+    - name: "Assert ctrl-alt-del.target is masked"
+      ansible.builtin.assert:
+        that: cad_status.stdout | trim == 'masked'
+        fail_msg: >-
+          ctrl-alt-del.target is not masked (got '{{ cad_status.stdout | trim }}')

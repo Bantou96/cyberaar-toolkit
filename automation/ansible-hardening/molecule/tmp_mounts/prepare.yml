@@ -1,0 +1,26 @@
+---
+- name: "Prepare — tmp_mounts RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false
+
+    - name: "Ensure /etc/fstab exists"
+      ansible.builtin.raw: touch /etc/fstab
+      changed_when: false
+
+
+- name: "Prepare — tmp_mounts Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600

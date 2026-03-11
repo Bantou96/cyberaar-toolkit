@@ -4,23 +4,22 @@
   ansible.builtin.setup:
     filter: "ansible_mounts"
 
-- name: "Ensure tmp mounts have required options"
-  ansible.posix.mount:
-    path: "{{ item }}"
-    src: "tmpfs"
-    fstype: "tmpfs"
-    opts: "{{ linux_tmp_mount_options | join(',') }}"
-    state: "mounted"
-    permanent: true
+- name: "Ensure tmp mounts have required options in /etc/fstab"
+  ansible.builtin.lineinfile:
+    path: "/etc/fstab"
+    regexp: "^\\S+\\s+{{ item | regex_escape() }}\\s"
+    line: "tmpfs {{ item }} tmpfs {{ linux_tmp_mount_options | join(',') }} 0 0"
+    state: "present"
+    create: false
   loop: "{{ linux_tmp_mount_paths }}"
-  register: "tmp_mount_result"
-  notify: "Remount tmp filesystems if changed"
+  register: "tmp_fstab_result"
 
-- name: "Remount tmp filesystems if options were updated"
-  when: "tmp_mount_result.results | selectattr('changed', 'equalto', true) | list | length > 0"
+- name: "Remount tmp filesystems to apply options"
+  when: "tmp_fstab_result.results | selectattr('changed', 'equalto', true) | list | length > 0"
   ansible.builtin.command: "mount -o remount {{ item }}"
   loop: "{{ linux_tmp_mount_paths }}"
-  changed_when: false   # mount options already persisted by ansible.posix.mount above
+  changed_when: false
+  failed_when: false
 
 - name: "Verify mount options (debug verbosity >=1)"
   when: "ansible_verbosity >= 1"
@@ -36,24 +35,27 @@
 
 # CIS 1.1.14 — Ensure nodev option set on /home partition
 # /home only gets nodev (NOT noexec/nosuid — users need to run scripts from home)
-- name: "Ensure /home partition has nodev option (CIS 1.1.14)"
-  when: "linux_home_nodev_enabled | bool"
-  ansible.posix.mount:
-    path: "/home"
-    src: "{{ item.device }}"
-    fstype: "{{ item.fstype }}"
-    opts: "{{ (item.options.split(',') | union(['nodev'])) | join(',') }}"
+- name: "Ensure /home partition has nodev option in /etc/fstab (CIS 1.1.14)"
+  when:
+    - "linux_home_nodev_enabled | bool"
+    - "ansible_mounts | selectattr('mount', 'equalto', '/home') | list | length > 0"
+  ansible.builtin.lineinfile:
+    path: "/etc/fstab"
+    regexp: "^\\S+\\s+/home\\s"
+    line: >-
+      {{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | list | first).device }}
+      /home
+      {{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | list | first).fstype }}
+      {{ ((ansible_mounts | selectattr('mount', 'equalto', '/home') | list | first).options.split(',') | union(['nodev'])) | join(',') }}
+      0 0
     state: "present"
-  loop: "{{ ansible_mounts | selectattr('mount', 'equalto', '/home') | list }}"
-  loop_control:
-    label: "/home"
-  register: "home_mount_result"
-  failed_when: false  # /home may not be a separate partition — skip gracefully
+  register: "home_fstab_result"
+  failed_when: false
 
 - name: "Remount /home if options were updated"
   when:
     - "linux_home_nodev_enabled | bool"
-    - "home_mount_result.changed | default(false)"
+    - "home_fstab_result.changed | default(false)"
   ansible.builtin.command: "mount -o remount /home"
   changed_when: false
   failed_when: false

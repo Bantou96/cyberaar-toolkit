@@ -1,0 +1,38 @@
+---
+- name: "Converge — file_permissions RHEL9"
+  hosts: rhel9
+  become: false
+
+  vars:
+    # grub2 path doesn't exist in containers — remove from critical files list
+    linux_critical_files:
+      - path: "/etc/passwd"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+      - path: "/etc/shadow"
+        mode: "0000"
+        owner: "root"
+        group: "root"
+      - path: "/etc/group"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+      - path: "/etc/gshadow"
+        mode: "0000"
+        owner: "root"
+        group: "root"
+      - path: "/etc/ssh/sshd_config"
+        mode: "0600"
+        owner: "root"
+        group: "root"
+
+  roles:
+    - role: linux_file_permissions_rhel9
+
+- name: "Converge — file_permissions Ubuntu"
+  hosts: ubuntu
+  become: true
+
+  roles:
+    - role: linux_file_permissions_ubuntu
