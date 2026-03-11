@@ -1,0 +1,16 @@
+---
+- name: "Converge — chrony RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  roles:
+    - role: linux_chrony_rhel9
+
+- name: "Converge — chrony Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  roles:
+    - role: linux_chrony_ubuntu

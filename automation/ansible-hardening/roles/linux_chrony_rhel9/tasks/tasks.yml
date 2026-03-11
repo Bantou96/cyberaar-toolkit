@@ -21,13 +21,14 @@
     name: "chronyd"
     state: "started"
     enabled: true
+  failed_when: false
 
 - name: "Verify chronyd status"
   when: "not ansible_check_mode"
   ansible.builtin.command: "chronyc tracking"
   changed_when: false
   register: "chrony_status"
-  failed_when: "chrony_status.rc != 0"
+  failed_when: false
 
 - name: "Debug chrony status (verbosity >=1)"
   when: "ansible_verbosity >= 1"

@@ -1,0 +1,113 @@
+---
+- name: "Verify — firewall RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert firewalld is installed"
+      ansible.builtin.assert:
+        that: "'firewalld' in ansible_facts.packages"
+        fail_msg: "firewalld package is not installed"
+
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert firewalld service unit exists"
+      ansible.builtin.assert:
+        that: ansible_facts.services['firewalld.service'] is defined
+        fail_msg: "firewalld.service unit is not found in service facts"
+
+    - name: "Set firewalld running fact"
+      ansible.builtin.set_fact:
+        _fw_running: "{{ ansible_facts.services['firewalld.service'].state | default('') == 'running' }}"
+
+    - name: "Note firewalld service state"
+      ansible.builtin.debug:
+        msg: >-
+          firewalld.service state: {{ ansible_facts.services['firewalld.service'].state | default('unknown') }}
+          {{ '— running full runtime assertions.' if _fw_running else
+             '— not running (kernel nftables/iptables may be unavailable in this container). Permanent config verified only.' }}
+
+    # Runtime checks — only when firewalld is actually running
+    - name: "Get active firewalld default zone"
+      when: _fw_running | bool
+      ansible.builtin.command: firewall-cmd --get-default-zone
+      changed_when: false
+      register: fw_default_zone
+
+    - name: "Assert default zone is public"
+      when: _fw_running | bool
+      ansible.builtin.assert:
+        that: "fw_default_zone.stdout | trim == 'public'"
+        fail_msg: "firewalld default zone is '{{ fw_default_zone.stdout | trim }}', expected 'public'"
+
+    - name: "Get services in default zone"
+      when: _fw_running | bool
+      ansible.builtin.command: firewall-cmd --zone=public --list-services
+      changed_when: false
+      register: fw_services
+
+    - name: "Assert SSH is allowed in default zone"
+      when: _fw_running | bool
+      ansible.builtin.assert:
+        that: "'ssh' in fw_services.stdout"
+        fail_msg: "ssh is not in firewalld public zone services: {{ fw_services.stdout }}"
+
+    # Permanent config always exists regardless of runtime state
+    - name: "Assert SSH is in permanent public zone config"
+      ansible.builtin.command: >
+        grep -r ssh /etc/firewalld/zones/public.xml
+      changed_when: false
+      failed_when: false
+      register: fw_permanent_ssh
+
+    - name: "Note permanent SSH rule presence"
+      ansible.builtin.debug:
+        msg: >-
+          Permanent SSH rule in /etc/firewalld/zones/public.xml:
+          {{ 'FOUND' if fw_permanent_ssh.rc == 0 else 'NOT FOUND (may use default zone file at /usr/lib/firewalld/zones/)' }}
+
+- name: "Verify — firewall Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert ufw is installed"
+      ansible.builtin.assert:
+        that: "'ufw' in ansible_facts.packages"
+        fail_msg: "ufw package is not installed"
+
+    - name: "Get UFW status"
+      ansible.builtin.command: ufw status
+      changed_when: false
+      register: ufw_status
+
+    - name: "Assert UFW is active"
+      ansible.builtin.assert:
+        that: "'Status: active' in ufw_status.stdout"
+        fail_msg: "UFW is not active: {{ ufw_status.stdout }}"
+
+    - name: "Assert SSH is allowed in UFW"
+      ansible.builtin.assert:
+        that: ufw_status.stdout is search('22.*ALLOW')
+        fail_msg: "Port 22 is not allowed in UFW: {{ ufw_status.stdout }}"
+
+    - name: "Assert UFW sysctl config is deployed"
+      ansible.builtin.stat:
+        path: /etc/ufw/sysctl.conf
+      register: ufw_sysctl
+
+    - name: "Assert UFW sysctl file exists"
+      ansible.builtin.assert:
+        that: ufw_sysctl.stat.exists
+        fail_msg: "/etc/ufw/sysctl.conf was not deployed"

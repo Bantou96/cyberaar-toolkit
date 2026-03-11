@@ -1,0 +1,21 @@
+---
+- name: "Prepare — chrony RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.dnf:
+        update_cache: true
+
+- name: "Prepare — chrony Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600

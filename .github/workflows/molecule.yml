@@ -32,6 +32,8 @@ jobs:
           - auditing_rhel9
           - selinux_rhel9
           - kernel_hardening
+          - firewall
+          - chrony
 
     steps:
       - name: Checkout

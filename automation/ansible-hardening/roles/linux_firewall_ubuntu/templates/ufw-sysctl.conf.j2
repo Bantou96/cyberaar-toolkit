@@ -1,6 +1,5 @@
 # UFW sysctl hardening
 # Managed by Ansible role linux_firewall_ubuntu
-# Generated: {{ ansible_date_time.iso8601 }}
 
 {% if linux_firewall_disable_ip_forward | bool %}
 net/ipv4/ip_forward=0
