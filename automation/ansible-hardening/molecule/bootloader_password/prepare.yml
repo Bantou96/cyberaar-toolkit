@@ -1,0 +1,35 @@
+---
+- name: "Prepare — bootloader_password RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false
+
+    - name: "Ensure /etc/grub.d exists"
+      ansible.builtin.raw: mkdir -p /etc/grub.d
+      changed_when: false
+
+    - name: "Ensure /etc/systemd/system exists"
+      ansible.builtin.raw: mkdir -p /etc/systemd/system
+      changed_when: false
+
+- name: "Prepare — bootloader_password Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: "Ensure /etc/grub.d exists"
+      ansible.builtin.file:
+        path: /etc/grub.d
+        state: directory
+        mode: "0755"

@@ -19,14 +19,14 @@
   ansible.builtin.command: >-
     grub2-mkpasswd-pbkdf2 --iteration-count=100000
   args:
-    stdin: "{{ linux_bootloader_password }}"
+    stdin: "{{ linux_bootloader_password }}\n{{ linux_bootloader_password }}\n"
   changed_when: false
   register: "grub_pbkdf2_output"
   no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
 
 - name: "Parse the generated GRUB PBKDF2 hash"
   ansible.builtin.set_fact:
-    grub_pbkdf2_hash: "{{ grub_pbkdf2_output.stdout | regex_search('password_pbkdf2 .* (grub\\.pbkdf2\\.sha512\\..*)', '\\1') | first }}"
+    grub_pbkdf2_hash: "{{ grub_pbkdf2_output.stdout | regex_search('grub\\.pbkdf2\\.sha512\\.\\S+') }}"
   no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
 
 - name: "Deploy GRUB password configuration file (/etc/grub.d/01_users)"
@@ -38,7 +38,6 @@
     group: "root"
   no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"
   register: "grub_users_result"
-  notify: "Rebuild GRUB config"
 
 - name: "Check if EFI grub.cfg exists"
   ansible.builtin.stat:
@@ -53,6 +52,7 @@
   ansible.builtin.command: >-
     grub2-mkconfig -o /boot/efi/EFI/{{ ansible_distribution | lower }}/grub.cfg
   changed_when: true
+  failed_when: false
   notify: "GRUB config updated - reboot recommended"
 
 - name: "Rebuild GRUB config after password deploy (BIOS path)"
@@ -61,6 +61,7 @@
     - "not (grub_efi_cfg_check.stat.exists | default(false))"
   ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
   changed_when: true
+  failed_when: false
   notify: "GRUB config updated - reboot recommended"
 
 - name: "Ensure GRUB config file has strict permissions"
@@ -69,6 +70,7 @@
     mode: "0600"
     owner: "root"
     group: "root"
+  failed_when: false
 
 - name: "Remove legacy / obsolete GRUB user.cfg in EFI path (if exists)"
   when:

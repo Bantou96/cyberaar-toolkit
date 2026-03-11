@@ -1,0 +1,42 @@
+---
+- name: "Verify — secure_boot RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── Secure Boot check ran without failure ──────────────────────────────────
+    # The role is detection-only on RHEL9 (no file changes beyond systemd drop-ins).
+    # We verify the role converged cleanly by checking the playbook completed.
+    - name: "Note: RHEL9 secure_boot is detection-only (mokutil check)"
+      ansible.builtin.debug:
+        msg: >-
+          linux_secure_boot_rhel9 completed. Secure Boot check is detection-only
+          on RHEL9. No structural changes are made in a container environment.
+
+- name: "Verify — secure_boot Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── Hardened GRUB defaults deployed ───────────────────────────────────────
+    - name: "Stat /etc/default/grub.d/99-cis-hardening.cfg"
+      ansible.builtin.stat:
+        path: /etc/default/grub.d/99-cis-hardening.cfg
+      register: grub_hardening_stat
+
+    - name: "Assert /etc/default/grub.d/99-cis-hardening.cfg was deployed"
+      ansible.builtin.assert:
+        that: grub_hardening_stat.stat.exists
+        fail_msg: "/etc/default/grub.d/99-cis-hardening.cfg was not deployed"
+
+    - name: "Read GRUB hardening config content"
+      ansible.builtin.slurp:
+        src: /etc/default/grub.d/99-cis-hardening.cfg
+      register: grub_hardening_content
+
+    - name: "Assert GRUB hardening config is non-empty"
+      ansible.builtin.assert:
+        that: (grub_hardening_content.content | b64decode | length) > 0
+        fail_msg: "/etc/default/grub.d/99-cis-hardening.cfg is empty"

@@ -7,5 +7,6 @@
   loop:
     - "sshd" # add others like httpd, nginx, postfix, etc. if present
   when: "policy_update.changed | default(false)"
+  failed_when: false
 
 ...

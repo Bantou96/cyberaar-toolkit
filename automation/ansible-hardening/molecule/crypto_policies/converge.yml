@@ -1,0 +1,15 @@
+---
+- name: "Converge — crypto_policies RHEL9"
+  hosts: rhel9
+  become: false
+  roles:
+    - role: linux_crypto_policies_rhel9
+
+- name: "Converge — crypto_policies Ubuntu"
+  hosts: ubuntu
+  become: true
+  vars:
+    # Skip GnuTLS config — /etc/gnutls/ directory absent in containers
+    linux_crypto_configure_gnutls: false
+  roles:
+    - role: linux_crypto_policies_ubuntu

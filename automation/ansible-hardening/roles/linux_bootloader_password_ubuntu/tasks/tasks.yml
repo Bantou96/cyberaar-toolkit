@@ -41,7 +41,7 @@
   when: "not _is_wsl"
   ansible.builtin.command: grub-mkpasswd-pbkdf2
   args:
-    stdin: "{{ linux_bootloader_password }}"
+    stdin: "{{ linux_bootloader_password }}\n{{ linux_bootloader_password }}\n"
   changed_when: false
   register: "grub_pbkdf2_output"
   no_log: "{{ linux_bootloader_disable_nolog | default(false) | ternary(false, true) }}"

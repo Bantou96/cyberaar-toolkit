@@ -1,0 +1,75 @@
+---
+- name: "Verify — bootloader_password RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── GRUB user config ───────────────────────────────────────────────────────
+    - name: "Stat /etc/grub.d/01_users"
+      ansible.builtin.stat:
+        path: /etc/grub.d/01_users
+      register: grub_users_stat
+
+    - name: "Assert /etc/grub.d/01_users was deployed"
+      ansible.builtin.assert:
+        that: grub_users_stat.stat.exists
+        fail_msg: "/etc/grub.d/01_users was not deployed"
+
+    - name: "Read /etc/grub.d/01_users content"
+      ansible.builtin.slurp:
+        src: /etc/grub.d/01_users
+      register: grub_users_content
+
+    - name: "Assert GRUB user config contains PBKDF2 hash"
+      ansible.builtin.assert:
+        that: "'password_pbkdf2' in (grub_users_content.content | b64decode)"
+        fail_msg: "PBKDF2 password hash not found in /etc/grub.d/01_users"
+
+    # ── Single user mode auth ──────────────────────────────────────────────────
+    - name: "Stat /etc/systemd/system/rescue.service.d/99-cis-auth.conf"
+      ansible.builtin.stat:
+        path: /etc/systemd/system/rescue.service.d/99-cis-auth.conf
+      register: rescue_conf_stat
+
+    - name: "Assert rescue.service auth override was deployed"
+      ansible.builtin.assert:
+        that: rescue_conf_stat.stat.exists
+        fail_msg: "/etc/systemd/system/rescue.service.d/99-cis-auth.conf was not deployed"
+
+    - name: "Stat /etc/systemd/system/emergency.service.d/99-cis-auth.conf"
+      ansible.builtin.stat:
+        path: /etc/systemd/system/emergency.service.d/99-cis-auth.conf
+      register: emergency_conf_stat
+
+    - name: "Assert emergency.service auth override was deployed"
+      ansible.builtin.assert:
+        that: emergency_conf_stat.stat.exists
+        fail_msg: "/etc/systemd/system/emergency.service.d/99-cis-auth.conf was not deployed"
+
+- name: "Verify — bootloader_password Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── GRUB user config ───────────────────────────────────────────────────────
+    - name: "Stat /etc/grub.d/01_users"
+      ansible.builtin.stat:
+        path: /etc/grub.d/01_users
+      register: grub_users_stat
+
+    - name: "Assert /etc/grub.d/01_users was deployed"
+      ansible.builtin.assert:
+        that: grub_users_stat.stat.exists
+        fail_msg: "/etc/grub.d/01_users was not deployed"
+
+    - name: "Read /etc/grub.d/01_users content"
+      ansible.builtin.slurp:
+        src: /etc/grub.d/01_users
+      register: grub_users_content
+
+    - name: "Assert GRUB user config contains PBKDF2 hash"
+      ansible.builtin.assert:
+        that: "'password_pbkdf2' in (grub_users_content.content | b64decode)"
+        fail_msg: "PBKDF2 password hash not found in /etc/grub.d/01_users"

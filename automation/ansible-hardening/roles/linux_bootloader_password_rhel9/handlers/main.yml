@@ -1,26 +1,5 @@
 ---
 
-- name: "Rebuild GRUB config"
-  # FIX: grub.cfg path differs between BIOS and EFI systems.
-  # Detect which path exists and use it. On EFI the BIOS path is unused.
-  block:
-    - name: "Check if EFI grub.cfg exists (UEFI system)"
-      ansible.builtin.stat:
-        path: "/boot/efi/EFI/{{ ansible_distribution | lower }}/grub.cfg"
-      register: "efi_grub_cfg"
-      failed_when: false
-
-    - name: "Rebuild GRUB config (EFI path)"
-      when: "efi_grub_cfg.stat.exists | default(false)"
-      ansible.builtin.command: >-
-        grub2-mkconfig -o /boot/efi/EFI/{{ ansible_distribution | lower }}/grub.cfg
-      changed_when: true
-
-    - name: "Rebuild GRUB config (BIOS path)"
-      when: "not (efi_grub_cfg.stat.exists | default(false))"
-      ansible.builtin.command: "grub2-mkconfig -o /boot/grub2/grub.cfg"
-      changed_when: true
-
 - name: "GRUB config updated - reboot recommended"
   ansible.builtin.debug:
     msg: >-

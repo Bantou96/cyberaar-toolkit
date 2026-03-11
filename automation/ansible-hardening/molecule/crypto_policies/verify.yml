@@ -1,0 +1,83 @@
+---
+- name: "Verify — crypto_policies RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── Package ────────────────────────────────────────────────────────────────
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert crypto-policies package is installed"
+      ansible.builtin.assert:
+        that: "'crypto-policies' in ansible_facts.packages"
+        fail_msg: "crypto-policies package is not installed"
+
+    # ── Active policy ──────────────────────────────────────────────────────────
+    - name: "Get current active crypto policy"
+      ansible.builtin.command: update-crypto-policies --show
+      changed_when: false
+      register: crypto_policy_current
+
+    - name: "Assert crypto policy is configured"
+      ansible.builtin.assert:
+        that: crypto_policy_current.stdout | length > 0
+        fail_msg: "update-crypto-policies --show returned empty output"
+
+    - name: "Note active crypto policy"
+      ansible.builtin.debug:
+        msg: "Active crypto policy: {{ crypto_policy_current.stdout }}"
+
+    # ── Subpolicy ──────────────────────────────────────────────────────────────
+    - name: "Stat /etc/crypto-policies/local.d"
+      ansible.builtin.stat:
+        path: /etc/crypto-policies/local.d
+      register: local_d_stat
+
+    - name: "Assert /etc/crypto-policies/local.d exists"
+      ansible.builtin.assert:
+        that: local_d_stat.stat.exists
+        fail_msg: "/etc/crypto-policies/local.d was not created"
+
+- name: "Verify — crypto_policies Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── OpenSSL config ─────────────────────────────────────────────────────────
+    - name: "Stat /etc/ssl/openssl.cnf"
+      ansible.builtin.stat:
+        path: /etc/ssl/openssl.cnf
+      register: openssl_cnf_stat
+
+    - name: "Assert /etc/ssl/openssl.cnf exists and is non-empty"
+      ansible.builtin.assert:
+        that:
+          - openssl_cnf_stat.stat.exists
+          - openssl_cnf_stat.stat.size > 0
+        fail_msg: "/etc/ssl/openssl.cnf was not deployed or is empty"
+
+    # ── TLS hardening config ───────────────────────────────────────────────────
+    - name: "Stat /etc/ssl/certs/cyberaar-tls-hardening.cnf"
+      ansible.builtin.stat:
+        path: /etc/ssl/certs/cyberaar-tls-hardening.cnf
+      register: tls_hardening_stat
+
+    - name: "Assert cyberaar-tls-hardening.cnf was deployed"
+      ansible.builtin.assert:
+        that: tls_hardening_stat.stat.exists
+        fail_msg: "/etc/ssl/certs/cyberaar-tls-hardening.cnf was not deployed"
+
+    # ── SSL policy config ──────────────────────────────────────────────────────
+    - name: "Stat /etc/ssl/certs/cyberaar-policy.cnf"
+      ansible.builtin.stat:
+        path: /etc/ssl/certs/cyberaar-policy.cnf
+      register: ssl_policy_stat
+
+    - name: "Assert cyberaar-policy.cnf was deployed"
+      ansible.builtin.assert:
+        that: ssl_policy_stat.stat.exists
+        fail_msg: "/etc/ssl/certs/cyberaar-policy.cnf was not deployed"

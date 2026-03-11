@@ -1,0 +1,15 @@
+---
+- name: "Converge — bootloader_password RHEL9"
+  hosts: rhel9
+  become: false
+  vars:
+    # Single-user mode auth creates systemd drop-ins; safe in containers
+    linux_single_user_auth: true
+  roles:
+    - role: linux_bootloader_password_rhel9
+
+- name: "Converge — bootloader_password Ubuntu"
+  hosts: ubuntu
+  become: true
+  roles:
+    - role: linux_bootloader_password_ubuntu
