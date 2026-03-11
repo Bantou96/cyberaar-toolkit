@@ -32,6 +32,11 @@ provisioner:
     verify: verify.yml
   env:
     ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/roles"
+  inventory:
+    host_vars:
+      rhel9:
+        ansible_become: false
+        ansible_user: root
 
 verifier:
   name: ansible
