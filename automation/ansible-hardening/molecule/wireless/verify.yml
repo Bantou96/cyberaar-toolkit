@@ -1,0 +1,67 @@
+---
+- name: "Verify — wireless RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── modprobe blacklist ──────────────────────────────────────────────────────
+    - name: "Stat /etc/modprobe.d/99-cis-wireless.conf (RHEL9)"
+      ansible.builtin.stat:
+        path: /etc/modprobe.d/99-cis-wireless.conf
+      register: wireless_conf_rhel9
+
+    - name: "Assert wireless blacklist file exists (RHEL9)"
+      ansible.builtin.assert:
+        that: wireless_conf_rhel9.stat.exists
+        fail_msg: "/etc/modprobe.d/99-cis-wireless.conf was not created on RHEL9"
+
+    - name: "Read wireless blacklist file content (RHEL9)"
+      ansible.builtin.slurp:
+        src: /etc/modprobe.d/99-cis-wireless.conf
+      register: wireless_conf_content_rhel9
+
+    - name: "Assert iwlwifi is blacklisted (RHEL9)"
+      ansible.builtin.assert:
+        that: "'blacklist iwlwifi' in (wireless_conf_content_rhel9.content | b64decode)"
+        fail_msg: "'blacklist iwlwifi' not found in /etc/modprobe.d/99-cis-wireless.conf on RHEL9"
+
+    - name: "Assert cfg80211 is blacklisted (RHEL9)"
+      ansible.builtin.assert:
+        that: "'blacklist cfg80211' in (wireless_conf_content_rhel9.content | b64decode)"
+        fail_msg: "'blacklist cfg80211' not found in /etc/modprobe.d/99-cis-wireless.conf on RHEL9"
+
+- name: "Verify — wireless Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  tasks:
+    # rfkill is disabled in converge (no wifi hardware in containers).
+    # Only the module blacklist is verified.
+
+    # ── modprobe blacklist ──────────────────────────────────────────────────────
+    - name: "Stat /etc/modprobe.d/99-cis-wireless.conf (Ubuntu)"
+      ansible.builtin.stat:
+        path: /etc/modprobe.d/99-cis-wireless.conf
+      register: wireless_conf_ubuntu
+
+    - name: "Assert wireless blacklist file exists (Ubuntu)"
+      ansible.builtin.assert:
+        that: wireless_conf_ubuntu.stat.exists
+        fail_msg: "/etc/modprobe.d/99-cis-wireless.conf was not created on Ubuntu"
+
+    - name: "Read wireless blacklist file content (Ubuntu)"
+      ansible.builtin.slurp:
+        src: /etc/modprobe.d/99-cis-wireless.conf
+      register: wireless_conf_content_ubuntu
+
+    - name: "Assert iwlwifi is blacklisted (Ubuntu)"
+      ansible.builtin.assert:
+        that: "'blacklist iwlwifi' in (wireless_conf_content_ubuntu.content | b64decode)"
+        fail_msg: "'blacklist iwlwifi' not found in /etc/modprobe.d/99-cis-wireless.conf on Ubuntu"
+
+    - name: "Assert cfg80211 is blacklisted (Ubuntu)"
+      ansible.builtin.assert:
+        that: "'blacklist cfg80211' in (wireless_conf_content_ubuntu.content | b64decode)"
+        fail_msg: "'blacklist cfg80211' not found in /etc/modprobe.d/99-cis-wireless.conf on Ubuntu"

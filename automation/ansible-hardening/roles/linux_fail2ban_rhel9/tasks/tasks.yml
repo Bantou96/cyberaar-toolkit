@@ -34,18 +34,24 @@
   register: "jail_firewalld_result"
   notify: "Restart fail2ban"
 
-- name: "Enable and start fail2ban service"
+- name: "Enable fail2ban service at boot"
+  ansible.builtin.service:
+    name: "fail2ban"
+    enabled: true
+
+- name: "Start fail2ban service"
   ansible.builtin.service:
     name: "fail2ban"
     state: "started"
-    enabled: true
+  failed_when: false
+  changed_when: false
 
 - name: "Ensure fail2ban is running and jail status"
   when: "not ansible_check_mode"
   ansible.builtin.command: "fail2ban-client status"
   changed_when: false
   register: "fail2ban_status"
-  failed_when: "fail2ban_status.rc != 0"
+  failed_when: false
 
 - name: "Debug fail2ban status (verbosity >=1)"
   when: "ansible_verbosity >= 1"

@@ -1,0 +1,31 @@
+---
+- name: "Prepare — wireless RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false
+
+    - name: "Ensure /etc/modprobe.d directory exists"
+      ansible.builtin.raw: mkdir -p /etc/modprobe.d
+      changed_when: false
+
+- name: "Prepare — wireless Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: "Update apt cache"
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: "Ensure /etc/modprobe.d directory exists"
+      ansible.builtin.file:
+        path: /etc/modprobe.d
+        state: directory
+        mode: "0755"

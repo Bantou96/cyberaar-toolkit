@@ -1,0 +1,58 @@
+---
+- name: "Verify — aide RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── AIDE database ──────────────────────────────────────────────────────────
+    - name: "Stat /var/lib/aide/aide.db.gz (RHEL9)"
+      ansible.builtin.stat:
+        path: /var/lib/aide/aide.db.gz
+      register: aide_db_rhel9
+
+    - name: "Assert AIDE database exists (RHEL9)"
+      ansible.builtin.assert:
+        that: aide_db_rhel9.stat.exists
+        fail_msg: "/var/lib/aide/aide.db.gz was not created on RHEL9"
+
+    # ── Cron job ───────────────────────────────────────────────────────────────
+    - name: "Check root crontab for AIDE (RHEL9)"
+      ansible.builtin.command: crontab -l -u root
+      changed_when: false
+      register: root_crontab_rhel9
+      failed_when: false
+
+    - name: "Assert AIDE is in root crontab (RHEL9)"
+      ansible.builtin.assert:
+        that: "'aide' in (root_crontab_rhel9.stdout | lower)"
+        fail_msg: "AIDE not found in root crontab on RHEL9"
+
+- name: "Verify — aide Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── AIDE database ──────────────────────────────────────────────────────────
+    - name: "Stat /var/lib/aide/aide.db (Ubuntu)"
+      ansible.builtin.stat:
+        path: /var/lib/aide/aide.db
+      register: aide_db_ubuntu
+
+    - name: "Assert AIDE database exists (Ubuntu)"
+      ansible.builtin.assert:
+        that: aide_db_ubuntu.stat.exists
+        fail_msg: "/var/lib/aide/aide.db was not created on Ubuntu"
+
+    # ── Cron job ───────────────────────────────────────────────────────────────
+    - name: "Check root crontab for AIDE (Ubuntu)"
+      ansible.builtin.command: crontab -l -u root
+      changed_when: false
+      register: root_crontab_ubuntu
+      failed_when: false
+
+    - name: "Assert AIDE is in root crontab (Ubuntu)"
+      ansible.builtin.assert:
+        that: "'aide' in (root_crontab_ubuntu.stdout | lower)"
+        fail_msg: "AIDE not found in root crontab on Ubuntu"

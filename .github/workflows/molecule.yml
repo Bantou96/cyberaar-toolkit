@@ -44,6 +44,12 @@ jobs:
           - file_permissions
           - sudo_hardening
           - user_management
+          - wireless
+          - authselect_ubuntu
+          - fail2ban_rhel9
+          - dnf_automatic
+          - unattended_upgrades
+          - aide
 
     steps:
       - name: Checkout

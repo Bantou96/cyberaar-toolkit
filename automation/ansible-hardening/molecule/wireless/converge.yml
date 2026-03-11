@@ -1,0 +1,16 @@
+---
+- name: "Converge — wireless RHEL9"
+  hosts: rhel9
+  become: false
+  roles:
+    - role: linux_wireless_rhel9
+
+- name: "Converge — wireless Ubuntu"
+  hosts: ubuntu
+  become: true
+  vars:
+    # Disable rfkill in containers (no wifi hardware — rfkill returns empty,
+    # making the task always report changed). Module blacklist still applies.
+    linux_wireless_disable: false
+  roles:
+    - role: linux_wireless_ubuntu

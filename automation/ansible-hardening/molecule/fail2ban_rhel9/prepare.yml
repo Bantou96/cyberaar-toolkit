@@ -1,0 +1,14 @@
+---
+- name: "Prepare — fail2ban RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false
+
+    - name: "Install EPEL release (provides fail2ban)"
+      ansible.builtin.raw: dnf install -y epel-release
+      changed_when: false

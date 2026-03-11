@@ -1,0 +1,6 @@
+---
+- name: "Converge — authselect Ubuntu"
+  hosts: ubuntu
+  become: true
+  roles:
+    - role: linux_authselect_ubuntu

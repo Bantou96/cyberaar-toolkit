@@ -5,25 +5,29 @@
     name: "aide"
     state: "present"
 
+- name: "Check if AIDE database already exists"
+  ansible.builtin.stat:
+    path: "/var/lib/aide/aide.db.gz"
+  register: "aide_db_initial"
+
 - name: "Initialize AIDE database if it does not exist yet"
+  when: "not aide_db_initial.stat.exists"
   ansible.builtin.command: "aide --init"
-  args:
-    creates: "/var/lib/aide/aide.db.gz"           # idempotent: skip if final db already exists
   register: "aide_init"
   changed_when: "aide_init.rc == 0"
 
 - name: "Activate the newly initialized AIDE database"
-  when: "aide_init.changed"                         # only if init actually ran
+  when: "aide_init.changed | default(false)"
   ansible.builtin.command: "mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz"
   args:
-    removes: "/var/lib/aide/aide.db.new.gz"       # idempotent: skip if .new.gz no longer exists
+    removes: "/var/lib/aide/aide.db.new.gz"
   changed_when: true
 
 - name: "Configure AIDE monitoring rules in /etc/aide.conf"
   ansible.builtin.lineinfile:
     path: "/etc/aide.conf"
-    regexp: "^{{ item | regex_escape() }} ="
-    line: "{{ item }} = p+i+n+u+g+s+acl+selinux+xattrs+sha512"
+    regexp: "^{{ item | regex_escape() }}\\s"
+    line: "{{ item }} p+i+n+u+g+s+acl+selinux+xattrs+sha512"
     insertafter: "^#.*BEGIN AIDE CONFIG"
     create: true
   loop: "{{ linux_aide_monitored_paths }}"
@@ -33,13 +37,11 @@
 - name: "Re-run AIDE init if monitoring rules were changed"
   when: "aide_config_changed.changed"
   ansible.builtin.command: "aide --init"
-  args:
-    creates: "/var/lib/aide/aide.db.new.gz"
   register: "aide_reinit"
   changed_when: "aide_reinit.rc == 0"
 
 - name: "Activate updated AIDE database after config change"
-  when: "aide_reinit.changed"
+  when: "aide_reinit.changed | default(false)"
   ansible.builtin.command: "mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz"
   args:
     removes: "/var/lib/aide/aide.db.new.gz"
@@ -53,13 +55,14 @@
     day:    "{{ linux_aide_cron_time.split(' ')[2] }}"
     month:  "{{ linux_aide_cron_time.split(' ')[3] }}"
     weekday: "{{ linux_aide_cron_time.split(' ')[4] }}"
-    job:    "/usr/sbin/aide --check | /usr/bin/mail -s \"AIDE Integrity Report on {{ ansible_hostname }}\" root@localhost"
+    job:    "/usr/sbin/aide --check | /usr/bin/mail -s 'AIDE Integrity Report on {{ ansible_facts.hostname }}' root@localhost"
     state:  "present"
 
 - name: "Debug AIDE status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:
     msg:
+      - "AIDE database existed: {{ aide_db_initial.stat.exists }}"
       - "AIDE database initialized: {{ aide_init.changed | default(false) }}"
       - "Config changed: {{ aide_config_changed.changed | default(false) }}"
       - "Re-init triggered: {{ aide_reinit.changed | default(false) }}"
