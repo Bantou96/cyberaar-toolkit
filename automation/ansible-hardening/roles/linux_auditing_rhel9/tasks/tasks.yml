@@ -86,6 +86,7 @@
     name: "rsyslog"
     state: "started"
     enabled: true
+  failed_when: false
 
 - name: "Deploy rsyslog remote forwarding configuration (TCP/TLS/RELP)"
   when:
