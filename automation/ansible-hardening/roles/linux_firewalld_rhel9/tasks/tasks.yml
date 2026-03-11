@@ -108,7 +108,8 @@
 - name: "Gather current services in default zone"
   when: "_firewalld_active | bool"
   ansible.posix.firewalld_info:
-    zone: "{{ linux_firewalld_default_zone }}"
+    zones:
+      - "{{ linux_firewalld_default_zone }}"
   register: "fw_info"
 
 - name: "Remove unexpected services from default zone"
