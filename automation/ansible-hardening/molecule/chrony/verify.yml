@@ -1,0 +1,102 @@
+---
+- name: "Verify — chrony RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: "Assert chrony package is installed"
+      ansible.builtin.assert:
+        that: "'chrony' in ansible_facts.packages"
+        fail_msg: "chrony package is not installed"
+
+    - name: "Assert chrony.conf exists"
+      ansible.builtin.stat:
+        path: /etc/chrony.conf
+      register: chrony_conf
+
+    - name: "Assert chrony config file is present"
+      ansible.builtin.assert:
+        that: chrony_conf.stat.exists
+        fail_msg: "/etc/chrony.conf was not deployed"
+
+    - name: "Read chrony.conf"
+      ansible.builtin.slurp:
+        src: /etc/chrony.conf
+      register: chrony_raw
+
+    - name: "Assert NTP servers are configured"
+      ansible.builtin.assert:
+        that: "chrony_raw.content | b64decode is search('pool.ntp.org')"
+        fail_msg: "No pool.ntp.org servers found in /etc/chrony.conf"
+
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert chronyd service unit exists"
+      ansible.builtin.assert:
+        that: ansible_facts.services['chronyd.service'] is defined
+        fail_msg: "chronyd.service unit is not found in service facts"
+
+    - name: "Note chronyd service state"
+      ansible.builtin.debug:
+        msg: >-
+          chronyd.service status={{ ansible_facts.services['chronyd.service'].status | default('unknown') }}
+          state={{ ansible_facts.services['chronyd.service'].state | default('unknown') }}
+          (systemd enable/start may be limited in containers — unit existence verified above).
+
+- name: "Verify — chrony Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: "Gather package facts"
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: "Assert chrony package is installed"
+      ansible.builtin.assert:
+        that: "'chrony' in ansible_facts.packages"
+        fail_msg: "chrony package is not installed"
+
+    - name: "Assert chrony.conf exists"
+      ansible.builtin.stat:
+        path: /etc/chrony/chrony.conf
+      register: chrony_conf
+
+    - name: "Assert chrony config file is present"
+      ansible.builtin.assert:
+        that: chrony_conf.stat.exists
+        fail_msg: "/etc/chrony/chrony.conf was not deployed"
+
+    - name: "Read chrony.conf"
+      ansible.builtin.slurp:
+        src: /etc/chrony/chrony.conf
+      register: chrony_raw
+
+    - name: "Assert NTP servers are configured"
+      ansible.builtin.assert:
+        that: "chrony_raw.content | b64decode is search('pool.ntp.org')"
+        fail_msg: "No pool.ntp.org servers found in /etc/chrony/chrony.conf"
+
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert chrony service unit exists"
+      ansible.builtin.assert:
+        that: >-
+          ansible_facts.services['chrony.service'] is defined
+          or ansible_facts.services['chrony'] is defined
+        fail_msg: "Neither chrony.service nor chrony unit found in service facts"
+
+    - name: "Note chrony service state"
+      ansible.builtin.debug:
+        msg: >-
+          chrony service: status={{ (ansible_facts.services['chrony.service'] | default(ansible_facts.services['chrony'] | default({}))).status | default('unknown') }}
+          state={{ (ansible_facts.services['chrony.service'] | default(ansible_facts.services['chrony'] | default({}))).state | default('unknown') }}
+          (systemd enable/start may be limited in containers — unit existence verified above).

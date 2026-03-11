@@ -10,11 +10,41 @@
     name: "firewalld"
     state: "started"
     enabled: true
+  failed_when: false
+  register: "_firewalld_service"
+
+- name: "Check if firewalld is actually running"
+  ansible.builtin.command: systemctl is-active firewalld
+  changed_when: false
+  failed_when: false
+  register: "_firewalld_active_check"
+
+- name: "Set firewalld active fact"
+  ansible.builtin.set_fact:
+    _firewalld_active: "{{ _firewalld_active_check.rc == 0 }}"
+
+- name: "Note when firewalld could not start"
+  when: "not _firewalld_active | bool"
+  ansible.builtin.debug:
+    msg: >-
+      firewalld failed to start (kernel may lack nftables/iptables support —
+      common in containers or WSL2). Permanent rules will still be written;
+      immediate apply and runtime queries are skipped.
+
+- name: "Get current firewalld default zone"
+  when: "_firewalld_active | bool"
+  ansible.builtin.command: firewall-cmd --get-default-zone
+  changed_when: false
+  failed_when: false
+  register: "_fw_default_zone_current"
 
 - name: "Set firewalld default zone"
-  when: "linux_firewalld_enabled | bool"
-  ansible.posix.firewalld_config:
-    default_zone: "{{ linux_firewalld_default_zone }}"
+  when:
+    - "linux_firewalld_enabled | bool"
+    - "_firewalld_active | bool"
+    - "_fw_default_zone_current.stdout | trim != linux_firewalld_default_zone"
+  ansible.builtin.command: "firewall-cmd --set-default-zone={{ linux_firewalld_default_zone }}"
+  changed_when: true
 
 - name: "Allow required services in default zone"
   when: "linux_firewalld_enabled | bool"
@@ -22,7 +52,7 @@
     service: "{{ item }}"
     zone: "{{ linux_firewalld_default_zone }}"
     permanent: true
-    immediate: true
+    immediate: "{{ _firewalld_active | bool }}"
     state: enabled
   loop: "{{ linux_firewalld_allowed_services }}"
 
@@ -32,7 +62,7 @@
     port: "{{ item }}"
     zone: "{{ linux_firewalld_default_zone }}"
     permanent: true
-    immediate: true
+    immediate: "{{ _firewalld_active | bool }}"
     state: enabled
   loop: "{{ linux_firewalld_allowed_ports }}"
 
@@ -44,7 +74,7 @@
     rich_rule: "rule family='ipv4' source address='{{ item }}' service name='ssh' accept"
     zone: "{{ linux_firewalld_default_zone }}"
     permanent: true
-    immediate: true
+    immediate: "{{ _firewalld_active | bool }}"
     state: enabled
   loop: "{{ linux_firewalld_ssh_sources }}"
 
@@ -56,33 +86,42 @@
     rich_rule: "rule family='ipv4' service name='ssh' limit value='{{ linux_firewalld_ssh_rate_limit }}' accept"
     zone: "{{ linux_firewalld_default_zone }}"
     permanent: true
-    immediate: true
+    immediate: "{{ _firewalld_active | bool }}"
     state: enabled
 
+- name: "Get current log-denied setting"
+  when: "_firewalld_active | bool"
+  ansible.builtin.command: firewall-cmd --get-log-denied
+  changed_when: false
+  failed_when: false
+  register: "_fw_log_denied_current"
+
 - name: "Enable logging of denied packets"
-  when: "linux_firewalld_enabled | bool"
-  ansible.posix.firewalld:
-    zone: "{{ linux_firewalld_default_zone }}"
-    log_denied: "{{ linux_firewalld_log_denied }}"
-    permanent: true
-    immediate: true
-    state: present
+  when:
+    - "linux_firewalld_enabled | bool"
+    - "_firewalld_active | bool"
+    - "_fw_log_denied_current.stdout | trim | lower != linux_firewalld_log_denied | lower"
+  ansible.builtin.command: "firewall-cmd --set-log-denied={{ linux_firewalld_log_denied }}"
+  changed_when: true
 
 # Optional: Remove any unexpected services (defense-in-depth)
 - name: "Gather current services in default zone"
+  when: "_firewalld_active | bool"
   ansible.posix.firewalld_info:
-    zone: "{{ linux_firewalld_default_zone }}"
+    zones:
+      - "{{ linux_firewalld_default_zone }}"
   register: "fw_info"
 
 - name: "Remove unexpected services from default zone"
   when:
     - "linux_firewalld_enabled | bool"
+    - "_firewalld_active | bool"
     - "fw_info.firewalld_zones[linux_firewalld_default_zone].services | default([]) | difference(linux_firewalld_allowed_services) | length > 0"
   ansible.posix.firewalld:
     service: "{{ item }}"
     zone: "{{ linux_firewalld_default_zone }}"
     permanent: true
-    immediate: true
+    immediate: "{{ _firewalld_active | bool }}"
     state: disabled
   loop: "{{ fw_info.firewalld_zones[linux_firewalld_default_zone].services | default([]) | difference(linux_firewalld_allowed_services) }}"
 

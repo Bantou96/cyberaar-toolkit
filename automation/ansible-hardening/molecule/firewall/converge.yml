@@ -1,0 +1,32 @@
+---
+- name: "Converge — firewall RHEL9"
+  hosts: rhel9
+  gather_facts: true
+  become: true
+
+  vars:
+    # Use public zone (not drop) so molecule connectivity is preserved
+    linux_firewalld_default_zone: "public"
+    linux_firewalld_allowed_services:
+      - "ssh"
+    linux_firewalld_allowed_ports: []
+    linux_firewalld_ssh_sources: []
+    # Disable rate limiting — rich rules add complexity without adding coverage
+    linux_firewalld_ssh_rate_limit: ""
+    linux_firewalld_log_denied: "all"
+
+  roles:
+    - role: linux_firewalld_rhel9
+
+- name: "Converge — firewall Ubuntu"
+  hosts: ubuntu
+  gather_facts: true
+  become: true
+
+  vars:
+    linux_firewall_ssh_port: "22"
+    linux_firewall_allow_rules: []
+    linux_firewall_deny_rules: []
+
+  roles:
+    - role: linux_firewall_ubuntu
