@@ -1,0 +1,10 @@
+---
+- name: "Prepare — dnf_automatic RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: "Update dnf cache"
+      ansible.builtin.raw: dnf makecache -q
+      changed_when: false

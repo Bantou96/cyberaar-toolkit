@@ -1,0 +1,47 @@
+---
+- name: "Verify — unattended_upgrades Ubuntu"
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+    # ── 50unattended-upgrades ──────────────────────────────────────────────────
+    - name: "Stat /etc/apt/apt.conf.d/50unattended-upgrades"
+      ansible.builtin.stat:
+        path: /etc/apt/apt.conf.d/50unattended-upgrades
+      register: uu_conf_stat
+
+    - name: "Assert /etc/apt/apt.conf.d/50unattended-upgrades exists and is non-empty"
+      ansible.builtin.assert:
+        that:
+          - uu_conf_stat.stat.exists
+          - uu_conf_stat.stat.size > 0
+        fail_msg: "/etc/apt/apt.conf.d/50unattended-upgrades was not deployed or is empty"
+
+    # ── 20auto-upgrades ────────────────────────────────────────────────────────
+    - name: "Stat /etc/apt/apt.conf.d/20auto-upgrades"
+      ansible.builtin.stat:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+      register: auto_upgrades_stat
+
+    - name: "Assert /etc/apt/apt.conf.d/20auto-upgrades exists and is non-empty"
+      ansible.builtin.assert:
+        that:
+          - auto_upgrades_stat.stat.exists
+          - auto_upgrades_stat.stat.size > 0
+        fail_msg: "/etc/apt/apt.conf.d/20auto-upgrades was not deployed or is empty"
+
+    # ── Service unit ───────────────────────────────────────────────────────────
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert unattended-upgrades.service unit is defined"
+      ansible.builtin.assert:
+        that: ansible_facts.services['unattended-upgrades.service'] is defined
+        fail_msg: "unattended-upgrades.service is not known to systemd"
+
+    - name: "Note unattended-upgrades.service state"
+      ansible.builtin.debug:
+        msg: >-
+          unattended-upgrades.service state: {{ ansible_facts.services['unattended-upgrades.service'].state | default('unknown') }}
+          status: {{ ansible_facts.services['unattended-upgrades.service'].status | default('unknown') }}

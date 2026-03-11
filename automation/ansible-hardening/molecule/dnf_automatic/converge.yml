@@ -1,0 +1,6 @@
+---
+- name: "Converge — dnf_automatic RHEL9"
+  hosts: rhel9
+  become: false
+  roles:
+    - role: linux_dnf_automatic_rhel9

@@ -1,0 +1,6 @@
+---
+- name: "Converge — fail2ban RHEL9"
+  hosts: rhel9
+  become: false
+  roles:
+    - role: linux_fail2ban_rhel9

@@ -1,0 +1,45 @@
+---
+- name: "Verify — dnf_automatic RHEL9"
+  hosts: rhel9
+  gather_facts: false
+  become: false
+
+  tasks:
+    # ── Config file ────────────────────────────────────────────────────────────
+    - name: "Stat /etc/dnf/automatic.conf"
+      ansible.builtin.stat:
+        path: /etc/dnf/automatic.conf
+      register: auto_conf_stat
+
+    - name: "Assert /etc/dnf/automatic.conf exists"
+      ansible.builtin.assert:
+        that: auto_conf_stat.stat.exists
+        fail_msg: "/etc/dnf/automatic.conf was not deployed"
+
+    - name: "Read /etc/dnf/automatic.conf content"
+      ansible.builtin.slurp:
+        src: /etc/dnf/automatic.conf
+      register: auto_conf_content
+
+    - name: "Assert upgrade_type is configured in automatic.conf"
+      ansible.builtin.assert:
+        that: "'upgrade_type' in (auto_conf_content.content | b64decode)"
+        fail_msg: "'upgrade_type' setting not found in /etc/dnf/automatic.conf"
+
+    # ── Timer unit ─────────────────────────────────────────────────────────────
+    - name: "Check dnf-automatic.timer is enabled"
+      ansible.builtin.command: systemctl is-enabled dnf-automatic.timer
+      changed_when: false
+      register: timer_enabled
+      failed_when: false
+
+    - name: "Assert dnf-automatic.timer is enabled"
+      ansible.builtin.assert:
+        that: timer_enabled.rc == 0
+        fail_msg: >-
+          dnf-automatic.timer is not enabled (rc={{ timer_enabled.rc }},
+          stdout={{ timer_enabled.stdout | default('') }})
+
+    - name: "Note dnf-automatic.timer state"
+      ansible.builtin.debug:
+        msg: "dnf-automatic.timer: {{ timer_enabled.stdout | default('unknown') }}"

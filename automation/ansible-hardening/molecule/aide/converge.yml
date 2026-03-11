@@ -1,0 +1,12 @@
+---
+- name: "Converge — aide RHEL9"
+  hosts: rhel9
+  become: false
+  roles:
+    - role: linux_aide_rhel9
+
+- name: "Converge — aide Ubuntu"
+  hosts: ubuntu
+  become: true
+  roles:
+    - role: linux_aide_ubuntu

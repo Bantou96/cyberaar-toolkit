@@ -1,0 +1,6 @@
+---
+- name: "Converge — unattended_upgrades Ubuntu"
+  hosts: ubuntu
+  become: true
+  roles:
+    - role: linux_unattended_upgrades_ubuntu
