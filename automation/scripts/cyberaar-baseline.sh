@@ -3,7 +3,7 @@
 #  CyberAar Security Baseline Checker
 #  Vérificateur de Sécurité de Base CyberAar
 #
-#  Version   : 4.0.0
+#  Version   : 4.2.0
 #  Author    : CyberAar (https://github.com/Bantou96/Aar-Act)
 #  License   : GPL v3
 #  Target    : RHEL/CentOS/Ubuntu/Debian (Linux Government Servers)
@@ -17,12 +17,12 @@
 # =============================================================================
 
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
-SCRIPT_VERSION="4.0.0"
+SCRIPT_VERSION="4.2.0"
 SCRIPT_NAME="cyberaar-baseline"
 
 _show_help() {
   cat <<'HELPEOF'
-CyberAar Security Baseline Checker v4.0.0
+CyberAar Security Baseline Checker v4.2.0
 
 Usage: cyberaar-baseline [OPTIONS]
 
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
     --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
     --install)    DO_INSTALL=true; shift ;;
     --uninstall)  DO_UNINSTALL=true; shift ;;
-    --version)    echo "cyberaar-baseline v4.0.0"; exit 0 ;;
+    --version)    echo "cyberaar-baseline v4.2.0"; exit 0 ;;
     --help|-h)    _show_help; exit 0 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
@@ -200,14 +200,17 @@ declare -A ANSIBLE_MAP=(
   ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
   ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
   ["NET-12"]="network,wireless|linux_wireless_rhel9|linux_wireless_ubuntu|Wireless interfaces disabled"
+  ["NET-13"]="network,ipv6|linux_ipv6_rhel9|linux_ipv6_ubuntu|IPv6 disabled (CIS 3.3.1)"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
   # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
   ["LOG-04"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit rules configuration"
   ["LOG-05"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit log size configuration"
   ["LOG-06"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Kernel audit boot parameter"
-  ["LOG-07"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|journald persistent storage"
+  ["LOG-07"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald persistent storage (/var/log/journal)"
   # LOG-08: remote syslog not managed by any hardening role — no Ansible remediation
+  ["LOG-09"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald Storage=persistent config"
+  ["LOG-10"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald rate limiting config"
   ["INT-01"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE file integrity monitor"
   # INT-02: rkhunter/chkrootkit not managed by any role — no Ansible remediation
   # INT-03: suspicious cron requires manual investigation — no Ansible remediation
@@ -1127,6 +1130,16 @@ else
     "Activez: 'net.ipv4.icmp_echo_ignore_broadcasts=1' dans /etc/sysctl.d/"
 fi
 
+# NET-13 IPv6 fully disabled (CIS 3.3.1)
+IPV6_ALL=$(sysctl -n net.ipv6.conf.all.disable_ipv6 2>/dev/null || echo "0")
+IPV6_DEF=$(sysctl -n net.ipv6.conf.default.disable_ipv6 2>/dev/null || echo "0")
+if [[ "$IPV6_ALL" == "1" && "$IPV6_DEF" == "1" ]]; then
+  add_result "Network" "PASS" "NET-13" "IPv6 fully disabled" "IPv6 entièrement désactivé" "disable_ipv6=1 (all + default)" ""
+else
+  add_result "Network" "WARN" "NET-13" "IPv6 not disabled" "IPv6 non désactivé" "all=$IPV6_ALL default=$IPV6_DEF" \
+    "Ajoutez dans /etc/sysctl.d/99-cis-ipv6.conf: net.ipv6.conf.all.disable_ipv6=1 et net.ipv6.conf.default.disable_ipv6=1"
+fi
+
 # NET-12 Wireless interfaces disabled (CIS 3.1.2)
 _WIRELESS_OK=false
 # Check rfkill (Ubuntu/Debian)
@@ -1228,6 +1241,26 @@ if [[ -d /var/log/journal ]]; then
 else
   add_result "Logging" "WARN" "LOG-07" "journald not persistent" "Journald non persistant" "/var/log/journal absent (volatile)" \
     "Activez: 'mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal'"
+fi
+
+# LOG-09 journald Storage=persistent configured (CIS 4.2.1.1)
+_JD_STORAGE=$(grep -rshE '^\s*Storage\s*=' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf 2>/dev/null | \
+  awk -F= '{print $2}' | tr -d ' ' | tail -1)
+if [[ "$_JD_STORAGE" == "persistent" || "$_JD_STORAGE" == "auto" ]]; then
+  add_result "Logging" "PASS" "LOG-09" "journald Storage configured" "Stockage journald configuré" "Storage=$_JD_STORAGE" ""
+else
+  add_result "Logging" "WARN" "LOG-09" "journald Storage not set" "Stockage journald non configuré" "Storage=${_JD_STORAGE:-not set}" \
+    "Créez /etc/systemd/journald.conf.d/99-cis-journald.conf avec Storage=persistent"
+fi
+
+# LOG-10 journald rate limiting configured (CIS 4.2.1.3)
+_JD_BURST=$(grep -rshE '^\s*RateLimitBurst\s*=' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf 2>/dev/null | \
+  awk -F= '{print $2}' | tr -d ' ' | tail -1)
+if [[ -n "$_JD_BURST" && "$_JD_BURST" -gt 0 ]] 2>/dev/null; then
+  add_result "Logging" "PASS" "LOG-10" "journald rate limiting configured" "Limitation débit journald configurée" "RateLimitBurst=$_JD_BURST" ""
+else
+  add_result "Logging" "WARN" "LOG-10" "journald rate limiting not set" "Limitation débit journald absente" "RateLimitBurst=${_JD_BURST:-not set}" \
+    "Ajoutez RateLimitBurst=10000 et RateLimitInterval=30s dans /etc/systemd/journald.conf.d/99-cis-journald.conf"
 fi
 
 # LOG-08 Remote syslog configured (informational — no Ansible remediation)
@@ -2219,7 +2252,7 @@ footer {
     <div><strong>${HOSTNAME_VAL}</strong></div>
     <div>${OS_VAL}</div>
     <div>${DATE_VAL}</div>
-    <div><span class="version-badge">v4.0.0</span></div>
+    <div><span class="version-badge">v${SCRIPT_VERSION}</span></div>
   </div>
 </header>
 
@@ -2302,7 +2335,7 @@ ${ANSIBLE_PLAN_HTML}
     </a>
   </div>
   <div class="footer-text">
-    Generated by <a href="https://github.com/Bantou96/Aar-Act" target="_blank">CyberAar Baseline Checker v4.0.0</a><br>
+    Generated by <a href="https://github.com/Bantou96/Aar-Act" target="_blank">CyberAar Baseline Checker v${SCRIPT_VERSION}</a><br>
     <strong>${DATE_VAL}</strong> · ${HOSTNAME_VAL} · ${OS_VAL}
   </div>
 </footer>

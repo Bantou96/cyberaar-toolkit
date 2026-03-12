@@ -111,6 +111,16 @@ else
     "Activez: 'net.ipv4.icmp_echo_ignore_broadcasts=1' dans /etc/sysctl.d/"
 fi
 
+# NET-13 IPv6 fully disabled (CIS 3.3.1)
+IPV6_ALL=$(sysctl -n net.ipv6.conf.all.disable_ipv6 2>/dev/null || echo "0")
+IPV6_DEF=$(sysctl -n net.ipv6.conf.default.disable_ipv6 2>/dev/null || echo "0")
+if [[ "$IPV6_ALL" == "1" && "$IPV6_DEF" == "1" ]]; then
+  add_result "Network" "PASS" "NET-13" "IPv6 fully disabled" "IPv6 entièrement désactivé" "disable_ipv6=1 (all + default)" ""
+else
+  add_result "Network" "WARN" "NET-13" "IPv6 not disabled" "IPv6 non désactivé" "all=$IPV6_ALL default=$IPV6_DEF" \
+    "Ajoutez dans /etc/sysctl.d/99-cis-ipv6.conf: net.ipv6.conf.all.disable_ipv6=1 et net.ipv6.conf.default.disable_ipv6=1"
+fi
+
 # NET-12 Wireless interfaces disabled (CIS 3.1.2)
 _WIRELESS_OK=false
 # Check rfkill (Ubuntu/Debian)

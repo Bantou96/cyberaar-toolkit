@@ -72,14 +72,17 @@ declare -A ANSIBLE_MAP=(
   ["NET-10"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|IPv6 RA disabled"
   ["NET-11"]="network,sysctl|linux_kernel_hardening_rhel9|linux_kernel_hardening_ubuntu|ICMP broadcast protection"
   ["NET-12"]="network,wireless|linux_wireless_rhel9|linux_wireless_ubuntu|Wireless interfaces disabled"
+  ["NET-13"]="network,ipv6|linux_ipv6_rhel9|linux_ipv6_ubuntu|IPv6 disabled (CIS 3.3.1)"
   ["LOG-01"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|auditd configuration"
   ["LOG-02"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|System logging (rsyslog)"
   # LOG-03: logrotate is not managed by any hardening role — no Ansible remediation
   ["LOG-04"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit rules configuration"
   ["LOG-05"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Audit log size configuration"
   ["LOG-06"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|Kernel audit boot parameter"
-  ["LOG-07"]="audit,logging|linux_auditing_rhel9|linux_auditing_ubuntu|journald persistent storage"
+  ["LOG-07"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald persistent storage (/var/log/journal)"
   # LOG-08: remote syslog not managed by any hardening role — no Ansible remediation
+  ["LOG-09"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald Storage=persistent config"
+  ["LOG-10"]="audit,logging,journald|linux_journald_rhel9|linux_journald_ubuntu|journald rate limiting config"
   ["INT-01"]="integrity,aide|linux_aide_rhel9|linux_aide_ubuntu|AIDE file integrity monitor"
   # INT-02: rkhunter/chkrootkit not managed by any role — no Ansible remediation
   # INT-03: suspicious cron requires manual investigation — no Ansible remediation

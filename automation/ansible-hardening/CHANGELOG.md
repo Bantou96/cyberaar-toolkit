@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] — 2026-03-12
+
+### Added
+
+- **`cyberaar-baseline.sh` v4.2.0** — 3 new checks (96 total):
+  - **NET-13** (CIS 3.3.1): IPv6 fully disabled — checks `net.ipv6.conf.all.disable_ipv6=1` + `default`; maps to `linux_ipv6_*`
+  - **LOG-09** (CIS 4.2.1.1): journald `Storage=persistent` configured in drop-in conf; maps to `linux_journald_*`
+  - **LOG-10** (CIS 4.2.1.3): journald `RateLimitBurst` configured; maps to `linux_journald_*`
+  - Ansible map updated: `LOG-07` now maps to `linux_journald_*` (was `linux_auditing_*`)
+- **`.github/workflows/baseline-build.yml`** — CI job that verifies `build.sh` succeeds, checks bundle is in sync with `src/`, validates bash syntax, and asserts ≥ 90 unique check IDs
+
+### Changed
+
+- `cyberaar-baseline.sh` / `src/main.sh`: version bumped 4.0.0 → 4.2.0 (4.1.0 was a documentation-only bump that was never reflected in the source)
+
 ## [1.9.0] — 2026-03-12
 
 ### Added

@@ -1,8 +1,8 @@
 # CyberAar Security Baseline Checker
 
 **Script:** `automation/scripts/cyberaar-baseline.sh`
-**Version:** 4.1.0
-**Checks:** 93 across 8 sections
+**Version:** 4.2.0
+**Checks:** 96 across 8 sections
 
 ## Overview
 
@@ -181,12 +181,12 @@ A self-contained single-file HTML report with:
 ```json
 {
   "cyberaar_baseline": {
-    "version": "4.1.0",
+    "version": "4.2.0",
     "host": "server01.example.com",
     "os": "AlmaLinux Linux 9.3",
     "date": "2026-03-07 14:23:01",
     "score": 74,
-    "summary": { "pass": 57, "warn": 28, "fail": 8, "total": 93 },
+    "summary": { "pass": 57, "warn": 31, "fail": 8, "total": 96 },
     "results": [
       {
         "id": "SYS-01",
@@ -320,6 +320,7 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 | NET-10 | `net.ipv6.conf.all.accept_ra = 0` | WARN | `network,sysctl` | WARN only — may be needed in IPv6 networks |
 | NET-11 | `net.ipv4.icmp_echo_ignore_broadcasts = 1` | WARN | `network,sysctl` | — |
 | NET-12 | Wireless interfaces disabled | WARN | `wireless` | CIS 3.1.2 — rfkill + nmcli + modprobe blacklist |
+| NET-13 | IPv6 fully disabled | WARN | `network,ipv6` | CIS 3.3.1 — checks `net.ipv6.conf.all.disable_ipv6=1` + `default` |
 
 ---
 
@@ -333,8 +334,10 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 | LOG-04 | Audit rules present | WARN | `audit,logging` | Checks for `execve`, `chmod`, `chown`, `delete`, `login`, `sudo` rules |
 | LOG-05 | `max_log_file ≥ 8` MB in `auditd.conf` | WARN | `audit,logging` | — |
 | LOG-06 | `audit=1` in kernel cmdline | WARN | `audit,logging` | Checks `/proc/cmdline` |
-| LOG-07 | journald persistent storage | WARN | `audit,logging` | Checks for `/var/log/journal` directory |
+| LOG-07 | journald persistent storage | WARN | `audit,logging,journald` | Checks for `/var/log/journal` directory |
 | LOG-08 | Remote syslog configured | WARN | — | **(manual review)** Checks rsyslog for `@@` forwarding — no Ansible role covers remote syslog |
+| LOG-09 | journald Storage=persistent configured | WARN | `audit,logging,journald` | CIS 4.2.1.1 — checks drop-in config in `/etc/systemd/journald.conf.d/` |
+| LOG-10 | journald rate limiting configured | WARN | `audit,logging,journald` | CIS 4.2.1.3 — checks `RateLimitBurst` in journald config |
 
 ---
 
@@ -470,12 +473,14 @@ Checks without a mapping have no automated fix in this collection.
 | NET-02, NET-03 | `network,sysctl` | `linux_ip_forwarding_rhel9` | `linux_ip_forwarding_ubuntu` |
 | NET-04, NET-06–NET-11, COMP-06–COMP-10 | `kernel,sysctl` | `linux_kernel_hardening_rhel9` | `linux_kernel_hardening_ubuntu` |
 | NET-05 | `services` | `linux_disable_unnecessary_services_rhel9` | `linux_disable_unnecessary_services_ubuntu` |
-| LOG-01, LOG-02, LOG-04–LOG-07 | `audit,logging` | `linux_auditing_rhel9` | `linux_auditing_ubuntu` |
+| LOG-01, LOG-02, LOG-04–LOG-06 | `audit,logging` | `linux_auditing_rhel9` | `linux_auditing_ubuntu` |
+| LOG-07, LOG-09, LOG-10 | `audit,logging,journald` | `linux_journald_rhel9` | `linux_journald_ubuntu` |
 | INT-01, INT-07 | `integrity,aide` | `linux_aide_rhel9` | `linux_aide_ubuntu` |
 | INT-05 | `updates,patching` | `linux_dnf_automatic_rhel9` | `linux_unattended_upgrades_ubuntu` |
 | INT-06 | `fail2ban` | `linux_fail2ban_rhel9` | `linux_fail2ban_ubuntu` |
 | AUTH-15, AUTH-16 | `sudo` | `linux_sudo_hardening_rhel9` | `linux_sudo_hardening_ubuntu` |
 | NET-12 | `wireless` | `linux_wireless_rhel9` | `linux_wireless_ubuntu` |
+| NET-13 | `network,ipv6` | `linux_ipv6_rhel9` | `linux_ipv6_ubuntu` |
 | COMP-01 | `banner` | `linux_login_banner_rhel9` | `linux_login_banner_ubuntu` |
 | COMP-11, COMP-12 | `cron` | `linux_cron_hardening_rhel9` | `linux_cron_hardening_ubuntu` |
 

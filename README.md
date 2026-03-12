@@ -45,7 +45,7 @@ available in French & English.
 
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
-| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 93 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.1.0 |
+| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
 | `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
@@ -58,7 +58,7 @@ Both tools are independent: you can run the baseline script standalone without A
 Aar-Act/
 ├── automation/
 │   ├── scripts/
-│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.1.0) — generated bundle
+│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.2.0) — generated bundle
 │   │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
 │   │   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
 │   │   ├── README.md                     # Baseline checker full reference
@@ -118,7 +118,7 @@ ansible-galaxy collection install -r automation/ansible-hardening/requirements.y
 
 ## Deliverable 1 — Baseline Audit Script (`cyberaar-baseline.sh`)
 
-The standalone audit script runs **93 security checks** across 8 sections and produces:
+The standalone audit script runs **96 security checks** across 8 sections and produces:
 
 - **Terminal output** — colour-coded PASS / WARN / FAIL with a security score
 - **HTML report** — self-contained file for sharing with management or auditors
@@ -155,7 +155,7 @@ cyberaar-baseline --inventory automation/ansible-hardening/inventory/hosts \
 
 ### What it checks
 
-93 checks across 8 sections — each mapped to a CIS benchmark control:
+96 checks across 8 sections — each mapped to a CIS benchmark control:
 
 | Section | Checks | Coverage highlights |
 |---|---|---|

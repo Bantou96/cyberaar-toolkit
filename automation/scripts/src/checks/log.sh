@@ -75,6 +75,26 @@ else
     "Activez: 'mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal'"
 fi
 
+# LOG-09 journald Storage=persistent configured (CIS 4.2.1.1)
+_JD_STORAGE=$(grep -rshE '^\s*Storage\s*=' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf 2>/dev/null | \
+  awk -F= '{print $2}' | tr -d ' ' | tail -1)
+if [[ "$_JD_STORAGE" == "persistent" || "$_JD_STORAGE" == "auto" ]]; then
+  add_result "Logging" "PASS" "LOG-09" "journald Storage configured" "Stockage journald configuré" "Storage=$_JD_STORAGE" ""
+else
+  add_result "Logging" "WARN" "LOG-09" "journald Storage not set" "Stockage journald non configuré" "Storage=${_JD_STORAGE:-not set}" \
+    "Créez /etc/systemd/journald.conf.d/99-cis-journald.conf avec Storage=persistent"
+fi
+
+# LOG-10 journald rate limiting configured (CIS 4.2.1.3)
+_JD_BURST=$(grep -rshE '^\s*RateLimitBurst\s*=' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf 2>/dev/null | \
+  awk -F= '{print $2}' | tr -d ' ' | tail -1)
+if [[ -n "$_JD_BURST" && "$_JD_BURST" -gt 0 ]] 2>/dev/null; then
+  add_result "Logging" "PASS" "LOG-10" "journald rate limiting configured" "Limitation débit journald configurée" "RateLimitBurst=$_JD_BURST" ""
+else
+  add_result "Logging" "WARN" "LOG-10" "journald rate limiting not set" "Limitation débit journald absente" "RateLimitBurst=${_JD_BURST:-not set}" \
+    "Ajoutez RateLimitBurst=10000 et RateLimitInterval=30s dans /etc/systemd/journald.conf.d/99-cis-journald.conf"
+fi
+
 # LOG-08 Remote syslog configured (informational — no Ansible remediation)
 REMOTE_LOG=false
 if [[ -f /etc/rsyslog.conf ]] || [[ -d /etc/rsyslog.d ]]; then
