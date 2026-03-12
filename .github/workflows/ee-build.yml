@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run — build image but do not push to Docker Hub"
+        description: "Dry run — build image but do not push to ghcr.io"
         required: false
         default: "false"
 
@@ -15,6 +15,9 @@ jobs:
   build:
     name: ee-build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # required to push to ghcr.io
 
     steps:
       - name: Checkout
@@ -29,12 +32,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to GitHub Container Registry
         if: ${{ github.event.inputs.dry_run != 'true' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -45,8 +49,8 @@ jobs:
             COLLECTION_VERSION=${{ steps.meta.outputs.version }}
           push: ${{ github.event.inputs.dry_run != 'true' }}
           tags: |
-            cyberaar/ee-hardening:latest
-            cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}
+            ghcr.io/cyberaar/ee-hardening:latest
+            ghcr.io/cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -54,5 +58,5 @@ jobs:
         if: ${{ github.event.inputs.dry_run == 'true' }}
         run: |
           echo "Dry run — image built but not pushed:"
-          echo "  cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}"
-          echo "  cyberaar/ee-hardening:latest"
+          echo "  ghcr.io/cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}"
+          echo "  ghcr.io/cyberaar/ee-hardening:latest"

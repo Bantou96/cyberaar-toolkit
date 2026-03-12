@@ -7,7 +7,7 @@
 [![Galaxy](https://img.shields.io/badge/galaxy-bantou96.hardening-blue?logo=ansible)](https://galaxy.ansible.com/ui/repo/published/bantou96/hardening/)
 [![Molecule CI](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml)
 [![Baseline Build](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml)
-[![Docker Hub](https://img.shields.io/docker/v/cyberaar/ee-hardening?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/cyberaar/ee-hardening)
+[![EE Image](https://img.shields.io/badge/ghcr.io-cyberaar%2Fee--hardening-blue?logo=docker)](https://github.com/cyberaar/cyberaar-toolkit/pkgs/container/ee-hardening)
 
 **cyberaar-toolkit** is a volunteer-driven, open collaboration to gather and share
 **best practices** for securing Senegal's critical infrastructure against cyber threats.
@@ -52,7 +52,7 @@ available in French & English.
 |-------------|-------------|---------|
 | `scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
 | `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
-| `execution-environment/` | Docker image — self-contained EE with Ansible + collection + playbooks, no local install required | `cyberaar/ee-hardening` |
+| `execution-environment/` | Docker image — self-contained EE with Ansible + collection + playbooks, no local install required | `ghcr.io/cyberaar/ee-hardening` |
 
 All three are independent: run the baseline script standalone, use the Ansible collection directly, or pull the Docker image for a zero-install experience.
 
@@ -126,7 +126,7 @@ ansible-galaxy collection install -r ansible-hardening/requirements.yml
 If you don't want to install Ansible locally, pull the pre-built Docker image:
 
 ```bash
-docker pull cyberaar/ee-hardening:latest
+docker pull ghcr.io/cyberaar/ee-hardening:latest
 ```
 
 **Dry-run hardening against a remote host (no changes):**
@@ -135,7 +135,7 @@ docker pull cyberaar/ee-hardening:latest
 docker run --rm -it \
   -v ~/.ssh:/root/.ssh:ro \
   -v $(pwd)/ansible-hardening/inventory:/inventory:ro \
-  cyberaar/ee-hardening:latest \
+  ghcr.io/cyberaar/ee-hardening:latest \
   ansible-playbook \
     -i /inventory/hosts \
     --extra-vars "target=myserver" \
@@ -150,7 +150,7 @@ docker run --rm -it \
   -v ~/.ssh:/root/.ssh:ro \
   -v $(pwd)/ansible-hardening/inventory:/inventory:ro \
   -v $(pwd)/reports:/reports \
-  cyberaar/ee-hardening:latest \
+  ghcr.io/cyberaar/ee-hardening:latest \
   ansible-playbook \
     -i /inventory/hosts \
     --extra-vars "target=myserver baseline_output_dir=/reports" \

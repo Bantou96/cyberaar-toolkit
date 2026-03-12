@@ -2,7 +2,7 @@
 
 A self-contained container image with everything needed to run CyberAar hardening — no local Ansible install required.
 
-**Image:** `cyberaar/ee-hardening` (Docker Hub)
+**Image:** `ghcr.io/cyberaar/ee-hardening` (GitHub Container Registry)
 
 **Includes:**
 - `ansible-core` (via base image)
@@ -26,7 +26,7 @@ Docker or Podman installed on the control node. No Python, no Ansible, no pip.
 ```bash
 docker run --rm \
   -v ~/.ssh:/root/.ssh:ro \
-  cyberaar/ee-hardening:latest \
+  ghcr.io/cyberaar/ee-hardening:latest \
   cyberaar-baseline --host 10.0.1.10 --user admin \
   --html-out /tmp/report.html --json-out /tmp/report.json
 ```
@@ -47,7 +47,7 @@ Then run:
 docker run --rm -it \
   -v ~/.ssh:/root/.ssh:ro \
   -v $(pwd)/inventory:/inventory:ro \
-  cyberaar/ee-hardening:latest \
+  ghcr.io/cyberaar/ee-hardening:latest \
   ansible-playbook \
     -i /inventory/hosts \
     --extra-vars "target=myserver" \
@@ -62,7 +62,7 @@ docker run --rm -it \
   -v ~/.ssh:/root/.ssh:ro \
   -v $(pwd)/inventory:/inventory:ro \
   -v $(pwd)/reports:/reports \
-  cyberaar/ee-hardening:latest \
+  ghcr.io/cyberaar/ee-hardening:latest \
   ansible-playbook \
     -i /inventory/hosts \
     --extra-vars "target=myserver baseline_output_dir=/reports" \
@@ -89,7 +89,7 @@ From the **repo root**:
 docker build \
   -f execution-environment/Containerfile \
   --build-arg COLLECTION_VERSION=1.9.0 \
-  -t cyberaar/ee-hardening:latest \
+  -t ghcr.io/cyberaar/ee-hardening:latest \
   .
 ```
 
