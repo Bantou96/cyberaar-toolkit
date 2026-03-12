@@ -59,7 +59,7 @@ Examples:
   cyberaar-baseline --inventory inventory/hosts.yml --user admin --output-dir /var/log/cyberaar
 
   # With Ansible remediation suggestions
-  cyberaar-baseline --host 10.0.1.10 --ansible-dir ~/cyberaar-toolkit/automation/ansible-hardening
+  cyberaar-baseline --host 10.0.1.10 --ansible-dir ~/cyberaar-toolkit/ansible-hardening
 
   # Install
   sudo bash cyberaar-baseline.sh --install

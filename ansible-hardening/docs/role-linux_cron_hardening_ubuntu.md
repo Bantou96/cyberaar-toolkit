@@ -59,7 +59,7 @@ linux_at_allow_enabled: true
 
 ```yaml
 # Run only cron hardening
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T cron
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T cron
 ```
 
 ## Testing

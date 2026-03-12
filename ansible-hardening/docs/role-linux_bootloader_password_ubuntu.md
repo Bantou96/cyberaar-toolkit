@@ -39,7 +39,7 @@ read -sr LINUX_BOOTLOADER_PASSWORD
 export LINUX_BOOTLOADER_PASSWORD
 
 # Run hardening
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s 2
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s 2
 
 # Unset immediately after
 unset LINUX_BOOTLOADER_PASSWORD

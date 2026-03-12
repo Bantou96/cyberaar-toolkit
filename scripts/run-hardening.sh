@@ -88,13 +88,11 @@ for _ in 1 2 3 4 5 6; do
   search="$(dirname "$search")"
 done
 
-# Pass 2: walk up looking for automation/ansible-hardening/ or ansible-hardening/
+# Pass 2: walk up looking for ansible-hardening/
 if [[ -z "$ANSIBLE_BASE" ]]; then
   search="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   for _ in 1 2 3 4 5 6; do
-    if   [[ -d "$search/automation/ansible-hardening" ]]; then
-      ANSIBLE_BASE="$search/automation/ansible-hardening"; break
-    elif [[ -d "$search/ansible-hardening" ]]; then
+    if [[ -d "$search/ansible-hardening" ]]; then
       ANSIBLE_BASE="$search/ansible-hardening"; break
     fi
     search="$(dirname "$search")"

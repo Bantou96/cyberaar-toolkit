@@ -30,7 +30,7 @@ jobs:
 
       - name: Read collection metadata
         id: meta
-        working-directory: automation/ansible-hardening
+        working-directory: ansible-hardening
         run: |
           NAMESPACE=$(grep '^namespace:' galaxy.yml | awk '{print $2}')
           NAME=$(grep '^name:' galaxy.yml | awk '{print $2}')
@@ -41,12 +41,12 @@ jobs:
           echo "tarball=${NAMESPACE}-${NAME}-${VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
 
       - name: Build collection
-        working-directory: automation/ansible-hardening
+        working-directory: ansible-hardening
         run: ansible-galaxy collection build --force
 
       - name: Publish to Galaxy
         if: ${{ github.event.inputs.dry_run != 'true' }}
-        working-directory: automation/ansible-hardening
+        working-directory: ansible-hardening
         run: |
           ansible-galaxy collection publish \
             "${{ steps.meta.outputs.tarball }}" \

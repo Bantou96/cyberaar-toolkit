@@ -41,7 +41,7 @@ linux_sudo_logfile: "/var/log/sudo.log"
 
 ```yaml
 # Run only sudo hardening
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T sudo
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T sudo
 ```
 
 ## Testing
