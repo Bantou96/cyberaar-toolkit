@@ -1,20 +1,26 @@
-# Pull Request Description
+# Pull Request
 
-Thank you for contributing to cyberaar-toolkit! 🇸🇳 Please fill this out to help us review faster.
-
-## What does this PR add/change?
-(e.g., New section on ransomware response, fixes to server hardening guide)
+## Summary
+<!-- What does this PR add or fix? -->
 
 ## Linked Issue
-Closes # (add issue number if relevant, e.g., #1)
+Closes #
 
-## Senegal-Specific Context
-How does this apply to local threats/infrastructure? (e.g., references DAF attack, low-bandwidth tips)
+## Type
+- [ ] Bug fix (Ansible role / baseline script)
+- [ ] New hardening control (role + Molecule scenario)
+- [ ] New baseline check
+- [ ] CI / workflow improvement
+- [ ] Documentation
 
-## Checklist
-- [ ] Content is practical and evidence-based
-- [ ] Written in French, English, or both
-- [ ] Follows Markdown style (headings, lists)
-- [ ] Tested links/references if any
+## CIS Reference
+<!-- If adding/fixing a hardening control, cite the CIS benchmark section -->
 
-Merci / Thanks! 💪
+## Test Plan
+- [ ] Molecule scenario passes (`molecule test -s <scenario>`)
+- [ ] Idempotency confirmed (second converge run = 0 changed tasks)
+- [ ] Tested in check mode (`--check`)
+- [ ] Tested on: <!-- RHEL 9 / Ubuntu 22.04 / both -->
+
+## Notes
+<!-- Anything reviewers should know: known limitations, container workarounds, etc. -->
