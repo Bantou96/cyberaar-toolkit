@@ -1,6 +1,6 @@
 # Pull Request Description
 
-Thank you for contributing to Aar-Act! 🇸🇳 Please fill this out to help us review faster.
+Thank you for contributing to cyberaar-toolkit! 🇸🇳 Please fill this out to help us review faster.
 
 ## What does this PR add/change?
 (e.g., New section on ransomware response, fixes to server hardening guide)
