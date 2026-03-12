@@ -4,3 +4,9 @@ reports/
 
 # Live inventory with real IPs — keep local only
 inventory/hosts
+
+# Galaxy build artifacts
+*.tar.gz
+
+# Ansible local cache
+.ansible/
