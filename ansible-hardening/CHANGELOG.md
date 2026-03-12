@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-03-12
+
+### Added
+
+- **`dashboard/index.html`** — single-file, zero-dependency web dashboard for visualising `cyberaar-baseline` JSON reports:
+  - Fleet overview: score ring per host (green ≥ 80%, amber ≥ 60%, red < 60%), PASS/WARN/FAIL counts, sorted worst-first
+  - Before/after comparison: automatic when two reports for the same host are loaded — score delta pill + side-by-side score boxes
+  - Host detail slide-in panel: full 96-check table with FAIL/WARN/PASS filter
+  - Copy-ready `ansible-playbook` remediation command per host
+  - PDF export via browser print (header and panel hidden automatically)
+  - CyberAar PNG logo embedded as base64 — consistent branding with HTML baseline report
+  - Works fully offline — no CDN, no npm, no build step; compatible with air-gapped environments
+- **`execution-environment/Containerfile`** — Docker/Podman execution environment published to `ghcr.io/cyberaar/ee-hardening`:
+  - Built on `quay.io/ansible/community-ee-base`; includes `ansible-core`, `bantou96.hardening`, `ansible.posix`, `community.general`
+  - Playbooks embedded at `/usr/share/cyberaar/playbooks/`; `cyberaar-baseline` at `/usr/local/bin/`
+  - `COLLECTION_VERSION` build arg pins exact collection release; `latest` + `vX.Y.Z` tags pushed on every GitHub release
+  - Zero local Ansible install required — one `docker run` to harden a server
+- **`.github/workflows/ee-build.yml`** — CI/CD for EE image; authenticates via `GITHUB_TOKEN` (no extra secrets needed)
+
+### Changed
+
+- **Repo structure flattened** — `automation/ansible-hardening/` → `ansible-hardening/`; `automation/scripts/` → `scripts/`; `automation/` directory removed. All workflow, README, and script path references updated.
+- **`2_configure_hardening.yml`** — added explicit `ansible.builtin.setup` task with `become: false` and `tags: always` in `pre_tasks`. Fixes `ansible_os_family is undefined` error when running with `--tags <non-hardening>` (e.g. `--tags ssh`), caused by play-level `tags: [hardening]` causing `gather_facts` to be skipped while `pre_tasks` tagged `always` still execute.
+- **`.gitignore`** — replaced Jekyll boilerplate with relevant entries: `.ansible/`, `*.tar.gz`, `mnt/`
+- **Issue templates** — replaced content-oriented templates with technical ones: `bug-report.md` (Ansible role / baseline script bugs), `feature-request.md` (new hardening controls / baseline checks); `best-practice-suggestion.md` removed (moved to `cyberaar/Aar-Act`)
+- **PR template** — reoriented to technical contributions: CIS reference field, Molecule test-plan checklist
+
+### Fixed
+
+- Committed Galaxy build artifact (`cyberaar-hardening-1.9.0.tar.gz`) removed from git history
+- Orphaned `automation/example.md` removed
+- `reports/` `.gitkeep` files removed (directory already covered by `.gitignore`)
+
 ## [1.9.1] — 2026-03-12
 
 ### Added
