@@ -1,0 +1,53 @@
+---
+name: Baseline Build Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "automation/scripts/src/**"
+      - "automation/scripts/build.sh"
+      - "automation/scripts/cyberaar-baseline.sh"
+      - ".github/workflows/baseline-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "automation/scripts/src/**"
+      - "automation/scripts/build.sh"
+      - "automation/scripts/cyberaar-baseline.sh"
+      - ".github/workflows/baseline-build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: baseline-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run build.sh
+        run: bash automation/scripts/build.sh
+
+      - name: Verify bundle is in sync with src/
+        run: |
+          if ! git diff --exit-code automation/scripts/cyberaar-baseline.sh; then
+            echo ""
+            echo "ERROR: cyberaar-baseline.sh is out of sync with src/."
+            echo "Run 'bash automation/scripts/build.sh' locally and commit the result."
+            exit 1
+          fi
+
+      - name: Verify check count
+        run: |
+          COUNT=$(grep -oh '"[A-Z]\{2,4\}-[0-9]\{2\}"' automation/scripts/cyberaar-baseline.sh | sort -u | wc -l)
+          echo "Unique check IDs in bundle: $COUNT"
+          if [[ "$COUNT" -lt 90 ]]; then
+            echo "ERROR: Fewer than 90 unique checks found — build may be corrupt."
+            exit 1
+          fi
+          echo "Check count OK: $COUNT"
+
+      - name: Verify bash syntax
+        run: bash -n automation/scripts/cyberaar-baseline.sh
