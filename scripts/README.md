@@ -1,6 +1,6 @@
 # CyberAar Security Baseline Checker
 
-**Script:** `automation/scripts/cyberaar-baseline.sh`
+**Script:** `scripts/cyberaar-baseline.sh`
 **Version:** 4.2.0
 **Checks:** 96 across 8 sections
 
@@ -35,13 +35,13 @@ It covers the same control areas as the CyberAar Ansible hardening roles, so the
 ### Run directly (no install)
 
 ```bash
-sudo bash automation/scripts/cyberaar-baseline.sh
+sudo bash scripts/cyberaar-baseline.sh
 ```
 
 ### Install to PATH
 
 ```bash
-sudo bash automation/scripts/cyberaar-baseline.sh --install
+sudo bash scripts/cyberaar-baseline.sh --install
 # Installs to /usr/local/bin/cyberaar-baseline
 
 sudo cyberaar-baseline --help
@@ -105,13 +105,13 @@ cyberaar-baseline --host-file /etc/cyberaar/hosts.txt --user admin \
 
 # Fleet scan from Ansible inventory
 cyberaar-baseline \
-  --inventory automation/ansible-hardening/inventory/hosts \
+  --inventory ansible-hardening/inventory/hosts \
   --user admin \
   --output-dir /var/log/cyberaar
 
 # With Ansible remediation suggestions pointing to the local repo
 sudo cyberaar-baseline \
-  --ansible-dir ~/cyberaar-toolkit/automation/ansible-hardening \
+  --ansible-dir ~/cyberaar-toolkit/ansible-hardening \
   --html-out /tmp/report.html
 ```
 
@@ -389,11 +389,11 @@ playbooks/0_execute_full_pipeline.yml
 To run the full pipeline (baseline → harden → baseline) against a single host:
 
 ```bash
-bash automation/scripts/run-hardening.sh -u admin -t myserver -s all -c   # dry-run
-bash automation/scripts/run-hardening.sh -u admin -t myserver -s all       # apply
+bash scripts/run-hardening.sh -u admin -t myserver -s all -c   # dry-run
+bash scripts/run-hardening.sh -u admin -t myserver -s all       # apply
 ```
 
-Reports are saved under `automation/ansible-hardening/reports/before/<hostname>/` and `reports/after/<hostname>/`.
+Reports are saved under `ansible-hardening/reports/before/<hostname>/` and `reports/after/<hostname>/`.
 
 To use the script standalone against a host already in the Ansible inventory and get remediation commands pointing at the local repo:
 
@@ -401,8 +401,8 @@ To use the script standalone against a host already in the Ansible inventory and
 cyberaar-baseline \
   --host 10.0.1.10 \
   --user admin \
-  --inventory automation/ansible-hardening/inventory/hosts \
-  --ansible-dir automation/ansible-hardening \
+  --inventory ansible-hardening/inventory/hosts \
+  --ansible-dir ansible-hardening \
   --output-dir /var/log/cyberaar
 ```
 
@@ -422,7 +422,7 @@ cyberaar-baseline \
 
 # From an Ansible INI inventory
 cyberaar-baseline \
-  --inventory automation/ansible-hardening/inventory/hosts \
+  --inventory ansible-hardening/inventory/hosts \
   --user admin \
   --output-dir /var/log/cyberaar
 ```
@@ -493,7 +493,7 @@ Checks without a mapping have no automated fix in this collection.
 ### Source layout
 
 ```
-automation/scripts/
+scripts/
 ├── cyberaar-baseline.sh        ← generated bundle (deploy/install this)
 ├── build.sh                    ← assembles src/ in order, runs bash -n
 └── src/
@@ -530,13 +530,13 @@ The renderers (`_render_json`, `_render_html`) iterate those arrays at the end o
 
 ```bash
 # 1. Edit a source file
-vim automation/scripts/src/checks/ssh.sh
+vim scripts/src/checks/ssh.sh
 
 # 2. Rebuild the bundle
-bash automation/scripts/build.sh
+bash scripts/build.sh
 
 # 3. Test locally
-sudo bash automation/scripts/cyberaar-baseline.sh \
+sudo bash scripts/cyberaar-baseline.sh \
   --html-out /tmp/test.html \
   --json-out /tmp/test.json
 

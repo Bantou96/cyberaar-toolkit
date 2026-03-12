@@ -3,8 +3,8 @@
 #  CyberAar Baseline — Build Script
 #  Concatenates src/ files in order to produce cyberaar-baseline.sh.
 #
-#  Usage: bash automation/scripts/build.sh
-#  Output: automation/scripts/cyberaar-baseline.sh (do not edit directly)
+#  Usage: bash scripts/build.sh
+#  Output: scripts/cyberaar-baseline.sh (do not edit directly)
 # =============================================================================
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

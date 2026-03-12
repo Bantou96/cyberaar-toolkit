@@ -50,7 +50,7 @@ linux_wireless_blacklist_modules: true
 
 ```yaml
 # Run only wireless hardening
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T wireless
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -T wireless
 ```
 
 ## Testing

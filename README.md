@@ -48,8 +48,8 @@ available in French & English.
 
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
-| `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
-| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
+| `scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
+| `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
 
@@ -59,36 +59,35 @@ Both tools are independent: you can run the baseline script standalone without A
 
 ```
 cyberaar-toolkit/
-├── automation/
-│   ├── scripts/
-│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.2.0) — generated bundle
-│   │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
-│   │   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
-│   │   ├── README.md                     # Baseline checker full reference
-│   │   └── src/                          # Source layout (edit here, not in the bundle)
-│   │       ├── main.sh                   # Shebang, CLI args, install/uninstall
-│   │       ├── run.sh                    # Execution entry point
-│   │       ├── lib/                      # core.sh, ansible_map.sh, remote.sh
-│   │       ├── checks/                   # 8 files — one per check section
-│   │       └── renderers/               # terminal.sh, json.sh, html.sh
-│   └── ansible-hardening/
-│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.9.0)
-│       ├── requirements.yml              # ansible.posix + community.general
-│       ├── inventory/
-│       │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
-│       │   └── group_vars/
-│       │       ├── all.yml               # Global defaults
-│       │       ├── linux_servers.yml     # Shared Linux defaults
-│       │       ├── rhel_servers.yml      # RHEL-specific vars + IP prefix
-│       │       ├── ubuntu_servers.yml    # Ubuntu-specific vars + IP prefix
-│       │       └── dmz_servers.yml       # Stricter thresholds for DMZ hosts
-│       ├── playbooks/
-│       │   ├── 0_execute_full_pipeline.yml                  # Pipeline orchestrator (imports all 3 steps)
-│       │   ├── 1_execute_baseline_before.yml   # Pre-hardening audit
-│       │   ├── 2_configure_hardening.yml       # Hardening roles (RHEL9 + Ubuntu)
-│       │   └── 3_execute_baseline_after.yml    # Post-hardening audit
-│       └── roles/                        # 51 hardening roles (parallel RHEL9 + Ubuntu)
-└── .github/                              # Issue templates, PR template
+├── scripts/
+│   ├── cyberaar-baseline.sh          # Standalone audit script (v4.2.0) — generated bundle
+│   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
+│   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
+│   ├── README.md                     # Baseline checker full reference
+│   └── src/                          # Source layout (edit here, not in the bundle)
+│       ├── main.sh                   # Shebang, CLI args, install/uninstall
+│       ├── run.sh                    # Execution entry point
+│       ├── lib/                      # core.sh, ansible_map.sh, remote.sh
+│       ├── checks/                   # 8 files — one per check section
+│       └── renderers/                # terminal.sh, json.sh, html.sh
+├── ansible-hardening/
+│   ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.9.0)
+│   ├── requirements.yml              # ansible.posix + community.general
+│   ├── inventory/
+│   │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
+│   │   └── group_vars/
+│   │       ├── all.yml               # Global defaults
+│   │       ├── linux_servers.yml     # Shared Linux defaults
+│   │       ├── rhel_servers.yml      # RHEL-specific vars + IP prefix
+│   │       ├── ubuntu_servers.yml    # Ubuntu-specific vars + IP prefix
+│   │       └── dmz_servers.yml       # Stricter thresholds for DMZ hosts
+│   ├── playbooks/
+│   │   ├── 0_execute_full_pipeline.yml      # Pipeline orchestrator (imports all 3 steps)
+│   │   ├── 1_execute_baseline_before.yml    # Pre-hardening audit
+│   │   ├── 2_configure_hardening.yml        # Hardening roles (RHEL9 + Ubuntu)
+│   │   └── 3_execute_baseline_after.yml     # Post-hardening audit
+│   └── roles/                        # 51 hardening roles (parallel RHEL9 + Ubuntu)
+└── .github/                          # Issue templates, PR template
 ```
 
 ---
@@ -102,7 +101,7 @@ cyberaar-toolkit/
 pip install ansible
 
 # Required Ansible collections (run once)
-ansible-galaxy collection install -r automation/ansible-hardening/requirements.yml
+ansible-galaxy collection install -r ansible-hardening/requirements.yml
 # Installs: ansible.posix >=1.5.4  |  community.general >=8.0.0
 ```
 
@@ -130,7 +129,7 @@ No Ansible required — pure bash, no dependencies beyond standard Linux tools.
 ### Install to PATH (optional)
 
 ```bash
-sudo bash automation/scripts/cyberaar-baseline.sh --install
+sudo bash scripts/cyberaar-baseline.sh --install
 # Installs to /usr/local/bin/cyberaar-baseline
 ```
 
@@ -138,7 +137,7 @@ sudo bash automation/scripts/cyberaar-baseline.sh --install
 
 ```bash
 # Without installing
-sudo bash automation/scripts/cyberaar-baseline.sh \
+sudo bash scripts/cyberaar-baseline.sh \
   --html-out /tmp/report.html \
   --json-out /tmp/report.json
 
@@ -149,7 +148,7 @@ sudo cyberaar-baseline --output-dir /var/log/cyberaar
 cyberaar-baseline --host 10.0.1.10 --user admin --output-dir /var/log/cyberaar
 
 # Fleet scan from Ansible inventory
-cyberaar-baseline --inventory automation/ansible-hardening/inventory/hosts \
+cyberaar-baseline --inventory ansible-hardening/inventory/hosts \
   --user admin --output-dir /var/log/cyberaar
 ```
 
@@ -170,7 +169,7 @@ cyberaar-baseline --inventory automation/ansible-hardening/inventory/hosts \
 
 Checks that require human judgment are flagged `(manual review required)` in the output — the script highlights them, the operator decides.
 
-> Full reference: [`automation/scripts/README.md`](automation/scripts/README.md)
+> Full reference: [`scripts/README.md`](scripts/README.md)
 
 ---
 
@@ -188,7 +187,7 @@ playbooks/0_execute_full_pipeline.yml
 │     ├── Runs the audit script
 │     ├── Fetches HTML + JSON reports back to the control node
 │     └── Reports saved to:
-│           automation/ansible-hardening/reports/before/<hostname>/
+│           ansible-hardening/reports/before/<hostname>/
 │
 ├── Step 2 — 2_configure_hardening.yml        [tags: hardening]
 │     ├── Verifies OS is supported (RedHat or Debian family)
@@ -206,7 +205,7 @@ playbooks/0_execute_full_pipeline.yml
       ├── Re-runs the audit script on each remote host
       ├── Fetches updated HTML + JSON reports
       ├── Reports saved to:
-      │     automation/ansible-hardening/reports/after/<hostname>/
+      │     ansible-hardening/reports/after/<hostname>/
       └── Compare before/ vs after/ to measure hardening impact
 ```
 
@@ -220,18 +219,18 @@ Captures the security posture of each host **before** any changes are made. This
 
 ```bash
 # Run Step 1 only
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 1
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 1
 
 # Or directly with ansible-playbook
 ansible-playbook \
   -u <admin_user> -b \
-  -i automation/ansible-hardening/inventory/hosts \
+  -i ansible-hardening/inventory/hosts \
   --extra-vars "target=linux_servers" \
   --tags baseline \
-  automation/ansible-hardening/playbooks/1_execute_baseline_before.yml
+  ansible-hardening/playbooks/1_execute_baseline_before.yml
 ```
 
-Reports are saved locally to `automation/ansible-hardening/reports/before/<hostname>/`.
+Reports are saved locally to `ansible-hardening/reports/before/<hostname>/`.
 
 ---
 
@@ -241,16 +240,16 @@ Applies all applicable CIS-aligned hardening roles to each host. OS detection is
 
 ```bash
 # Dry-run (check mode — no changes applied, always start here)
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 2 -c
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 2 -c
 
 # Apply full hardening
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 2
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 2
 
 # Apply a specific category only (e.g. SSH)
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -T ssh
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -T ssh
 
 # Skip a role without modifying the playbook
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> \
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> \
   -- --extra-vars "linux_bootloader_password_rhel9_disabled=true"
 ```
 
@@ -262,18 +261,18 @@ Re-runs the audit on each host to measure the impact of the hardening. The JSON 
 
 ```bash
 # Run Step 3 only
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 3
+bash scripts/run-hardening.sh -u <admin_user> -t <host_or_group> -s 3
 
 # Or directly
 ansible-playbook \
   -u <admin_user> -b \
-  -i automation/ansible-hardening/inventory/hosts \
+  -i ansible-hardening/inventory/hosts \
   --extra-vars "target=linux_servers" \
   --tags baseline \
-  automation/ansible-hardening/playbooks/3_execute_baseline_after.yml
+  ansible-hardening/playbooks/3_execute_baseline_after.yml
 ```
 
-Reports are saved to `automation/ansible-hardening/reports/after/<hostname>/`.
+Reports are saved to `ansible-hardening/reports/after/<hostname>/`.
 
 ---
 
@@ -284,7 +283,7 @@ Reports are saved to `automation/ansible-hardening/reports/after/<hostname>/`.
 The script auto-discovers `ansible-hardening/` by walking up the directory tree — run it from anywhere in the repo.
 
 ```
-Usage: bash automation/scripts/run-hardening.sh [options]
+Usage: bash scripts/run-hardening.sh [options]
 
 Options:
   -u USER    SSH admin user              (default: ansible)
@@ -300,22 +299,22 @@ Options:
 
 ```bash
 # 1. Connectivity check
-ansible -i automation/ansible-hardening/inventory/hosts linux_servers -m ping
+ansible -i ansible-hardening/inventory/hosts linux_servers -m ping
 
 # 2. Dry-run step 2 on a single Ubuntu host
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s 2 -c
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s 2 -c
 
 # 3. Full 3-step pipeline dry-run (baseline → harden → baseline)
-bash automation/scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s all -c
+bash scripts/run-hardening.sh -u ubuntu -t ubuntu-vm-01 -s all -c
 
 # 4. Apply full pipeline to a Rocky Linux host
-bash automation/scripts/run-hardening.sh -u rockylinux -t rocky-vm-01 -s all
+bash scripts/run-hardening.sh -u rockylinux -t rocky-vm-01 -s all
 
 # 5. Harden only SSH across all Linux servers
-bash automation/scripts/run-hardening.sh -u ansible -t linux_servers -T ssh
+bash scripts/run-hardening.sh -u ansible -t linux_servers -T ssh
 
 # 6. Full pipeline with sudo password prompt
-bash automation/scripts/run-hardening.sh -u ansible -t linux_servers -s all -K
+bash scripts/run-hardening.sh -u ansible -t linux_servers -s all -K
 ```
 
 Logs are automatically saved to `~/logs/<timestamp>-hardening-<target>.log`.
@@ -327,26 +326,26 @@ Logs are automatically saved to `~/logs/<timestamp>-hardening-<target>.log`.
 ANSIBLE_LOG_PATH=~/logs/$(date +%Y-%m-%d)-hardening.log \
 ansible-playbook --diff --check \
   -u <admin_user> -b \
-  -i automation/ansible-hardening/inventory/hosts \
+  -i ansible-hardening/inventory/hosts \
   --extra-vars "target=ubuntu-vm-01" \
   --tags hardening \
-  automation/ansible-hardening/playbooks/2_configure_hardening.yml
+  ansible-hardening/playbooks/2_configure_hardening.yml
 
 # Apply hardening to an entire group
 ANSIBLE_LOG_PATH=~/logs/$(date +%Y-%m-%d)-hardening.log \
 ansible-playbook --diff \
   -u <admin_user> -b \
-  -i automation/ansible-hardening/inventory/hosts \
+  -i ansible-hardening/inventory/hosts \
   --extra-vars "target=rhel_servers" \
   --tags hardening \
-  automation/ansible-hardening/playbooks/2_configure_hardening.yml
+  ansible-hardening/playbooks/2_configure_hardening.yml
 
 # Full 3-step pipeline via 0_execute_full_pipeline.yml
 ansible-playbook --diff \
   -u <admin_user> -b \
-  -i automation/ansible-hardening/inventory/hosts \
+  -i ansible-hardening/inventory/hosts \
   --extra-vars "target=linux_servers" \
-  automation/ansible-hardening/playbooks/0_execute_full_pipeline.yml
+  ansible-hardening/playbooks/0_execute_full_pipeline.yml
 ```
 
 ---
@@ -504,7 +503,7 @@ read -sr LINUX_BOOTLOADER_PASSWORD
 export LINUX_BOOTLOADER_PASSWORD
 
 # Run the pipeline
-bash automation/scripts/run-hardening.sh -u <admin_user> -t <target> -s all
+bash scripts/run-hardening.sh -u <admin_user> -t <target> -s all
 
 # Unset immediately after
 unset LINUX_BOOTLOADER_PASSWORD
@@ -519,7 +518,7 @@ If `LINUX_BOOTLOADER_PASSWORD` is not set, `run-hardening.sh` will warn and the 
 After running Steps 1 and 3, HTML and JSON reports are saved locally:
 
 ```
-automation/ansible-hardening/reports/
+ansible-hardening/reports/
 ├── before/
 │   └── <hostname>/
 │       ├── report.html     # Human-readable audit report (pre-hardening)
@@ -560,17 +559,17 @@ No long commitments required — add one improvement when you have 10 minutes.
 
 1. **Browse** existing sections or suggest new ones via [Issues](https://github.com/cyberaar/cyberaar-toolkit/issues)
 2. **Fork** this repo or create a branch
-3. **Add or edit** — hardening roles in `automation/ansible-hardening/roles/`, or guides in [cyberaar/Aar-Act](https://github.com/cyberaar/Aar-Act)
+3. **Add or edit** — hardening roles in `ansible-hardening/roles/`, or guides in [cyberaar/Aar-Act](https://github.com/cyberaar/Aar-Act)
 4. **Submit** a Pull Request — reference the CIS benchmark section when adding hardening controls
 5. Get **credit** in the Contributors list
 
 New hardening roles should follow the `linux_<category>_<rhel9|ubuntu>` naming convention and include parallel RHEL9 and Ubuntu implementations.
 
-**Contributing to the baseline script:** `cyberaar-baseline.sh` is a generated bundle — do not edit it directly. Edit the source files under `automation/scripts/src/`, then rebuild:
+**Contributing to the baseline script:** `cyberaar-baseline.sh` is a generated bundle — do not edit it directly. Edit the source files under `scripts/src/`, then rebuild:
 
 ```bash
-bash automation/scripts/build.sh
-bash -n automation/scripts/cyberaar-baseline.sh   # verify syntax
+bash scripts/build.sh
+bash -n scripts/cyberaar-baseline.sh   # verify syntax
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.

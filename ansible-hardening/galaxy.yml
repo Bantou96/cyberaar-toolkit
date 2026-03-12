@@ -44,7 +44,7 @@ tags:
   - journald
 
 repository: https://github.com/cyberaar/cyberaar-toolkit
-documentation: https://github.com/cyberaar/cyberaar-toolkit/tree/main/automation/ansible-hardening/docs
+documentation: https://github.com/cyberaar/cyberaar-toolkit/tree/main/ansible-hardening/docs
 homepage: https://www.linkedin.com/company/cyberaar/
 issues: https://github.com/cyberaar/cyberaar-toolkit/issues
 

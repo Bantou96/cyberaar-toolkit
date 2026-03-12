@@ -38,7 +38,7 @@ Protects the GRUB2 bootloader with a PBKDF2-hashed password on RHEL 9 family sys
 # Set password securely before running — never commit this value
 read -sr LINUX_BOOTLOADER_PASSWORD ; export LINUX_BOOTLOADER_PASSWORD
 
-bash automation/scripts/run-hardening.sh -u rockylinux -t rocky-vm-01 -T boot
+bash scripts/run-hardening.sh -u rockylinux -t rocky-vm-01 -T boot
 
 # Unset after run
 unset LINUX_BOOTLOADER_PASSWORD
