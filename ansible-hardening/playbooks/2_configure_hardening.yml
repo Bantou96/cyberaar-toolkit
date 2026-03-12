@@ -90,6 +90,7 @@
     # executes pre_tasks tagged 'always', causing ansible_os_family to be undefined.
     - name: "CyberAar | Gather facts"
       ansible.builtin.setup:
+      become: false   # fact gathering does not require root
       tags: [always]
 
     - name: "CyberAar | Verify supported OS"
