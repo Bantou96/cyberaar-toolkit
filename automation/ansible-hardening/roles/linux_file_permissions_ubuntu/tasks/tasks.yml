@@ -54,6 +54,23 @@
   register: "unowned_files"
   failed_when: false
 
+- name: "Find NFS mounts in /etc/fstab (CIS 2.2.x — verify mount options)"
+  when: "linux_file_permissions_check_nfs_mounts | bool"
+  ansible.builtin.shell: >
+    awk '$3 == "nfs" || $3 == "nfs4" { print $0 }' /etc/fstab
+  changed_when: false
+  failed_when: false
+  register: "nfs_mounts_fstab"
+
+- name: "Warn about NFS mounts — verify nodev,nosuid,noexec are set (CIS 2.2.x)"
+  when:
+    - "linux_file_permissions_check_nfs_mounts | bool"
+    - "nfs_mounts_fstab.stdout_lines | length > 0"
+  ansible.builtin.debug:
+    msg:
+      - "NFS mounts detected in /etc/fstab — verify each uses nodev,nosuid,noexec:"
+      - "{{ nfs_mounts_fstab.stdout_lines }}"
+
 - name: "Debug file permissions status (verbosity >=1)"
   when: "ansible_verbosity >= 1"
   ansible.builtin.debug:

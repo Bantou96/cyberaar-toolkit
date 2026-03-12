@@ -1,0 +1,7 @@
+---
+- name: "Restart journald"
+  ansible.builtin.systemd:
+    name: "systemd-journald"
+    state: "restarted"
+    daemon_reload: true
+  failed_when: false

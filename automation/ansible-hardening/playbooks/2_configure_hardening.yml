@@ -73,8 +73,10 @@
 #    permissions    — critical file permissions
 #    fail2ban       — fail2ban brute-force protection (Ubuntu only)
 #    wireless       — disable wireless interfaces (nmcli/rfkill + module blacklist)
+#    ipv6           — disable IPv6 (sysctl + modprobe)
 #    sudo           — sudo use_pty + logfile enforcement
 #    cron           — cron/at service + permissions + allow-list
+#    journald       — systemd-journald persistent storage + hardening
 # =============================================================================
 
 - name: "CyberAar | System Hardening — RHEL9 + Ubuntu/Debian"
@@ -140,6 +142,10 @@
       tags: [hardening, network, sysctl]
       when: ansible_os_family == "RedHat"
 
+    - role: "linux_ipv6_rhel9"
+      tags: [hardening, network, ipv6]
+      when: ansible_os_family == "RedHat"
+
     - role: "linux_wireless_rhel9"
       tags: [hardening, network, wireless]
       when: ansible_os_family == "RedHat"
@@ -158,6 +164,10 @@
 
     - role: "linux_auditing_rhel9"
       tags: [hardening, audit, logging]
+      when: ansible_os_family == "RedHat"
+
+    - role: "linux_journald_rhel9"
+      tags: [hardening, audit, logging, journald]
       when: ansible_os_family == "RedHat"
 
     - role: "linux_aide_rhel9"
@@ -200,6 +210,10 @@
       tags: [hardening, boot, secureboot]
       when: ansible_os_family == "RedHat"
 
+    - role: "linux_fail2ban_rhel9"
+      tags: [hardening, network, fail2ban]
+      when: ansible_os_family == "RedHat"
+
     - role: "linux_file_permissions_rhel9"
       tags: [hardening, filesystem, permissions]
       when: ansible_os_family == "RedHat"
@@ -233,6 +247,10 @@
       tags: [hardening, network, sysctl]
       when: ansible_os_family == "Debian"
 
+    - role: "linux_ipv6_ubuntu"
+      tags: [hardening, network, ipv6]
+      when: ansible_os_family == "Debian"
+
     - role: "linux_wireless_ubuntu"
       tags: [hardening, network, wireless]
       when: ansible_os_family == "Debian"
@@ -251,6 +269,10 @@
 
     - role: "linux_auditing_ubuntu"
       tags: [hardening, audit, logging]
+      when: ansible_os_family == "Debian"
+
+    - role: "linux_journald_ubuntu"
+      tags: [hardening, audit, logging, journald]
       when: ansible_os_family == "Debian"
 
     - role: "linux_aide_ubuntu"

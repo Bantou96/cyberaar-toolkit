@@ -1,0 +1,70 @@
+---
+- name: "Disable IPv6 via sysctl (CIS 3.3.1)"
+  when: "linux_ipv6_disable | bool"
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: "present"
+    sysctl_set: true
+    sysctl_file: "/etc/sysctl.d/99-cis-ipv6.conf"
+    reload: true
+  loop:
+    - "net.ipv6.conf.all.disable_ipv6"
+    - "net.ipv6.conf.default.disable_ipv6"
+    - "net.ipv6.conf.lo.disable_ipv6"
+  register: "ipv6_sysctl_result"
+
+- name: "Disable IPv6 kernel module via modprobe (CIS 3.3.1)"
+  when: "linux_ipv6_disable | bool"
+  ansible.builtin.copy:
+    dest: "/etc/modprobe.d/99-cis-ipv6.conf"
+    content: |
+      # CyberAar CIS 3.3.1 — Disable IPv6 kernel module
+      options ipv6 disable=1
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: "ipv6_modprobe_result"
+  notify: "IPv6 disabled — reboot recommended"
+
+- name: "Rebuild initramfs to persist modprobe change across kernel updates"
+  when:
+    - "linux_ipv6_disable | bool"
+    - "linux_ipv6_update_initramfs | bool"
+    - "ipv6_modprobe_result.changed"
+    - "not ansible_check_mode"
+  ansible.builtin.command: "update-initramfs -u -k all"
+  changed_when: true
+  failed_when: false
+
+- name: "Remove IPv6 ::1 localhost from /etc/hosts (CIS 3.3.1)"
+  when:
+    - "linux_ipv6_disable | bool"
+    - "linux_ipv6_clean_hosts | bool"
+  ansible.builtin.lineinfile:
+    path: "/etc/hosts"
+    regexp: '^::1\s'
+    state: "absent"
+  register: "ipv6_hosts_result"
+  failed_when: false
+
+- name: "Remove IPv6 sysctl config when IPv6 is not disabled"
+  when: "not (linux_ipv6_disable | bool)"
+  ansible.builtin.file:
+    path: "/etc/sysctl.d/99-cis-ipv6.conf"
+    state: "absent"
+
+- name: "Remove IPv6 modprobe config when IPv6 is not disabled"
+  when: "not (linux_ipv6_disable | bool)"
+  ansible.builtin.file:
+    path: "/etc/modprobe.d/99-cis-ipv6.conf"
+    state: "absent"
+
+- name: "Debug IPv6 hardening status (verbosity >= 1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "IPv6 disable: {{ linux_ipv6_disable }}"
+      - "sysctl changed: {{ ipv6_sysctl_result.changed | default(false) }}"
+      - "modprobe config changed: {{ ipv6_modprobe_result.changed | default(false) }}"
+      - "hosts changed: {{ ipv6_hosts_result.changed | default(false) }}"

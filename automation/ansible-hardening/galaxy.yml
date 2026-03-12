@@ -2,7 +2,7 @@
 
 namespace: cyberaar
 name: hardening
-version: 1.8.0
+version: 1.9.0
 readme: README.md
 
 authors:
@@ -10,10 +10,10 @@ authors:
 
 description: >
   CIS-aligned hardening roles for RHEL 9 family (AlmaLinux 9, Rocky Linux 9)
-  and Ubuntu/Debian servers. Implements 47 roles (23 RHEL9, 24 Ubuntu/Debian)
-  covering SSH, sudo, cron, wireless, kernel hardening, auditing, MAC enforcement
-  (SELinux/AppArmor), firewall, AIDE, and more — with a three-step baseline →
-  harden → baseline pipeline.
+  and Ubuntu/Debian servers. Implements 51 roles (25 RHEL9, 26 Ubuntu/Debian)
+  covering SSH, sudo, cron, wireless, IPv6 hardening, journald, kernel hardening,
+  auditing, MAC enforcement (SELinux/AppArmor), firewall, AIDE, and more — with
+  a three-step baseline → harden → baseline pipeline.
 
 license:
   - GPL-3.0-or-later
@@ -36,6 +36,8 @@ tags:
   - sudo
   - cron
   - wireless
+  - ipv6
+  - journald
 
 repository: https://github.com/Bantou96/Aar-Act
 documentation: https://github.com/Bantou96/Aar-Act/tree/main/automation/ansible-hardening/docs

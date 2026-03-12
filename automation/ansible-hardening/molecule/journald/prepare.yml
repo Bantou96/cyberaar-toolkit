@@ -1,0 +1,16 @@
+---
+- name: "Prepare — journald hardening"
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: "Ensure systemd-journal group exists"
+      ansible.builtin.group:
+        name: "systemd-journal"
+        state: present
+        system: true
+
+    - name: "Ensure /etc/systemd/journald.conf.d directory exists"
+      ansible.builtin.file:
+        path: "/etc/systemd/journald.conf.d"
+        state: directory
+        mode: "0755"

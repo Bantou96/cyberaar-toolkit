@@ -31,5 +31,8 @@ linux_file_permissions_fail_on_world_writable: false
 # Scan for unowned files
 linux_file_permissions_find_unowned: true
 
+# Check NFS client mounts for missing nodev/nosuid/noexec options (CIS 2.2.x)
+linux_file_permissions_check_nfs_mounts: true
+
 # Role disable var
 linux_file_permissions_disabled: false

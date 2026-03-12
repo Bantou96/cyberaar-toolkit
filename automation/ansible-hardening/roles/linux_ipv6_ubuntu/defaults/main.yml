@@ -1,0 +1,14 @@
+---
+
+# Fully disable IPv6 via sysctl + modprobe (CIS 3.3.1)
+# Set to false if IPv6 is actively used in your environment.
+linux_ipv6_disable: true
+
+# Remove the ::1 localhost line from /etc/hosts when disabling IPv6.
+linux_ipv6_clean_hosts: true
+
+# Run update-initramfs after modprobe change to persist across kernel updates.
+linux_ipv6_update_initramfs: true
+
+# Role disable var
+linux_ipv6_disabled: false

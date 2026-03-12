@@ -1,0 +1,54 @@
+---
+- name: "Verify — journald hardening"
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: "Check /etc/systemd/journald.conf.d/99-cis-journald.conf exists"
+      ansible.builtin.stat:
+        path: "/etc/systemd/journald.conf.d/99-cis-journald.conf"
+      register: "journald_conf_file"
+
+    - name: "Assert journald config exists"
+      ansible.builtin.assert:
+        that: "journald_conf_file.stat.exists"
+        fail_msg: "/etc/systemd/journald.conf.d/99-cis-journald.conf not found"
+
+    - name: "Read journald config"
+      ansible.builtin.slurp:
+        src: "/etc/systemd/journald.conf.d/99-cis-journald.conf"
+      register: "journald_conf_content"
+
+    - name: "Assert Storage=persistent"
+      ansible.builtin.assert:
+        that: "'Storage=persistent' in (journald_conf_content.content | b64decode)"
+        fail_msg: "Storage=persistent not found in journald config"
+
+    - name: "Assert Compress=yes"
+      ansible.builtin.assert:
+        that: "'Compress=yes' in (journald_conf_content.content | b64decode)"
+        fail_msg: "Compress=yes not found in journald config"
+
+    - name: "Assert ForwardToSyslog=yes"
+      ansible.builtin.assert:
+        that: "'ForwardToSyslog=yes' in (journald_conf_content.content | b64decode)"
+        fail_msg: "ForwardToSyslog=yes not found in journald config"
+
+    - name: "Assert RateLimitBurst is set"
+      ansible.builtin.assert:
+        that: "'RateLimitBurst=' in (journald_conf_content.content | b64decode)"
+        fail_msg: "RateLimitBurst not found in journald config"
+
+    - name: "Assert SystemMaxUse is set"
+      ansible.builtin.assert:
+        that: "'SystemMaxUse=' in (journald_conf_content.content | b64decode)"
+        fail_msg: "SystemMaxUse not found in journald config"
+
+    - name: "Check /var/log/journal directory exists (persistent storage)"
+      ansible.builtin.stat:
+        path: "/var/log/journal"
+      register: "journal_dir"
+
+    - name: "Assert /var/log/journal exists"
+      ansible.builtin.assert:
+        that: "journal_dir.stat.exists and journal_dir.stat.isdir"
+        fail_msg: "/var/log/journal directory not found (required for persistent storage)"
