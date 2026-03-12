@@ -1,0 +1,58 @@
+---
+name: EE Build & Push
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run — build image but do not push to Docker Hub"
+        required: false
+        default: "false"
+
+jobs:
+  build:
+    name: ee-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read collection version from galaxy.yml
+        id: meta
+        run: |
+          VERSION=$(grep '^version:' ansible-hardening/galaxy.yml | awk '{print $2}')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: execution-environment/Containerfile
+          build-args: |
+            COLLECTION_VERSION=${{ steps.meta.outputs.version }}
+          push: ${{ github.event.inputs.dry_run != 'true' }}
+          tags: |
+            cyberaar/ee-hardening:latest
+            cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Dry run summary
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          echo "Dry run — image built but not pushed:"
+          echo "  cyberaar/ee-hardening:v${{ steps.meta.outputs.version }}"
+          echo "  cyberaar/ee-hardening:latest"
