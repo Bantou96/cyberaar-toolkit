@@ -1,8 +1,8 @@
 # CyberAar Security Baseline Checker
 
 **Script:** `automation/scripts/cyberaar-baseline.sh`
-**Version:** 4.0.0
-**Checks:** 88 across 8 sections
+**Version:** 4.1.0
+**Checks:** 93 across 8 sections
 
 ## Overview
 
@@ -181,12 +181,12 @@ A self-contained single-file HTML report with:
 ```json
 {
   "cyberaar_baseline": {
-    "version": "4.0.0",
+    "version": "4.1.0",
     "host": "server01.example.com",
     "os": "AlmaLinux Linux 9.3",
     "date": "2026-03-07 14:23:01",
     "score": 74,
-    "summary": { "pass": 52, "warn": 28, "fail": 8, "total": 88 },
+    "summary": { "pass": 57, "warn": 28, "fail": 8, "total": 93 },
     "results": [
       {
         "id": "SYS-01",
@@ -258,6 +258,8 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 | AUTH-12 | `/etc/group` permissions 644 | FAIL | `filesystem,permissions` | — |
 | AUTH-13 | `/etc/gshadow` permissions 640 or stricter | FAIL | `filesystem,permissions` | — |
 | AUTH-14 | Password complexity configured | WARN | `auth,pam` | Checks `minlen ≥ 12` in `pwquality.conf` |
+| AUTH-15 | sudo `use_pty` enforced | WARN | `sudo` | CIS 1.3.2 — checks `Defaults use_pty` in sudoers |
+| AUTH-16 | sudo logfile configured | WARN | `sudo` | CIS 1.3.3 — checks `Defaults logfile=` in sudoers |
 
 ---
 
@@ -317,6 +319,7 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 | NET-09 | `net.ipv4.conf.all.rp_filter = 1` or `2` | FAIL | `network,sysctl` | — |
 | NET-10 | `net.ipv6.conf.all.accept_ra = 0` | WARN | `network,sysctl` | WARN only — may be needed in IPv6 networks |
 | NET-11 | `net.ipv4.icmp_echo_ignore_broadcasts = 1` | WARN | `network,sysctl` | — |
+| NET-12 | Wireless interfaces disabled | WARN | `wireless` | CIS 3.1.2 — rfkill + nmcli + modprobe blacklist |
 
 ---
 
@@ -364,6 +367,8 @@ Checks marked **(manual review)** cannot be automatically remediated — the scr
 | COMP-08 | `kernel.dmesg_restrict = 1` | WARN | `kernel,sysctl` | — |
 | COMP-09 | `kernel.yama.ptrace_scope ≥ 1` | WARN | `kernel,sysctl` | — |
 | COMP-10 | USB storage module blacklisted | WARN | `kernel,sysctl` | Checks `/etc/modprobe.d/` for `blacklist usb-storage` |
+| COMP-11 | cron service enabled and running | WARN | `cron` | CIS 5.1.1 |
+| COMP-12 | `cron.allow` and `at.allow` allow-list enforced | WARN | `cron` | CIS 5.1.8–5.1.9 — both files must exist and be non-empty |
 
 ---
 
@@ -469,7 +474,10 @@ Checks without a mapping have no automated fix in this collection.
 | INT-01, INT-07 | `integrity,aide` | `linux_aide_rhel9` | `linux_aide_ubuntu` |
 | INT-05 | `updates,patching` | `linux_dnf_automatic_rhel9` | `linux_unattended_upgrades_ubuntu` |
 | INT-06 | `fail2ban` | `linux_fail2ban_rhel9` | `linux_fail2ban_ubuntu` |
+| AUTH-15, AUTH-16 | `sudo` | `linux_sudo_hardening_rhel9` | `linux_sudo_hardening_ubuntu` |
+| NET-12 | `wireless` | `linux_wireless_rhel9` | `linux_wireless_ubuntu` |
 | COMP-01 | `banner` | `linux_login_banner_rhel9` | `linux_login_banner_ubuntu` |
+| COMP-11, COMP-12 | `cron` | `linux_cron_hardening_rhel9` | `linux_cron_hardening_ubuntu` |
 
 ---
 

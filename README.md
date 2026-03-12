@@ -46,7 +46,7 @@ available in French & English.
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
 | `automation/scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 93 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.1.0 |
-| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 47 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.7.0 |
+| `automation/ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 47 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.8.0 |
 
 Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
 
@@ -58,7 +58,7 @@ Both tools are independent: you can run the baseline script standalone without A
 Aar-Act/
 ├── automation/
 │   ├── scripts/
-│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.0.0) — generated bundle
+│   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.1.0) — generated bundle
 │   │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
 │   │   ├── run-hardening.sh              # Pipeline runner (wraps ansible-playbook)
 │   │   ├── README.md                     # Baseline checker full reference
@@ -69,7 +69,7 @@ Aar-Act/
 │   │       ├── checks/                   # 8 files — one per check section
 │   │       └── renderers/               # terminal.sh, json.sh, html.sh
 │   └── ansible-hardening/
-│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.7.0)
+│       ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.8.0)
 │       ├── requirements.yml              # ansible.posix + community.general
 │       ├── inventory/
 │       │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
@@ -118,7 +118,7 @@ ansible-galaxy collection install -r automation/ansible-hardening/requirements.y
 
 ## Deliverable 1 — Baseline Audit Script (`cyberaar-baseline.sh`)
 
-The standalone audit script runs **88 security checks** across 8 sections and produces:
+The standalone audit script runs **93 security checks** across 8 sections and produces:
 
 - **Terminal output** — colour-coded PASS / WARN / FAIL with a security score
 - **HTML report** — self-contained file for sharing with management or auditors
