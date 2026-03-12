@@ -7,6 +7,7 @@
 [![Galaxy](https://img.shields.io/badge/galaxy-bantou96.hardening-blue?logo=ansible)](https://galaxy.ansible.com/ui/repo/published/bantou96/hardening/)
 [![Molecule CI](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml)
 [![Baseline Build](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml)
+[![EE Image](https://img.shields.io/badge/ghcr.io-cyberaar%2Fee--hardening-blue?logo=docker)](https://github.com/cyberaar/cyberaar-toolkit/pkgs/container/ee-hardening)
 
 **cyberaar-toolkit** is a volunteer-driven, open collaboration to gather and share
 **best practices** for securing Senegal's critical infrastructure against cyber threats.
@@ -24,6 +25,7 @@ available in French & English.
 - [What's Inside](#whats-inside)
 - [Repository Structure](#repository-structure)
 - [Prerequisites](#prerequisites)
+- [Deliverable 0 — Docker Execution Environment](#deliverable-0--docker-execution-environment-no-install)
 - [Deliverable 1 — Baseline Audit Script](#deliverable-1--baseline-audit-script-cyberaar-baselinesh)
 - [Deliverable 2 — Ansible Hardening Collection](#deliverable-2--ansible-hardening-collection)
   - [The Three-Step Pipeline](#the-three-step-pipeline)
@@ -50,8 +52,9 @@ available in French & English.
 |-------------|-------------|---------|
 | `scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
 | `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
+| `execution-environment/` | Docker image — self-contained EE with Ansible + collection + playbooks, no local install required | `ghcr.io/cyberaar/ee-hardening` |
 
-Both tools are independent: you can run the baseline script standalone without Ansible, or use Ansible to run the full three-step pipeline (audit → harden → audit) across an entire fleet.
+All three are independent: run the baseline script standalone, use the Ansible collection directly, or pull the Docker image for a zero-install experience.
 
 ---
 
@@ -59,6 +62,9 @@ Both tools are independent: you can run the baseline script standalone without A
 
 ```
 cyberaar-toolkit/
+├── execution-environment/
+│   ├── Containerfile                 # Docker image definition (build from repo root)
+│   └── README.md                     # EE usage guide
 ├── scripts/
 │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.2.0) — generated bundle
 │   ├── build.sh                      # Rebuilds cyberaar-baseline.sh from src/
@@ -112,6 +118,47 @@ ansible-galaxy collection install -r ansible-hardening/requirements.yml
 - Python 3 installed
 - SSH access with a sudo-capable admin user
 - No agent required — push-based via SSH
+
+---
+
+## Deliverable 0 — Docker Execution Environment (no install)
+
+If you don't want to install Ansible locally, pull the pre-built Docker image:
+
+```bash
+docker pull ghcr.io/cyberaar/ee-hardening:latest
+```
+
+**Dry-run hardening against a remote host (no changes):**
+
+```bash
+docker run --rm -it \
+  -v ~/.ssh:/root/.ssh:ro \
+  -v $(pwd)/ansible-hardening/inventory:/inventory:ro \
+  ghcr.io/cyberaar/ee-hardening:latest \
+  ansible-playbook \
+    -i /inventory/hosts \
+    --extra-vars "target=myserver" \
+    -u admin -b --check \
+    /usr/share/cyberaar/playbooks/2_configure_hardening.yml
+```
+
+**Full pipeline (baseline → harden → baseline):**
+
+```bash
+docker run --rm -it \
+  -v ~/.ssh:/root/.ssh:ro \
+  -v $(pwd)/ansible-hardening/inventory:/inventory:ro \
+  -v $(pwd)/reports:/reports \
+  ghcr.io/cyberaar/ee-hardening:latest \
+  ansible-playbook \
+    -i /inventory/hosts \
+    --extra-vars "target=myserver baseline_output_dir=/reports" \
+    -u admin -b \
+    /usr/share/cyberaar/playbooks/0_execute_full_pipeline.yml
+```
+
+> Full reference: [`execution-environment/README.md`](execution-environment/README.md)
 
 ---
 

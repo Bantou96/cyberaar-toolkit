@@ -1,0 +1,31 @@
+# CyberAar Execution Environment
+#
+# Build from repo root:
+#   docker build -f execution-environment/Containerfile \
+#     --build-arg COLLECTION_VERSION=1.9.0 \
+#     -t cyberaar/ee-hardening:latest .
+#
+# The COLLECTION_VERSION build arg pins bantou96.hardening to an exact release.
+# CI overrides it automatically from galaxy.yml — set it manually for local builds.
+
+FROM quay.io/ansible/community-ee-base:latest
+
+ARG COLLECTION_VERSION=1.9.0
+
+LABEL org.opencontainers.image.title="CyberAar Execution Environment"
+LABEL org.opencontainers.image.description="Ansible EE with CyberAar hardening collection (bantou96.hardening) — CIS-aligned Linux hardening for RHEL 9 and Ubuntu/Debian"
+LABEL org.opencontainers.image.source="https://github.com/cyberaar/cyberaar-toolkit"
+LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"
+
+# Install required Ansible collections
+RUN ansible-galaxy collection install \
+    "bantou96.hardening:==${COLLECTION_VERSION}" \
+    "ansible.posix:>=1.5.4" \
+    "community.general:>=8.0.0"
+
+# Copy hardening playbooks into the image
+COPY ansible-hardening/playbooks/ /usr/share/cyberaar/playbooks/
+
+# Copy baseline audit script
+COPY scripts/cyberaar-baseline.sh /usr/local/bin/cyberaar-baseline
+RUN chmod 755 /usr/local/bin/cyberaar-baseline
