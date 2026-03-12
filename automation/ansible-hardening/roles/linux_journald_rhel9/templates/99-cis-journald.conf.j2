@@ -1,0 +1,14 @@
+# CyberAar — systemd-journald hardening (CIS 4.2.1.x)
+# Managed by Ansible — do not edit manually
+
+[Journal]
+Storage={{ linux_journald_storage }}
+Compress={{ linux_journald_compress }}
+ForwardToSyslog={{ linux_journald_forward_to_syslog }}
+RateLimitInterval={{ linux_journald_rate_limit_interval }}
+RateLimitBurst={{ linux_journald_rate_limit_burst }}
+SystemMaxUse={{ linux_journald_system_max_use }}
+SystemKeepFree={{ linux_journald_system_keep_free }}
+SystemMaxFileSize={{ linux_journald_system_max_file_size }}
+MaxFileSec={{ linux_journald_max_file_sec }}
+MaxRetentionSec={{ linux_journald_max_retention_sec }}

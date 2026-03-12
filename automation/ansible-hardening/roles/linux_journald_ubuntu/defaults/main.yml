@@ -1,0 +1,32 @@
+---
+
+# Write logs to /var/log/journal (persistent across reboots) — CIS 4.2.1.1.1
+linux_journald_storage: "persistent"
+
+# Compress large journal files — CIS 4.2.1.1.2
+linux_journald_compress: "yes"
+
+# Forward entries to syslog socket (integrates with rsyslog)
+linux_journald_forward_to_syslog: "yes"
+
+# Rate limiting — prevent log flooding
+linux_journald_rate_limit_interval: "30s"
+linux_journald_rate_limit_burst: 10000
+
+# Maximum total disk usage by journald
+linux_journald_system_max_use: "1G"
+
+# Minimum free disk space journald will leave available
+linux_journald_system_keep_free: "256M"
+
+# Maximum size of a single journal file
+linux_journald_system_max_file_size: "100M"
+
+# Rotate individual files after this period
+linux_journald_max_file_sec: "1month"
+
+# Delete old journal files beyond this total retention period
+linux_journald_max_retention_sec: "2year"
+
+# Role disable var
+linux_journald_disabled: false

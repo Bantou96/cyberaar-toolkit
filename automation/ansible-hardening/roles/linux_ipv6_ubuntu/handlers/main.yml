@@ -1,0 +1,6 @@
+---
+- name: "IPv6 disabled — reboot recommended"
+  ansible.builtin.debug:
+    msg: >-
+      IPv6 has been disabled via sysctl and modprobe.
+      A reboot is required for the modprobe change to take full effect.

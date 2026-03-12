@@ -1,0 +1,39 @@
+---
+- name: "Ensure /etc/systemd/journald.conf.d directory exists (CIS 4.2.1.x)"
+  ansible.builtin.file:
+    path: "/etc/systemd/journald.conf.d"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0755"
+
+- name: "Deploy journald hardening configuration (CIS 4.2.1.x)"
+  ansible.builtin.template:
+    src: "99-cis-journald.conf.j2"
+    dest: "/etc/systemd/journald.conf.d/99-cis-journald.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  notify: "Restart journald"
+  register: "journald_config_result"
+
+- name: "Ensure /var/log/journal directory exists for persistent storage (CIS 4.2.1.1.1)"
+  when: "linux_journald_storage == 'persistent'"
+  ansible.builtin.file:
+    path: "/var/log/journal"
+    state: directory
+    owner: "root"
+    group: "systemd-journal"
+    mode: "2755"
+  register: "journal_dir_result"
+
+- name: "Debug journald configuration status (verbosity >= 1)"
+  when: "ansible_verbosity >= 1"
+  ansible.builtin.debug:
+    msg:
+      - "Storage: {{ linux_journald_storage }}"
+      - "Compress: {{ linux_journald_compress }}"
+      - "ForwardToSyslog: {{ linux_journald_forward_to_syslog }}"
+      - "RateLimitBurst: {{ linux_journald_rate_limit_burst }}"
+      - "SystemMaxUse: {{ linux_journald_system_max_use }}"
+      - "Config changed: {{ journald_config_result.changed | default(false) }}"

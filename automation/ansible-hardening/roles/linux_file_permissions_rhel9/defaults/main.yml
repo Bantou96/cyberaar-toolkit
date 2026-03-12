@@ -47,5 +47,8 @@ linux_restrict_su_to_wheel: true
 # Remove world-writable files in /etc, /boot, /var/log (careful scan)
 linux_remove_world_writable: false # set true only after testing
 
+# Check NFS client mounts for missing nodev/nosuid/noexec options (CIS 2.2.x)
+linux_file_permissions_check_nfs_mounts: true
+
 # Role disable
 linux_file_permissions_disabled: false

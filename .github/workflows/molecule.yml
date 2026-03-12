@@ -77,6 +77,8 @@ jobs:
           - crypto_policies
           - secure_boot
           - bootloader_password
+          - ipv6
+          - journald
 
     steps:
       - name: Checkout

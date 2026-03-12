@@ -1,0 +1,5 @@
+---
+- name: "Apply journald hardening (Ubuntu/Debian)"
+  when: "linux_journald_disabled is not defined or not linux_journald_disabled | bool"
+  ansible.builtin.import_tasks: "tasks.yml"
+  tags: "linux_journald_ubuntu"

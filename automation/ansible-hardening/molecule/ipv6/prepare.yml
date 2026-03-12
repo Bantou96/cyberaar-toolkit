@@ -1,0 +1,22 @@
+---
+- name: "Prepare — IPv6 hardening"
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: "Ensure /etc/sysctl.d directory exists"
+      ansible.builtin.file:
+        path: "/etc/sysctl.d"
+        state: directory
+        mode: "0755"
+
+    - name: "Ensure /etc/modprobe.d directory exists"
+      ansible.builtin.file:
+        path: "/etc/modprobe.d"
+        state: directory
+        mode: "0755"
+
+    - name: "Ensure /etc/hosts exists"
+      ansible.builtin.file:
+        path: "/etc/hosts"
+        state: touch
+        mode: "0644"

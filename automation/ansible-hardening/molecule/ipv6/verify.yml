@@ -1,0 +1,46 @@
+---
+- name: "Verify — IPv6 hardening"
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: "Check /etc/modprobe.d/99-cis-ipv6.conf exists"
+      ansible.builtin.stat:
+        path: "/etc/modprobe.d/99-cis-ipv6.conf"
+      register: "ipv6_modprobe_file"
+
+    - name: "Assert modprobe config exists"
+      ansible.builtin.assert:
+        that: "ipv6_modprobe_file.stat.exists"
+        fail_msg: "/etc/modprobe.d/99-cis-ipv6.conf not found"
+
+    - name: "Check modprobe config contains disable directive"
+      ansible.builtin.command:
+        cmd: "grep -q 'options ipv6 disable=1' /etc/modprobe.d/99-cis-ipv6.conf"
+      changed_when: false
+      register: "ipv6_modprobe_content"
+
+    - name: "Assert modprobe disable directive present"
+      ansible.builtin.assert:
+        that: "ipv6_modprobe_content.rc == 0"
+        fail_msg: "'options ipv6 disable=1' not found in modprobe config"
+
+    - name: "Check /etc/sysctl.d/99-cis-ipv6.conf exists"
+      ansible.builtin.stat:
+        path: "/etc/sysctl.d/99-cis-ipv6.conf"
+      register: "ipv6_sysctl_file"
+
+    - name: "Assert sysctl config exists"
+      ansible.builtin.assert:
+        that: "ipv6_sysctl_file.stat.exists"
+        fail_msg: "/etc/sysctl.d/99-cis-ipv6.conf not found"
+
+    - name: "Check sysctl config disables IPv6"
+      ansible.builtin.command:
+        cmd: "grep -q 'net.ipv6.conf.all.disable_ipv6' /etc/sysctl.d/99-cis-ipv6.conf"
+      changed_when: false
+      register: "ipv6_sysctl_content"
+
+    - name: "Assert sysctl disable_ipv6 directive present"
+      ansible.builtin.assert:
+        that: "ipv6_sysctl_content.rc == 0"
+        fail_msg: "'net.ipv6.conf.all.disable_ipv6' not found in sysctl config"

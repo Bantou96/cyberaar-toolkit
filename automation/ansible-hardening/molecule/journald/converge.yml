@@ -1,0 +1,14 @@
+---
+- name: "Converge — journald hardening"
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: "Apply linux_journald_rhel9"
+      when: ansible_os_family == "RedHat"
+      ansible.builtin.include_role:
+        name: "linux_journald_rhel9"
+
+    - name: "Apply linux_journald_ubuntu"
+      when: ansible_os_family == "Debian"
+      ansible.builtin.include_role:
+        name: "linux_journald_ubuntu"
