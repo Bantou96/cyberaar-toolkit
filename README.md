@@ -52,7 +52,7 @@ available in French & English.
 | Deliverable | Description | Version |
 |-------------|-------------|---------|
 | `scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
-| `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
+| `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v2.0.0 |
 | `execution-environment/` | Docker image — self-contained EE with Ansible + collection + playbooks, no local install required | `ghcr.io/cyberaar/ee-hardening` |
 | `dashboard/index.html` | Single-file web dashboard — visualise baseline JSON reports across multiple hosts, before/after comparison, PDF export | zero dependencies |
 
@@ -81,7 +81,7 @@ cyberaar-toolkit/
 │       ├── checks/                   # 8 files — one per check section
 │       └── renderers/                # terminal.sh, json.sh, html.sh
 ├── ansible-hardening/
-│   ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v1.9.0)
+│   ├── galaxy.yml                    # Collection metadata (cyberaar.hardening v2.0.0)
 │   ├── requirements.yml              # ansible.posix + community.general
 │   ├── inventory/
 │   │   ├── hosts                     # INI inventory (rhel_servers / ubuntu_servers / dmz_servers)
@@ -168,23 +168,87 @@ docker run --rm -it \
 
 ## Deliverable 0b — Security Dashboard
 
-A single-file web dashboard — open `dashboard/index.html` in any browser, no install needed.
+`dashboard/index.html` is a single-file, zero-dependency web dashboard for visualising baseline reports across your entire fleet. No install, no server, no internet connection required.
 
-**Load reports** by drag & drop or file picker. Load multiple hosts and multiple runs simultaneously:
+### Features
 
-- Fleet overview with score ring, PASS/WARN/FAIL counts per host
-- Before/after comparison — automatic when two reports for the same host are loaded
-- Per-host drill-down with check table, status filter, and copy-ready Ansible remediation command
-- PDF export via browser print
+| Feature | Description |
+|---|---|
+| Fleet overview | Score ring per host (green ≥ 80%, amber ≥ 60%, red < 60%), PASS / WARN / FAIL counts, sorted worst-first |
+| Before/After delta | Load a pre- and post-hardening report for the same host — score delta pill appears automatically |
+| Host detail panel | Click any host card — slide-in panel with full check table |
+| Status filter | Filter checks by FAIL / WARN / PASS inside the detail panel |
+| Ansible remediation | Copy-ready `ansible-playbook` command pre-filled with hostname and inventory path |
+| PDF export | Browser print → PDF (header and panel hidden automatically) |
+| Fully offline | No CDN, no npm, no build step — works in air-gapped environments |
+
+---
+
+### Step 1 — Generate JSON reports
 
 ```bash
-# Open directly
+# Run directly on the local machine
+sudo bash scripts/cyberaar-baseline.sh \
+  --json-out /tmp/before-$(hostname).json
+
+# Or via Ansible (pre-hardening)
+ansible-playbook \
+  -i ansible-hardening/inventory/hosts \
+  --extra-vars "target=myserver" -u admin -b \
+  ansible-hardening/playbooks/1_execute_baseline_before.yml
+# → report saved to ansible-hardening/reports/before/myserver/report.json
+```
+
+---
+
+### Step 2 — Open the dashboard
+
+**Linux / macOS:**
+```bash
 xdg-open dashboard/index.html         # Linux
 open dashboard/index.html             # macOS
-
-# Or serve locally
-python3 -m http.server 8080 --directory dashboard/
 ```
+
+**WSL2 (Windows Subsystem for Linux):**
+```bash
+# Option A — open via Windows Explorer
+explorer.exe dashboard/index.html
+
+# Option B — get the Windows path and paste into browser
+wslpath -w $(pwd)/dashboard/index.html
+# Output: \\wsl$\Ubuntu\...\dashboard\index.html
+# Paste that path into Chrome / Edge address bar
+```
+
+**Any platform — serve locally:**
+```bash
+python3 -m http.server 8080 --directory dashboard/
+# Then open http://localhost:8080 in your browser
+```
+
+---
+
+### Step 3 — Load reports
+
+1. Click **Load Reports** (top right) or drag & drop `.json` files onto the drop zone
+2. The dashboard groups reports by `host` field — load reports from multiple hosts at once
+3. For before/after comparison: load two reports for the same host — the dashboard detects them automatically by date and shows the score delta
+
+**Where to find reports after an Ansible pipeline run:**
+```
+ansible-hardening/reports/before/<hostname>/report.json   ← pre-hardening
+ansible-hardening/reports/after/<hostname>/report.json    ← post-hardening
+```
+
+---
+
+### Step 4 — Explore
+
+- **Fleet view** — all hosts on one screen, worst score first
+- **Click a host card** — opens the detail panel with all 96 checks
+- **Filter** by FAIL / WARN / PASS to focus on what matters
+- **Ansible remediation** block shows the exact command to remediate FAIL/WARN items
+- **Export PDF** — click the button top right, then use your browser's print dialog
 
 > Full reference: [`dashboard/README.md`](dashboard/README.md)
 
