@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] — 2026-03-12
+
+### Added
+
+- **`linux_ipv6_rhel9` + `linux_ipv6_ubuntu`** — Disable IPv6 at kernel level (CIS 3.3.1): sysctl `net.ipv6.conf.{all,default,lo}.disable_ipv6=1` persisted to `/etc/sysctl.d/99-cis-ipv6.conf`; modprobe `options ipv6 disable=1` persisted to `/etc/modprobe.d/99-cis-ipv6.conf`; Ubuntu variant runs `update-initramfs -u -k all` to persist across kernel updates
+- **`linux_journald_rhel9` + `linux_journald_ubuntu`** — systemd-journald hardening (CIS 4.2.1.x): drop-in `/etc/systemd/journald.conf.d/99-cis-journald.conf` sets persistent storage, compression, syslog forwarding, rate limiting, and disk retention limits; `/var/log/journal` created for persistent mode
+- **NFS mount scan** in `linux_file_permissions_rhel9` / `linux_file_permissions_ubuntu`: new `linux_file_permissions_check_nfs_mounts` variable (default `true`) scans `/etc/fstab` for NFS entries and emits a debug warning if found (CIS 1.1.x — verify nodev/nosuid on NFS)
+- **Molecule scenarios**: `ipv6` and `journald` — dual-platform (Rocky Linux 9 + Ubuntu 22.04), full converge/verify/idempotency
+- **CI matrix** expanded from 29 → 31 Molecule scenarios
+
+### Fixed
+
+- **BUG** `linux_fail2ban_rhel9` was present in `roles/` since v1.7.0 but was **never added** to `playbooks/2_configure_hardening.yml` under the RedHat block — silently skipped on all RHEL9 runs. Role is now correctly included in the playbook.
+
+### Changed
+
+- `galaxy.yml`: version → 1.9.0; description updated to 51 roles (25 RHEL9 + 26 Ubuntu/Debian); tags: added `ipv6`, `journald`
+- `playbooks/2_configure_hardening.yml`: added `linux_ipv6_*` (tag: `network, ipv6`) after ip_forwarding; added `linux_journald_*` (tag: `audit, logging, journald`) after auditing
+
 ## [1.8.0] — 2026-03-11
 
 ### Added
