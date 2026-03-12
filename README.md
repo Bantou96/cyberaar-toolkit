@@ -36,7 +36,7 @@ available in French & English.
 - [Inventory & Variable Configuration](#inventory--variable-configuration)
 - [Sensitive Variables](#sensitive-variables)
 - [Report Output](#report-output)
-- [Practices & Knowledge Base](#practices--knowledge-base)
+- [Practices & Knowledge Base](#practices--knowledge-base) *(→ [cyberaar/Aar-Act](https://github.com/cyberaar/Aar-Act))*
 - [Goal & Target Sectors](#goal--target-sectors)
 - [How to Contribute](#how-to-contribute)
 - [License](#license)
@@ -88,9 +88,6 @@ cyberaar-toolkit/
 │       │   ├── 2_configure_hardening.yml       # Hardening roles (RHEL9 + Ubuntu)
 │       │   └── 3_execute_baseline_after.yml    # Post-hardening audit
 │       └── roles/                        # 51 hardening roles (parallel RHEL9 + Ubuntu)
-├── practices/                            # Community security guides (English)
-├── translations/                         # French versions of all guides
-├── examples/                             # Senegal-specific templates & sample reports
 └── .github/                              # Issue templates, PR template
 ```
 
@@ -539,11 +536,9 @@ Open `before/` and `after/` HTML reports side by side to visualise the security 
 
 ## Practices & Knowledge Base
 
-Community-maintained security guides adapted for the Senegalese context:
+Community-maintained security guides and templates have moved to their own repository:
 
-- `practices/` — Best practices per topic (hardening, access control, incident response, network security…)
-- `translations/` — French versions of all guides
-- `examples/` — Senegal-specific templates, sample inventory files, and baseline report examples
+**[cyberaar/Aar-Act](https://github.com/cyberaar/Aar-Act)** — practices (English), translations (French), and Senegal-specific examples.
 
 ---
 
@@ -565,7 +560,7 @@ No long commitments required — add one improvement when you have 10 minutes.
 
 1. **Browse** existing sections or suggest new ones via [Issues](https://github.com/cyberaar/cyberaar-toolkit/issues)
 2. **Fork** this repo or create a branch
-3. **Add or edit** — hardening roles in `automation/ansible-hardening/roles/`, guides in `practices/`
+3. **Add or edit** — hardening roles in `automation/ansible-hardening/roles/`, or guides in [cyberaar/Aar-Act](https://github.com/cyberaar/Aar-Act)
 4. **Submit** a Pull Request — reference the CIS benchmark section when adding hardening controls
 5. Get **credit** in the Contributors list
 
