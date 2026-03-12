@@ -4,7 +4,7 @@
 #  Vérificateur de Sécurité de Base CyberAar
 #
 #  Version   : 4.2.0
-#  Author    : CyberAar (https://github.com/Bantou96/cyberaar-toolkit)
+#  Author    : CyberAar (https://github.com/cyberaar/cyberaar-toolkit)
 #  License   : GPL v3
 #  Target    : RHEL/CentOS/Ubuntu/Debian (Linux Government Servers)
 #
