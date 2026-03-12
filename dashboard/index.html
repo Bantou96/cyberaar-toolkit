@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyberAar — Security Baseline Dashboard</title>
+  <style>
+    :root {
+      --bg:       #0f1923;
+      --surface:  #1a2735;
+      --surface2: #223040;
+      --border:   #2d4056;
+      --text:     #e2e8f0;
+      --muted:    #8a9bb0;
+      --green:    #22c55e;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
+      --accent:   #10b981;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.875rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo { display: flex; align-items: center; gap: 0.6rem; }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; color: #fff;
+    }
+    .logo-text { font-size: 1.1rem; font-weight: 700; }
+    .logo-text span { font-weight: 300; color: var(--muted); }
+
+    .header-actions { display: flex; gap: 0.6rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; border: none;
+      transition: opacity 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-secondary {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Main layout ──────────────────────────────────────────── */
+    main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+    /* ── Drop zone ────────────────────────────────────────────── */
+    #dropZone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 4rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+    }
+    #dropZone.drag-over {
+      border-color: var(--accent);
+      background: rgba(16,185,129,0.04);
+    }
+    #dropZone h2 { font-size: 1.25rem; margin: 0.75rem 0 0.4rem; }
+    #dropZone p  { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+    #dropZone code {
+      background: var(--surface2);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    #fileInput { display: none; }
+
+    /* ── Summary bar ──────────────────────────────────────────── */
+    #summarySection { display: none; }
+
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      text-align: center;
+    }
+    .summary-card .val {
+      font-size: 1.875rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .summary-card .lbl {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    /* ── Fleet grid ───────────────────────────────────────────── */
+    .section-hd {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--muted); margin-bottom: 0.875rem;
+    }
+
+    .fleet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .host-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.125rem;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+      position: relative;
+    }
+    .host-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.875rem;
+    }
+    .host-name { font-weight: 700; font-size: 0.975rem; }
+    .host-os   { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* Score ring (SVG) */
+    .score-ring { width: 58px; height: 58px; flex-shrink: 0; }
+
+    /* Status mini-bars */
+    .status-row {
+      display: flex; gap: 0.4rem; margin-bottom: 0.6rem;
+    }
+    .mini-bar {
+      flex: 1; background: var(--surface2);
+      border-radius: 4px; padding: 0.35rem 0.4rem;
+      text-align: center;
+    }
+    .mini-bar .n { font-weight: 700; font-size: 0.9rem; }
+    .mini-bar .t { font-size: 0.6rem; color: var(--muted); }
+    .mini-bar.p .n { color: var(--green); }
+    .mini-bar.w .n { color: var(--amber); }
+    .mini-bar.f .n { color: var(--red);   }
+
+    .card-date { font-size: 0.68rem; color: var(--muted); }
+
+    /* Delta pill */
+    .delta {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 0.15rem 0.5rem; border-radius: 999px;
+    }
+    .delta-up   { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .delta-down { background: rgba(239,68,68,0.15);  color: var(--red);   }
+    .delta-flat { background: var(--surface2);        color: var(--muted); }
+
+    /* ── Detail panel ─────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200; display: none;
+    }
+    .overlay.open { display: block; }
+
+    .panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: min(860px, 96vw);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 201;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.24s cubic-bezier(.4,0,.2,1);
+    }
+    .panel.open { transform: translateX(0); }
+
+    .panel-hd {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+    .panel-hd-title  { font-weight: 700; font-size: 1.05rem; }
+    .panel-hd-meta   { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+    .panel-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer; padding: 0.2rem 0.4rem; line-height: 1;
+    }
+    .panel-close:hover { color: var(--text); }
+
+    .panel-body { padding: 1.5rem; }
+
+    /* Score comparison boxes */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .compare-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .compare-box .phase {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .compare-box .big { font-size: 2.25rem; font-weight: 800; }
+    .compare-box .sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+    .compare-box .counts { font-size: 0.75rem; margin-top: 0.5rem; }
+
+    /* Filters */
+    .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .flt {
+      padding: 0.3rem 0.7rem; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted);
+      transition: all 0.15s;
+    }
+    .flt.on { color: var(--text); border-color: var(--accent); background: rgba(16,185,129,0.1); }
+
+    /* Results table */
+    .rtable { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .rtable th {
+      text-align: left; padding: 0.5rem 0.7rem;
+      color: var(--muted); font-size: 0.65rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); position: sticky; top: 73px;
+    }
+    .rtable td {
+      padding: 0.55rem 0.7rem;
+      border-bottom: 1px solid rgba(45,64,86,0.4);
+      vertical-align: top;
+    }
+    .rtable tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-block; padding: 0.12rem 0.45rem;
+      border-radius: 4px; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .PASS { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .WARN { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .FAIL { background: rgba(239,68,68,0.15);  color: var(--red);   }
+
+    .chk-id { font-family: monospace; color: var(--muted); font-size: 0.72rem; }
+    .detail  { font-size: 0.68rem; color: var(--muted); margin-top: 0.2rem; }
+    .remed   { font-size: 0.67rem; color: var(--muted); font-style: italic; margin-top: 0.2rem; }
+
+    /* Ansible block */
+    .ansible-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem; margin-top: 1.5rem;
+    }
+    .ansible-box h3 { font-size: 0.825rem; color: var(--accent); margin-bottom: 0.5rem; }
+    .ansible-box p  { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .code-block {
+      background: #08121c;
+      border-radius: 6px; padding: 0.75rem 1rem;
+      font-family: 'Courier New', monospace; font-size: 0.72rem;
+      color: #a8d8a8; white-space: pre; overflow-x: auto;
+    }
+    .copy-btn {
+      display: inline-block; margin-top: 0.5rem;
+      padding: 0.25rem 0.6rem; border-radius: 4px;
+      font-size: 0.7rem; cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    }
+    .copy-btn:hover { border-color: var(--accent); }
+
+    /* Print */
+    @media print {
+      header, #dropZone, .overlay, .panel, .header-actions { display: none !important; }
+      #summarySection { display: block !important; }
+      .host-card { break-inside: avoid; cursor: default; }
+      .host-card:hover { transform: none; box-shadow: none; border-color: var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">CA</div>
+    <div class="logo-text">CyberAar <span>Security Dashboard</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" id="exportBtn" onclick="window.print()" style="display:none">
+      &#x2193; Export PDF
+    </button>
+    <button class="btn btn-secondary" id="addMoreBtn" onclick="document.getElementById('fileInput').click()" style="display:none">
+      + Add Reports
+    </button>
+    <button class="btn btn-primary" id="loadBtn" onclick="document.getElementById('fileInput').click()">
+      Load Reports
+    </button>
+    <input type="file" id="fileInput" multiple accept=".json" onchange="handleFiles(this.files)">
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Drop zone -->
+  <div id="dropZone">
+    <div style="font-size:2.5rem">&#x1F4C2;</div>
+    <h2>Drop JSON baseline reports here</h2>
+    <p>
+      Or click <strong>Load Reports</strong> above to select files.<br>
+      Accepts <code>.json</code> output from <code>cyberaar-baseline --json-out report.json</code><br><br>
+      Load multiple files across hosts &amp; runs — before/after comparison is automatic.
+    </p>
+  </div>
+
+  <!-- Summary + fleet (hidden until reports loaded) -->
+  <div id="summarySection">
+    <div class="summary-bar" id="summaryBar"></div>
+    <div class="section-hd" id="fleetHd"></div>
+    <div class="fleet-grid" id="fleetGrid"></div>
+  </div>
+
+</main>
+
+<!-- ── Detail panel ─────────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<div class="panel" id="panel">
+  <div class="panel-hd">
+    <div>
+      <div class="panel-hd-title" id="panelTitle"></div>
+      <div class="panel-hd-meta"  id="panelMeta"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">&#x2715;</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+
+<!-- ── Script ───────────────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────────
+const DB = {};   // { hostname: Report[] }  sorted asc by date
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function scoreColor(s) {
+  return s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--amber)' : 'var(--red)';
+}
+
+function ring(score) {
+  const r = 23, circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  const c = scoreColor(score);
+  return `<svg class="score-ring" viewBox="0 0 58 58">
+    <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--border)" stroke-width="5.5"/>
+    <circle cx="29" cy="29" r="${r}" fill="none" stroke="${c}" stroke-width="5.5"
+      stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
+      transform="rotate(-90 29 29)"/>
+    <text x="29" y="33" text-anchor="middle"
+      style="font-size:11px;font-weight:800;fill:${c};font-family:inherit">${score}%</text>
+  </svg>`;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── File loading ───────────────────────────────────────────────────────────
+function handleFiles(files) {
+  let pending = files.length;
+  Array.from(files).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const raw = JSON.parse(e.target.result);
+        const r   = raw.cyberaar_baseline;
+        if (!r || !r.host) { alert('Not a valid cyberaar-baseline JSON:\n' + f.name); return; }
+        const host = r.host;
+        if (!DB[host]) DB[host] = [];
+        const dup = DB[host].some(x => x.date === r.date && x.score === r.score);
+        if (!dup) {
+          DB[host].push(r);
+          DB[host].sort((a, b) => a.date.localeCompare(b.date));
+        }
+      } catch { alert('Failed to parse JSON:\n' + f.name); }
+      if (--pending === 0) renderAll();
+    };
+    reader.readAsText(f);
+  });
+}
+
+// ── Drag & Drop ────────────────────────────────────────────────────────────
+const dz = document.getElementById('dropZone');
+dz.addEventListener('click',     () => document.getElementById('fileInput').click());
+dz.addEventListener('dragover',  e  => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', ()  => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+// ── Render fleet ───────────────────────────────────────────────────────────
+function renderAll() {
+  const hosts = Object.keys(DB);
+  if (!hosts.length) return;
+
+  document.getElementById('dropZone').style.display  = 'none';
+  document.getElementById('summarySection').style.display = 'block';
+  document.getElementById('exportBtn').style.display  = 'inline-flex';
+  document.getElementById('addMoreBtn').style.display = 'inline-flex';
+  document.getElementById('loadBtn').style.display    = 'none';
+
+  // Fleet-wide totals (latest report per host)
+  const latest = hosts.map(h => DB[h][DB[h].length - 1]);
+  const nHosts    = hosts.length;
+  const avgScore  = Math.round(latest.reduce((s, r) => s + r.score, 0) / nHosts);
+  const totPass   = latest.reduce((s, r) => s + r.summary.pass, 0);
+  const totWarn   = latest.reduce((s, r) => s + r.summary.warn, 0);
+  const totFail   = latest.reduce((s, r) => s + r.summary.fail, 0);
+  const critical  = latest.filter(r => r.score < 60).length;
+
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="summary-card">
+      <div class="val">${nHosts}</div>
+      <div class="lbl">Hosts</div>
+    </div>
+    <div class="summary-card">
+      <div class="val" style="color:${scoreColor(avgScore)}">${avgScore}%</div>
+      <div class="lbl">Avg Score</div>
+    </div>
+    <div class="summary-card">
+      <div class="val" style="color:var(--green)">${totPass}</div>
+      <div class="lbl">Total PASS</div>
+    </div>
+    <div class="summary-card">
+      <div class="val" style="color:var(--amber)">${totWarn}</div>
+      <div class="lbl">Total WARN</div>
+    </div>
+    <div class="summary-card">
+      <div class="val" style="color:var(--red)">${totFail}</div>
+      <div class="lbl">Total FAIL</div>
+    </div>
+    <div class="summary-card">
+      <div class="val" style="color:${critical > 0 ? 'var(--red)' : 'var(--green)'}">${critical}</div>
+      <div class="lbl">Critical (&lt;60%)</div>
+    </div>
+  `;
+
+  document.getElementById('fleetHd').textContent =
+    `Fleet — ${nHosts} host${nHosts !== 1 ? 's' : ''}`;
+
+  // Sort: worst score first
+  const sorted = [...hosts].sort((a, b) =>
+    DB[a][DB[a].length-1].score - DB[b][DB[b].length-1].score
+  );
+
+  document.getElementById('fleetGrid').innerHTML = sorted.map(hostCard).join('');
+}
+
+function hostCard(host) {
+  const reps   = DB[host];
+  const last   = reps[reps.length - 1];
+  const before = reps.length >= 2 ? reps[0] : null;
+  const delta  = before ? last.score - before.score : null;
+
+  let deltaPill = '';
+  if (delta !== null) {
+    const cls = delta > 0 ? 'delta-up' : delta < 0 ? 'delta-down' : 'delta-flat';
+    deltaPill = `<div class="delta ${cls}">${delta > 0 ? '+' : ''}${delta}%</div>`;
+  }
+
+  const dateStr = before
+    ? `${before.date} &rarr; ${last.date}`
+    : last.date;
+
+  return `
+    <div class="host-card" onclick="openPanel('${esc(host)}')">
+      ${deltaPill}
+      <div class="card-top">
+        <div>
+          <div class="host-name">${esc(host)}</div>
+          <div class="host-os">${esc(last.os || '')}</div>
+        </div>
+        ${ring(last.score)}
+      </div>
+      <div class="status-row">
+        <div class="mini-bar p">
+          <div class="n">${last.summary.pass}</div>
+          <div class="t">PASS</div>
+        </div>
+        <div class="mini-bar w">
+          <div class="n">${last.summary.warn}</div>
+          <div class="t">WARN</div>
+        </div>
+        <div class="mini-bar f">
+          <div class="n">${last.summary.fail}</div>
+          <div class="t">FAIL</div>
+        </div>
+      </div>
+      <div class="card-date">${dateStr}${reps.length >= 2 ? ` &nbsp;&#183;&nbsp; ${reps.length} reports` : ''}</div>
+    </div>
+  `;
+}
+
+// ── Detail panel ───────────────────────────────────────────────────────────
+let _activeHost   = '';
+let _activeFilter = 'ALL';
+
+function openPanel(host) {
+  _activeHost   = host;
+  _activeFilter = 'ALL';
+  renderPanel();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePanel() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderPanel() {
+  const reps   = DB[_activeHost];
+  const last   = reps[reps.length - 1];
+  const before = reps.length >= 2 ? reps[0] : null;
+
+  document.getElementById('panelTitle').textContent = _activeHost;
+  document.getElementById('panelMeta').textContent  =
+    `${last.os || ''} · ${last.date} · ${last.summary.pass + last.summary.warn + last.summary.fail} checks`;
+
+  // Score comparison
+  const scoreHtml = before ? `
+    <div class="compare-grid">
+      <div class="compare-box">
+        <div class="phase">Before &nbsp; ${before.date}</div>
+        <div class="big" style="color:${scoreColor(before.score)}">${before.score}%</div>
+        <div class="counts">
+          <span style="color:var(--green)">${before.summary.pass}P</span> &nbsp;
+          <span style="color:var(--amber)">${before.summary.warn}W</span> &nbsp;
+          <span style="color:var(--red)">${before.summary.fail}F</span>
+        </div>
+      </div>
+      <div class="compare-box">
+        <div class="phase">After &nbsp; ${last.date}</div>
+        <div class="big" style="color:${scoreColor(last.score)}">${last.score}%</div>
+        <div class="counts">
+          <span style="color:var(--green)">${last.summary.pass}P</span> &nbsp;
+          <span style="color:var(--amber)">${last.summary.warn}W</span> &nbsp;
+          <span style="color:var(--red)">${last.summary.fail}F</span>
+        </div>
+        ${(()=>{
+          const d = last.score - before.score;
+          if (!d) return '';
+          const cls = d > 0 ? 'delta-up' : 'delta-down';
+          return `<div class="delta ${cls}" style="position:static;display:inline-block;margin-top:0.5rem">${d>0?'+':''}${d}% vs before</div>`;
+        })()}
+      </div>
+    </div>` : `
+    <div class="compare-grid">
+      <div class="compare-box">
+        <div class="phase">${last.date}</div>
+        <div class="big" style="color:${scoreColor(last.score)}">${last.score}%</div>
+        <div class="counts" style="margin-top:0.6rem;font-size:0.8rem">
+          <span style="color:var(--green)">${last.summary.pass} PASS</span> &nbsp;&#183;&nbsp;
+          <span style="color:var(--amber)">${last.summary.warn} WARN</span> &nbsp;&#183;&nbsp;
+          <span style="color:var(--red)">${last.summary.fail} FAIL</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Filter counts
+  const all  = last.results.length;
+  const nF   = last.results.filter(r => r.status === 'FAIL').length;
+  const nW   = last.results.filter(r => r.status === 'WARN').length;
+  const nP   = last.results.filter(r => r.status === 'PASS').length;
+
+  const filtersHtml = `
+    <div class="filters">
+      <button class="flt ${_activeFilter==='ALL' ?'on':''}" onclick="setFilter('ALL',this)">All (${all})</button>
+      <button class="flt ${_activeFilter==='FAIL'?'on':''}" onclick="setFilter('FAIL',this)" style="color:var(--red)">FAIL (${nF})</button>
+      <button class="flt ${_activeFilter==='WARN'?'on':''}" onclick="setFilter('WARN',this)" style="color:var(--amber)">WARN (${nW})</button>
+      <button class="flt ${_activeFilter==='PASS'?'on':''}" onclick="setFilter('PASS',this)" style="color:var(--green)">PASS (${nP})</button>
+    </div>`;
+
+  // Ansible remediation
+  const rem  = last.ansible_remediation || {};
+  const fIds = rem.fail_ids || [];
+  const wIds = rem.warn_ids || [];
+  const ansibleHtml = (fIds.length + wIds.length) ? `
+    <div class="ansible-box">
+      <h3>&#x1F6E0; Ansible Remediation</h3>
+      <p>${fIds.length} FAIL &middot; ${wIds.length} WARN items addressable via the hardening playbook</p>
+      <div class="code-block" id="ansibleCmd">ansible-playbook \\
+  -i ${esc(rem.inventory || 'ansible-hardening/inventory/hosts')} \\
+  --extra-vars "target=${esc(_activeHost)}" \\
+  -u &lt;admin_user&gt; -b \\
+  ${esc(rem.playbook || 'ansible-hardening/playbooks/2_configure_hardening.yml')}</div>
+      <button class="copy-btn" onclick="copyCmd()">Copy</button>
+    </div>` : '';
+
+  document.getElementById('panelBody').innerHTML =
+    scoreHtml + filtersHtml +
+    `<div id="tableWrap">${buildTable(last.results, _activeFilter)}</div>` +
+    ansibleHtml;
+}
+
+function setFilter(status, btn) {
+  _activeFilter = status;
+  document.querySelectorAll('.flt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const last = DB[_activeHost][DB[_activeHost].length - 1];
+  document.getElementById('tableWrap').innerHTML = buildTable(last.results, status);
+}
+
+function buildTable(results, filter) {
+  const rows = results.filter(r => filter === 'ALL' || r.status === filter);
+  if (!rows.length) return '<p style="color:var(--muted);padding:0.75rem 0">No results.</p>';
+  return `
+    <table class="rtable">
+      <thead>
+        <tr>
+          <th>Status</th><th>ID</th><th>Category</th><th>Check / Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td><span class="badge ${r.status}">${r.status}</span></td>
+            <td><span class="chk-id">${esc(r.id)}</span></td>
+            <td>${esc(r.category)}</td>
+            <td>
+              <div>${esc(r.check)}</div>
+              ${r.detail      ? `<div class="detail">${esc(r.detail)}</div>`      : ''}
+              ${r.remediation ? `<div class="remed">${esc(r.remediation)}</div>` : ''}
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function copyCmd() {
+  const el = document.getElementById('ansibleCmd');
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    const btn = el.nextElementSibling;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+</script>
+</body>
+</html>
