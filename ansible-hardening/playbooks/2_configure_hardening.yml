@@ -84,12 +84,21 @@
   gather_facts: true
   tags: [hardening]
   pre_tasks:
+    # Explicit setup ensures facts are gathered even when --tags filters out
+    # the play-level 'hardening' tag that gather_facts inherits. Without this,
+    # running --tags ssh (or any non-hardening tag) skips gather_facts but still
+    # executes pre_tasks tagged 'always', causing ansible_os_family to be undefined.
+    - name: "CyberAar | Gather facts"
+      ansible.builtin.setup:
+      become: false   # fact gathering does not require root
+      tags: [always]
+
     - name: "CyberAar | Verify supported OS"
       ansible.builtin.assert:
         that:
           - ansible_os_family in ['RedHat', 'Debian']
         fail_msg: >
-          Unsupported OS family: {{ ansible_os_family }}.
+          Unsupported OS family: {{ ansible_os_family | default('unknown') }}.
           CyberAar hardening supports: RedHat (RHEL9/AlmaLinux/Rocky) and Debian (Ubuntu/Debian).
         success_msg: >
           OS supported: {{ ansible_distribution }} {{ ansible_distribution_major_version }}

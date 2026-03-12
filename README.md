@@ -26,6 +26,7 @@ available in French & English.
 - [Repository Structure](#repository-structure)
 - [Prerequisites](#prerequisites)
 - [Deliverable 0 — Docker Execution Environment](#deliverable-0--docker-execution-environment-no-install)
+- [Deliverable 0b — Security Dashboard](#deliverable-0b--security-dashboard)
 - [Deliverable 1 — Baseline Audit Script](#deliverable-1--baseline-audit-script-cyberaar-baselinesh)
 - [Deliverable 2 — Ansible Hardening Collection](#deliverable-2--ansible-hardening-collection)
   - [The Three-Step Pipeline](#the-three-step-pipeline)
@@ -53,6 +54,7 @@ available in French & English.
 | `scripts/cyberaar-baseline.sh` | Standalone bash script — audits a Linux server across 96 security checks, produces HTML + JSON reports with Ansible remediation plan | v4.2.0 |
 | `ansible-hardening/` | Ansible collection (`cyberaar.hardening`) — 51 CIS-aligned hardening roles for RHEL 9 family and Ubuntu/Debian | v1.9.0 |
 | `execution-environment/` | Docker image — self-contained EE with Ansible + collection + playbooks, no local install required | `ghcr.io/cyberaar/ee-hardening` |
+| `dashboard/index.html` | Single-file web dashboard — visualise baseline JSON reports across multiple hosts, before/after comparison, PDF export | zero dependencies |
 
 All three are independent: run the baseline script standalone, use the Ansible collection directly, or pull the Docker image for a zero-install experience.
 
@@ -62,6 +64,8 @@ All three are independent: run the baseline script standalone, use the Ansible c
 
 ```
 cyberaar-toolkit/
+├── dashboard/
+│   └── index.html                    # Single-file security dashboard (zero dependencies)
 ├── execution-environment/
 │   ├── Containerfile                 # Docker image definition (build from repo root)
 │   └── README.md                     # EE usage guide
@@ -159,6 +163,30 @@ docker run --rm -it \
 ```
 
 > Full reference: [`execution-environment/README.md`](execution-environment/README.md)
+
+---
+
+## Deliverable 0b — Security Dashboard
+
+A single-file web dashboard — open `dashboard/index.html` in any browser, no install needed.
+
+**Load reports** by drag & drop or file picker. Load multiple hosts and multiple runs simultaneously:
+
+- Fleet overview with score ring, PASS/WARN/FAIL counts per host
+- Before/after comparison — automatic when two reports for the same host are loaded
+- Per-host drill-down with check table, status filter, and copy-ready Ansible remediation command
+- PDF export via browser print
+
+```bash
+# Open directly
+xdg-open dashboard/index.html         # Linux
+open dashboard/index.html             # macOS
+
+# Or serve locally
+python3 -m http.server 8080 --directory dashboard/
+```
+
+> Full reference: [`dashboard/README.md`](dashboard/README.md)
 
 ---
 
