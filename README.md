@@ -1,11 +1,11 @@
-# Aar-Act — CyberAar Security Toolkit
+# cyberaar-toolkit
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
-[![Issues](https://img.shields.io/github/issues/Bantou96/Aar-Act)](https://github.com/Bantou96/Aar-Act/issues)
-[![Release](https://img.shields.io/github/v/release/Bantou96/Aar-Act)](https://github.com/Bantou96/Aar-Act/releases)
+[![Issues](https://img.shields.io/github/issues/Bantou96/cyberaar-toolkit)](https://github.com/Bantou96/cyberaar-toolkit/issues)
+[![Release](https://img.shields.io/github/v/release/Bantou96/cyberaar-toolkit)](https://github.com/Bantou96/cyberaar-toolkit/releases)
 
-**Aar-Act** (from CyberAar) is a volunteer-driven, open collaboration to gather and share
+**cyberaar-toolkit** is a volunteer-driven, open collaboration to gather and share
 **best practices** for securing Senegal's critical infrastructure against cyber threats.
 
 Inspired by recent attacks on Senegalese public systems, we unite Senegalese talents
@@ -55,7 +55,7 @@ Both tools are independent: you can run the baseline script standalone without A
 ## Repository Structure
 
 ```
-Aar-Act/
+cyberaar-toolkit/
 ├── automation/
 │   ├── scripts/
 │   │   ├── cyberaar-baseline.sh          # Standalone audit script (v4.2.0) — generated bundle
@@ -560,7 +560,7 @@ Build a **free, community-maintained security toolkit** that provides practical,
 
 No long commitments required — add one improvement when you have 10 minutes.
 
-1. **Browse** existing sections or suggest new ones via [Issues](https://github.com/Bantou96/Aar-Act/issues)
+1. **Browse** existing sections or suggest new ones via [Issues](https://github.com/Bantou96/cyberaar-toolkit/issues)
 2. **Fork** this repo or create a branch
 3. **Add or edit** — hardening roles in `automation/ansible-hardening/roles/`, guides in `practices/`
 4. **Submit** a Pull Request — reference the CIS benchmark section when adding hardening controls

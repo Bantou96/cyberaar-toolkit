@@ -1,6 +1,6 @@
 ---
 name: Suggest a Best Practice
-about: Propose a new section or edit for Aar-Act
+about: Propose a new section or edit for cyberaar-toolkit
 title: '[Suggestion] Title Here'
 labels: enhancement
 assignees: ''
