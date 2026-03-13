@@ -1,8 +1,6 @@
 ---
 
 collections:
-  - name: cyberaar.hardening
-    version: ">=1.9.0"
   - name: ansible.posix
     version: ">=1.5.4"      # for firewalld, selinux, seboolean, etc.
   - name: community.general
