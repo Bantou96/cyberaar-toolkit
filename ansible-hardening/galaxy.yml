@@ -1,10 +1,6 @@
 ---
 
-# To switch to the cyberaar namespace once approved on Galaxy:
-#   1. Change namespace: bantou96  →  namespace: cyberaar
-#   2. Update the Galaxy badge in README.md (bantou96.hardening → cyberaar.hardening)
-#   3. Run: ansible-galaxy collection publish with the new tarball
-namespace: bantou96
+namespace: cyberaar
 name: hardening
 version: 2.0.0
 readme: README.md
