@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CyberAar PNG logo embedded as base64 — consistent branding with HTML baseline report
   - Works fully offline — no CDN, no npm, no build step; compatible with air-gapped environments
 - **`execution-environment/Containerfile`** — Docker/Podman execution environment published to `ghcr.io/cyberaar/ee-hardening`:
-  - Built on `quay.io/ansible/community-ee-base`; includes `ansible-core`, `bantou96.hardening`, `ansible.posix`, `community.general`
+  - Built on `python:3.11-slim`; includes `ansible-core`, `cyberaar.hardening`, `ansible.posix`, `community.general`
   - Playbooks embedded at `/usr/share/cyberaar/playbooks/`; `cyberaar-baseline` at `/usr/local/bin/`
   - `COLLECTION_VERSION` build arg pins exact collection release; `latest` + `vX.Y.Z` tags pushed on every GitHub release
   - Zero local Ansible install required — one `docker run` to harden a server

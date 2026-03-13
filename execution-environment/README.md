@@ -6,7 +6,7 @@ A self-contained container image with everything needed to run CyberAar hardenin
 
 **Includes:**
 - `ansible-core` (via base image)
-- `bantou96.hardening` collection — 51 CIS-aligned hardening roles
+- `cyberaar.hardening` collection — 51 CIS-aligned hardening roles
 - `ansible.posix` + `community.general` dependencies
 - CyberAar playbooks at `/usr/share/cyberaar/playbooks/`
 - `cyberaar-baseline` audit script at `/usr/local/bin/cyberaar-baseline`
@@ -77,7 +77,7 @@ docker run --rm -it \
 | Tag | Description |
 |---|---|
 | `latest` | Latest stable release |
-| `v1.9.0` | Pinned to collection v1.9.0 |
+| `v2.0.0` | Pinned to collection v2.0.0 |
 
 ---
 
@@ -88,7 +88,7 @@ From the **repo root**:
 ```bash
 docker build \
   -f execution-environment/Containerfile \
-  --build-arg COLLECTION_VERSION=1.9.0 \
+  --build-arg COLLECTION_VERSION=2.0.0 \
   -t ghcr.io/cyberaar/ee-hardening:latest \
   .
 ```
@@ -97,4 +97,4 @@ docker build \
 
 ## Base image
 
-Built on `quay.io/ansible/community-ee-base:latest` — maintained by the Ansible team.
+Built on `python:3.11-slim` with `ansible-core` and `openssh-client` installed on top.

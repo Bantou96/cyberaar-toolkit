@@ -4,7 +4,7 @@
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
 [![Issues](https://img.shields.io/github/issues/cyberaar/cyberaar-toolkit)](https://github.com/cyberaar/cyberaar-toolkit/issues)
 [![Release](https://img.shields.io/github/v/release/cyberaar/cyberaar-toolkit)](https://github.com/cyberaar/cyberaar-toolkit/releases)
-[![Galaxy](https://img.shields.io/badge/galaxy-bantou96.hardening-blue?logo=ansible)](https://galaxy.ansible.com/ui/repo/published/bantou96/hardening/)
+[![Galaxy](https://img.shields.io/badge/galaxy-cyberaar.hardening-blue?logo=ansible)](https://galaxy.ansible.com/ui/repo/published/cyberaar/hardening/)
 [![Molecule CI](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/molecule.yml)
 [![Baseline Build](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml/badge.svg)](https://github.com/cyberaar/cyberaar-toolkit/actions/workflows/baseline-build.yml)
 [![EE Image](https://img.shields.io/badge/ghcr.io-cyberaar%2Fee--hardening-blue?logo=docker)](https://github.com/cyberaar/cyberaar-toolkit/pkgs/container/ee-hardening)
